@@ -1,0 +1,124 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+
+using POILibCommunication;
+
+namespace POIProxy
+{
+    public class POISessionManager : POISessionCtrlMsgCB
+    {
+        POISessionRegistery registery = new POISessionRegistery();
+
+        public POISessionRegistery Registery { get { return registery; } }
+
+        public void StartSession(POIUser user, int contentId)
+        {
+            //Create a new session and add to registery
+            POISession session = new POISession(user, GenerateSessionId(), contentId);
+
+            registery.AddSession(user, session);
+        }
+
+        public void EndSession(POIUser user)
+        {
+            POISession session = registery.GetSessionByUser(user);
+            if (session != null)
+            {
+                if (session.IsCommander(user))
+                {
+                    session.SessionEnd();
+                }
+
+                registery.RemoveSession(user);
+            }
+            
+        }
+
+        public void JoinSession(POIUser user, int sessionId)
+        {
+            POISession session = registery.GetSessionById(sessionId);
+            if (session != null)
+            {
+                if (user.UserPrivilege == POIUser.Privilege.Commander)
+                {
+                    session.JoinAsCommander(user);
+                    registery.RegisterSession(user, sessionId);
+                }
+                else if (user.UserPrivilege == POIUser.Privilege.Viewer)
+                {
+                    session.JoinAsViewer(user);
+                    registery.RegisterSession(user, sessionId);
+                }
+                else
+                {
+                    Console.WriteLine("Not proper user privilege for user join operation");
+                }
+            }
+        }
+
+        public void LeaveSession(POIUser user)
+        {
+            POISession session = registery.GetSessionByUser(user);
+            if (session != null)
+            {
+                if (session.IsCommander(user))
+                {
+                    session.LeaveAsCommander(user);
+                }
+                else if (session.IsViewer(user))
+                {
+                    session.LeaveAsViewer(user);
+                }
+
+                registery.DeRegisterSession(user);
+            }
+        }
+
+        //A simple session id generator
+        static int counter = 0;
+        public int GenerateSessionId()
+        {
+            return counter++;
+        }
+
+        public List<POISessionInfo> GetSessionsByContent(int contentId)
+        {
+            List<POISessionInfo> result = new List<POISessionInfo>();
+            List<POISession> curSessions = registery.GetSessionByContent(contentId);
+
+            if (curSessions != null)
+            {
+                for (int i = 0; i < curSessions.Count; i++)
+                {
+                    result.Add(curSessions[i].Info);
+                }
+            }
+
+            return result;
+        }
+
+        //Handler for session message
+        public void sessionCtrlMsgReceived(POISessionMsg msg, POIUser user)
+        {
+            switch ((SessionCtrlType)msg.CtrlType)
+            {
+                case SessionCtrlType.Start: //Start session
+                    StartSession(user, msg.ContentId);
+                    break;
+                case SessionCtrlType.End: //End session
+                    EndSession(user);
+                    break;
+                case SessionCtrlType.Join: //Join session
+                    JoinSession(user, msg.SessionId);
+                    break;
+                case SessionCtrlType.Leave: //Leave session
+                    LeaveSession(user);
+                    break;
+            }
+        }
+    }
+
+
+}
