@@ -14,18 +14,26 @@
 <style type="text/css"><!--
     body
     {
-                
+        height: 100%;
+        width: 100%;
+        margin: 0;
+        padding: 0;  
     }
             
     #PresBoard
     {
         border-radius: 10px ;
-        margin: 0px auto;
     }
             
     #PresBoardSideBarContainer
     {
-        overflow: hidden;   
+        overflow: hidden; 
+        background: transparent;  
+    }
+    
+    #PresBoardSideBarSlideRegion
+    {
+        background: transparent;
     }
             
     #PresBoardSideBar
@@ -59,6 +67,7 @@
     {
         position: absolute;
         border: 1px solid #000;
+        background-color: Silver;
     }
             
     #whiteBoard
@@ -106,17 +115,73 @@
         $("#PresBoard").css("background-image", "url(@(Model.ImageUrl)background.png)");
         //$("#PresBoard").resizable().draggable();
 
+        
         $("#PresBoardSideBarSlideRegion").slider({
             orientation: "vertical",
             slide: duringSlideOnSideBar,
             start: startSlideOnSideBar,
             stop: stopSlideOnSideBar
         });
+
         $(".ui-slider-handle").hide();
 
 
-        //$("#whiteBoard").hide();
+        //$("#PresBoardSideBarSlideRegion").slider("disable");
+
+        $("#whiteBoard").click(function(){
+            hideWhiteboard();
+        });
+
+        updateUI();
     });
+
+    function updateUI() {
+        // Apple detection object  
+        var Apple = {};
+        Apple.UA = navigator.userAgent;
+        Apple.Device = false;
+        Apple.Types = ["iPhone", "iPod", "iPad"];
+        for (var d = 0; d < Apple.Types.length; d++) {
+            var t = Apple.Types[d];
+            Apple[t] = !!Apple.UA.match(new RegExp(t, "i"));
+            Apple.Device = Apple.Device || Apple[t];
+        }
+
+        if (Apple.iPad) {
+            initIpadLayout();
+        }
+        else {
+            initCommonLayout();
+        }
+    }
+
+    function initCommonLayout() {
+        var board = $("#PresBoard");
+        var totalWidth = board.width();
+        var myHeight = parseInt((totalWidth) / 100 * 75);
+
+        board.css({
+            height: myHeight
+        });
+    }
+
+    function initIpadLayout() {
+        $("#PresBoard").css({
+            width: "100%",
+            left: "0%",
+            top: "0%",
+        });
+
+        $("#PresBoard").css("border-radius", 0);
+
+        var board = $("#PresBoard");
+        var totalWidth = board.width();
+        var myHeight = parseInt((totalWidth) / 100 * 74);
+
+        board.css({
+            height: myHeight
+        });
+    }
 
     function duringSlideOnSideBar(event, ui) {
         if (!isStart) {
@@ -195,14 +260,45 @@
 
         switch(msg['CtrlType']) {
             case 0:
-                $("#whiteBoard").show();
-                $("#PresBoard").hide();
+                showWhiteboard();
                 break;
             case 1:
-                $("#whiteBoard").hide();
-                $("#PresBoard").show();
+                hideWhiteboard();
                 break;
         };
+    }
+
+    function showWhiteboard() {
+        
+        $("#whiteBoard").animate({
+            top : "15%"
+        },  200, 'linear', function () {
+        /*
+            //Start another round 
+            $("#whiteBoard").animate({
+                top : "13%"
+            },  50, 'linear', function () {
+                $("#whiteBoard").animate({
+                    top : "15%"
+                },  50, 'linear', function () {
+                
+                });
+            });*/
+        });
+
+        //$("#whiteBoard").slideDown('slow', function(){});
+    }
+
+    function hideWhiteboard() {
+        $("#whiteBoard").animate({
+            top : "19%"
+        },  50, 'linear', function () {
+            $("#whiteBoard").animate({
+                top : "-82%"
+            },  400, 'linear', function () {
+                
+            });
+        });
     }
 
     function handleCommentMsg(msgString) {

@@ -28,7 +28,7 @@ namespace POIProxy
 
         private int mainPort = 8091;
         private int signalRPort = 8080;
-        private string baseAddr = "http://192.168.1.115:";
+        private string baseAddr = "http://192.168.1.109:";
 
         public bool Status { get; set; }
 
@@ -97,6 +97,7 @@ namespace POIProxy
             }
             catch (Exception e)
             {
+                Console.WriteLine(e.Message);
                 Console.WriteLine("Something happened!");
             }
 
