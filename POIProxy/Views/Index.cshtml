@@ -66,17 +66,15 @@
         border: 0px;
     }
             
-    canvas 
-    {
-        position: absolute;
-        border: 1px solid #000;
-        background-color: Silver;
-    }
-            
     #whiteBoard
     {
         top: 45px;
         left: 259px;
+    }
+    
+    #canvasStack > img
+    {
+        background-color: Silver;
     }
     
     .SlideAbstractView
@@ -98,7 +96,7 @@
         border-radius: 5px;
         
         -webkit-box-shadow: 0 8px 6px -6px black;
-	   -moz-box-shadow: 0 8px 6px -6px black;
+	    -moz-box-shadow: 0 8px 6px -6px black;
 	        box-shadow: 0 8px 6px -6px black;
     }
     
@@ -257,6 +255,10 @@
         $("#ColorItem > img").attr("src", "@(Model.ImageUrl)graph_bar.png");
         $("#CommentItem > img").attr("src", "@(Model.ImageUrl)speech_bubble.png");
         $("#ControlItem > img").attr("src", "@(Model.ImageUrl)Control_icon.png");
+
+        $("#DrawingItem > img").click(function(){
+            showWhiteboard();
+        });
     }
 
     function duringSlideOnSideBar(event, ui) {
@@ -349,6 +351,7 @@
         $("#whiteBoard").animate({
             top : "15%"
         },  200, 'linear', function () {
+        
         /*
             //Start another round 
             $("#whiteBoard").animate({
@@ -424,15 +427,19 @@
         }
 
         function setupDrawingCanvas (canvasId) {
-            var newCanvas = document.createElement("canvas");
-            newCanvas.setAttribute('id', canvasId);
-            newCanvas.setAttribute('width', 500);
-            newCanvas.setAttribute('height', 400);
-            var textNode = document.createTextNode("Not supported!");
-            newCanvas.appendChild(textNode);
 
-            document.getElementById("canvasStack").appendChild(newCanvas);
-            var newCurve = new POIDrawingCurve(newCanvas.getContext('2d'));
+            var newCanvas = $('<canvas>Not supported!</canvas>');
+            newCanvas.attr("id", canvasId);
+            newCanvas.attr("width", $("#canvasStack").width());
+            newCanvas.attr("height", $("#canvasStack").height());
+
+            newCanvas.css({
+                position: "absolute",
+                left: "0%"
+            });
+
+            $("#canvasStack").append(newCanvas);
+            var newCurve = new POIDrawingCurve(newCanvas[0].getContext('2d'));
             curve = newCurve;
 
             drawings[canvasId.toString()] = newCurve;
