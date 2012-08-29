@@ -65,12 +65,6 @@
         background: transparent;
         border: 0px;
     }
-            
-    #whiteBoard
-    {
-        top: 45px;
-        left: 259px;
-    }
     
     #canvasStack > img
     {
@@ -534,6 +528,9 @@
             ev._x = ev.offsetX;
             ev._y = ev.offsetY;
         }
+
+        ev._x = ev.pageX - $('#canvasStack').offset().left;
+        ev._y = ev.pageY - $('#canvasStack').offset().top;
 
         // Call the event handler of the tool.
         var func = tool[ev.type];
