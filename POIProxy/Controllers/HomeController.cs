@@ -21,6 +21,7 @@ namespace POIProxy.Controllers
                 SignalrUrl = POIProxyGlobalVar.SignalRUrl + "signalr/",
                 ScriptUrl = POIProxyGlobalVar.MainUrl + "content/Scripts/",
                 ImageUrl = POIProxyGlobalVar.MainUrl + "content/Images/",
+                CSSUrl = POIProxyGlobalVar.MainUrl + "content/CSS/",
                 SessionUrl = POIProxyGlobalVar.MainUrl + "api/Sessions"
             };
 

@@ -8,6 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
+[assembly: System.Windows.Resources.AssemblyAssociatedContentFileAttribute("css/jmenu.jquery.css")]
 [assembly: System.Windows.Resources.AssemblyAssociatedContentFileAttribute("scripts/jquery-1.6.4-vsdoc.js")]
 [assembly: System.Windows.Resources.AssemblyAssociatedContentFileAttribute("scripts/jquery-1.6.4.min.js")]
 [assembly: System.Windows.Resources.AssemblyAssociatedContentFileAttribute("scripts/jquery-ui-1.8.22.custom.min.js")]

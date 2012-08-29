@@ -160,11 +160,15 @@
     <EmbeddedResource Include="Views\Layout.cshtml" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="CSS\" />
     <Folder Include="Models\" />
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Images\background.png" />
+    <Content Include="CSS\jMenu.jquery.css" />
+    <Resource Include="Images\Control_icon.png" />
+    <Resource Include="Images\pencil.png" />
+    <Resource Include="Images\speech_bubble.png" />
+    <Resource Include="Images\graph_bar.png" />
     <Content Include="Scripts\jquery-1.6.4-vsdoc.js">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
