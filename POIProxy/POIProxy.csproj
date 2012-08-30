@@ -157,7 +157,6 @@
     </None>
     <AppDesigner Include="Properties\" />
     <EmbeddedResource Include="Views\Index.cshtml" />
-    <EmbeddedResource Include="Views\Layout.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Models\" />
@@ -169,11 +168,11 @@
     <Resource Include="Images\pencil.png" />
     <Resource Include="Images\speech_bubble.png" />
     <Resource Include="Images\graph_bar.png" />
+    <Content Include="CSS\poi.css" />
     <Content Include="Scripts\jquery-1.6.4-vsdoc.js">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <EmbeddedResource Include="Views\test.htm" />
-    <EmbeddedResource Include="Views\TestLayout.html" />
+    <EmbeddedResource Include="Views\Layout.htm" />
     <EmbeddedResource Include="Scripts\jquery-1.6.4.js">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </EmbeddedResource>

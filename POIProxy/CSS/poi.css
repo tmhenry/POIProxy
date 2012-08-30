@@ -1,0 +1,146 @@
+﻿body
+{
+    height: 100%;
+    width: 100%;
+    margin: 0;
+    padding: 0;  
+}
+            
+#PresBoard
+{
+    border-radius: 10px ;
+    height: 479px; 
+    width: 60%; 
+    position: relative; 
+    
+    left:20%; 
+    top: 10%; 
+}
+            
+#PresBoardSideBarContainer
+{
+    overflow: hidden; 
+    background: transparent;  
+    position: absolute; top: 5%; left: 20%; height: 90%; width: 60%;
+}
+    
+#PresBoardSideBarSlideRegion
+{
+    background: transparent;
+    position: absolute; top: 10%; left: -4%; height: 90%; width: 25%;
+}
+            
+#PresBoardSideBar
+{
+    border-radius: 2% ;
+    position: absolute; height: 17%; width: 100%; left: 0%; top: 0%;
+}
+
+#PresBoardMainDisplay
+{
+    position: absolute; top: 15%; left: 18%; height: 80%; width: 80%;
+}
+            
+            
+.MainSlideView
+{
+    border-radius: 8px ;
+    position: absolute; top: 1%; left: 1%; height: 98%; width: 98%; 
+    background-image: none;
+}
+            
+.ui-slider .ui-slider-handle 
+{ 
+    width: 10px; 
+}
+            
+.ui-slider 
+{
+    background-image: none;
+    background: transparent;
+    border: 0px;
+}
+
+#whiteBoard
+{
+    position: absolute; top: -82%; left: 18%; height: 80%; width: 80%;
+}
+
+#canvasStack
+{
+    position: absolute; width: 100%; height: 100%;
+}
+    
+#canvasStack > img
+{
+    background-color: Silver;
+    position: absolute; width: 100%; height: 100%;
+}
+    
+.SlideAbstractView
+{
+    border-radius: 5px ;
+    position: absolute; 
+    left: 5%; 
+    height: 100%; 
+    width: 90%;
+}
+    
+#MenuBar
+{
+    position: absolute; 
+    width: 30%; 
+    left: 25%; 
+    top: 5%; 
+    height: 7%;
+    background-color: #222;
+    border-radius: 5px;
+        
+    -webkit-box-shadow: 0 8px 6px -6px black;
+    -moz-box-shadow: 0 8px 6px -6px black;
+        box-shadow: 0 8px 6px -6px black;
+}
+    
+#MenuBar > div
+{
+    width: 25%;
+    height: 100%;
+        
+    position: absolute;
+    border-left: 1px solid #c0c0c0;
+        
+}
+    
+#MenuBar > div > img
+{
+    height: 70%;
+       
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 10%;
+}
+    
+#MenuBar > div:first-child
+{
+    border-left: none;
+}
+    
+#DrawingItem
+{
+    left: 0%;
+}
+    
+#ColorItem
+{
+    left: 25%;
+}
+    
+#CommentItem
+{
+    left: 50%;
+}
+    
+#ControlItem
+{
+    left: 75%;
+}
