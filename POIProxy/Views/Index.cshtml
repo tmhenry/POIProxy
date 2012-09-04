@@ -21,7 +21,7 @@
 
         //Initialize the callback function for the hub
         poiProxy.echoOnClient = function () {
-            alert("LZ SB!!!");
+            //alert("LZ SB!!!");
         }
 
         //Register handlers
@@ -33,7 +33,7 @@
 
         //Connect to the hub
         $.connection.hub.start().done(function () {
-            alert("Start done!");
+            //alert("Start done!");
             poiProxy.echoOnServer();
             poiProxy.joinSession(0);
         });
@@ -261,6 +261,11 @@
         canvasStack.addEventListener('mousedown', ev_canvas, false);
         canvasStack.addEventListener('mousemove', ev_canvas, false);
         canvasStack.addEventListener('mouseup', ev_canvas, false);
+
+        //Attach the touchstart, touchmove and touchend event listeners.
+        canvasStack.addEventListener('touchstart', ev_canvas, false);
+        canvasStack.addEventListener('touchmove', ev_canvas, false);
+        canvasStack.addEventListener('touchend', ev_canvas, false);
     }
     
     // This painting tool works like a drawing pencil which tracks the mouse 
@@ -278,7 +283,7 @@
         var textboxes = [];
 
         function initDrawingContext() {
-            var canvas = document.getElementById(stackSize);
+            var canvas = document.getElementById("canvas" + stackSize);
             if(canvas === null)
             {
                 setupDrawingCanvas(stackSize);
@@ -293,7 +298,7 @@
         function setupDrawingCanvas (canvasId) {
 
             var newCanvas = $('<canvas>Not supported!</canvas>');
-            newCanvas.attr("id", canvasId);
+            newCanvas.attr("id", "canvas" + canvasId);
             newCanvas.attr("width", $("#canvasStack").width());
             newCanvas.attr("height", $("#canvasStack").height());
 
@@ -338,6 +343,9 @@
                     }
 
                     var curDrawing = drawings[path.Depth.toString()];
+                    curDrawing.setupColor(
+                        "rgb(" + path.Color.R + ", " + path.Color.G + ", " + path.Color.B + " )"
+                    );
                     curDrawing.updateDrawing(path);
                     curDrawing.render();
 
@@ -347,14 +355,51 @@
             };
         }
 
-        function updateTextbox(textbox) {
+        //Load the text comment 
+        function updateTextbox(text) {
+           
+            switch (text.Mode) {
+                case 0: //Create
+                    if (textboxes[text.Depth.toString()] == null) {
+                        textboxes[text.Depth.toString()] = new POITextBox(text);
+                    }
+                    break;
+                case 1: //Pop
+                    var curText = textboxes[text.Depth.toString()];
+                    curText.popOut();
+                    break;
+                case 2: //Collapse
+                    var curText = textboxes[text.Depth.toString()];
+                    curText.collapse();
+                    break;
+                case 3: //Position changed
+                    var curText = textboxes[text.Depth.toString()];
+                    curText.updatePosition(text.X, text.Y);
+                    break;
+                case 4: //Content changed
+                    var curText = textboxes[text.Depth.toString()];
+                    curText.updateContent(text.Msg);
+                    break;
+                case 5: //Delete
+                    //To be completed
 
+                    break;                
+            }
         }
 
 
         // This is called when you start holding down the mouse button.
         // This starts the pencil drawing.
         this.mousedown = function (ev) {
+            initDrawingContext();
+
+            var point = new point2D();
+            point.construct(ev._x, ev._y);
+            curve.addPointToCurve(point);
+            tool.started = true;
+        };
+
+        this.touchstart = function (ev) {
             initDrawingContext();
 
             var point = new point2D();
@@ -377,10 +422,28 @@
             }
         };
 
+        this.touchmove = function (ev) {
+            if (tool.started) {
+                //context.lineTo(ev._x, ev._y);
+                //context.stroke();
+                var point = new point2D();
+                point.construct(ev._x, ev._y);
+                curve.addPointToCurve(point);
+                curve.render();
+            }
+        };
+
         // This is called when you release the mouse button.
         this.mouseup = function (ev) {
             if (tool.started) {
                 tool.mousemove(ev);
+                tool.started = false;
+            }
+        };
+
+        this.touchend = function (ev) {
+            if (tool.started) {
+                //tool.touchmove(ev);
                 tool.started = false;
             }
         };
@@ -391,6 +454,14 @@
     // The general-purpose event handler. This function just determines the mouse 
     // position relative to the canvas element.
     function ev_canvas(ev) {
+        switch (ev.type) {
+            case "touchstart":
+            case "touchmove":
+            case "touchend":
+                ev.preventDefault();
+                break;
+        }
+        /*
         if (ev.layerX || ev.layerX == 0) { // Firefox
             ev._x = ev.layerX;
             ev._y = ev.layerY;
@@ -398,6 +469,7 @@
             ev._x = ev.offsetX;
             ev._y = ev.offsetY;
         }
+        */
 
         ev._x = ev.pageX - $('#canvasStack').offset().left;
         ev._y = ev.pageY - $('#canvasStack').offset().top;
@@ -410,6 +482,100 @@
     }
 </script>
 
+<script type="text/javascript">
+    function POITextBox(textComment) {
+        var isCollapsed;
+        var depth;
+
+        this.init = init;
+        this.updateContent = updateContent;
+        this.updatePosition = updatePosition;
+        this.popOut = popOut;
+        this.collapse = collapse;
+
+        init(textComment);
+
+        function init(textComment) {
+            var container = $('<div></div>', {
+                id: "textbox" + textComment.Depth
+            });
+
+            container.css({
+                position: "absolute",
+                left: textComment.X * 100 + "%",
+                top: textComment.Y * 100 + "%"
+            });
+            
+            //An image tag
+            var icon = $('<img>', {
+                src: "@(Model.ImageUrl)speech_bubble.png"
+            });
+
+            //An text field
+            var textField = $('<input>', {
+                type: "text"
+            });
+
+            var iconContainer = $('<div></div>', {
+
+            });
+
+            var textFieldContainer = $('<div></div>', {
+
+            });
+
+            iconContainer.css({
+                position: "absolute"
+            });
+
+            textFieldContainer.css({
+                position: "absolute"
+            });
+
+            iconContainer.append(icon);
+            textFieldContainer.append(textField);
+
+            container.append(iconContainer);
+            container.append(textFieldContainer);
+            $("#canvasStack").append(container);
+
+            $("#textbox" + textComment.Depth + " > div > input").hide();
+            isCollapsed = true;
+            depth = textComment.Depth;
+        }
+
+        function collapse() {
+            if (!isCollapsed) {
+                $("#textbox" + depth + " > div > input").hide();
+                $("#textbox" + depth + " > div > img").show();
+
+                isCollapsed = true;
+            }
+        }
+
+        function popOut() {
+            if (isCollapsed) {
+                $("#textbox" + depth + " > div > input").show();
+                $("#textbox" + depth + " > div > img").hide();
+
+                isCollapsed = false;
+            }
+        }
+        
+        function updateContent(msg) {
+            $("#textbox" + depth + " > div > input").val(msg);
+        }
+
+        function updatePosition(x, y) {
+            //Update the container position
+            $("#textbox" + depth).css({
+                left: x * 100 + "%",
+                top: y * 100 + "%"
+            });
+        }
+    }
+</script>
+
 <script type = "text/javascript">
     function POIDrawingCurve(myContext) {
         //Private variables
@@ -417,19 +583,28 @@
         var numPoints = 0;
         var startPoint;
         var context = myContext;
+        var color;
 
         //Public functions
         this.render = render;
         this.addPointToCurve = addPointToCurve;
         this.updateDrawing = updateDrawing;
+        this.setupColor = setupColor;
 
         function updateDrawing(path) {
             for (var i = 0; i < path.NumPoints; i++) {
                 var curPoint = new point2D();
-                curPoint.construct(path.Points[i].X*500, path.Points[i].Y*400);
+                curPoint.construct(
+                    path.Points[i].X * $("#canvasStack").width(),
+                    path.Points[i].Y * $("#canvasStack").height()
+                );
 
                 addPointToCurve(curPoint);
             }
+        }
+
+        function setupColor(myColor) {
+            color = myColor;
         }
 
         //Function definitions
@@ -486,6 +661,8 @@
                     segment.endPoint.X, segment.endPoint.Y
                 );
             }
+
+            context.strokeStyle = color;
             context.stroke();
             context.closePath();
             context.save();
