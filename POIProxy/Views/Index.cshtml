@@ -503,7 +503,9 @@
             container.css({
                 position: "absolute",
                 left: textComment.X * 100 + "%",
-                top: textComment.Y * 100 + "%"
+                top: textComment.Y * 100 + "%",
+                width: "100%",
+                height: "100%"
             });
             
             //An image tag
@@ -511,9 +513,22 @@
                 src: "@(Model.ImageUrl)speech_bubble.png"
             });
 
+            icon.css({
+                position: "absolute",
+                width: "4%",
+                height: "auto",
+            });
+
             //An text field
-            var textField = $('<input>', {
-                type: "text"
+            var textField = $('<textarea></textarea>', {
+                rows: 20,
+                cols: 10
+            });
+
+            textField.css({
+                position: "absolute",
+                width: "30%",
+                height: "50%"
             });
 
             var iconContainer = $('<div></div>', {
@@ -525,11 +540,15 @@
             });
 
             iconContainer.css({
-                position: "absolute"
+                position: "absolute",
+                width: "100%",
+                height: "100%"
             });
 
             textFieldContainer.css({
-                position: "absolute"
+                position: "absolute",
+                width: "100%",
+                height: "100%"
             });
 
             iconContainer.append(icon);
@@ -539,14 +558,14 @@
             container.append(textFieldContainer);
             $("#canvasStack").append(container);
 
-            $("#textbox" + textComment.Depth + " > div > input").hide();
+            $("#textbox" + textComment.Depth + " > div > textarea").hide();
             isCollapsed = true;
             depth = textComment.Depth;
         }
 
         function collapse() {
             if (!isCollapsed) {
-                $("#textbox" + depth + " > div > input").hide();
+                $("#textbox" + depth + " > div > textarea").hide();
                 $("#textbox" + depth + " > div > img").show();
 
                 isCollapsed = true;
@@ -555,7 +574,7 @@
 
         function popOut() {
             if (isCollapsed) {
-                $("#textbox" + depth + " > div > input").show();
+                $("#textbox" + depth + " > div > textarea").show();
                 $("#textbox" + depth + " > div > img").hide();
 
                 isCollapsed = false;
@@ -563,7 +582,7 @@
         }
         
         function updateContent(msg) {
-            $("#textbox" + depth + " > div > input").val(msg);
+            $("#textbox" + depth + " > div > textarea").val(msg);
         }
 
         function updatePosition(x, y) {
