@@ -18,6 +18,7 @@ namespace POIProxy
         const int preloadOffset = 2;
         bool preloadStarted = false;
 
+        int curPreloadIndex = -1;
 
         POIPresentation curPresentation;
         POISession mySession;
@@ -38,8 +39,10 @@ namespace POIProxy
         public POISlide GetPreloadSlide()
         {
             int index = curSlideIndex + preloadOffset;
-            if (index < curPresentation.Count)
+            
+            if (index < curPresentation.Count && index > curPreloadIndex)
             {
+                curPreloadIndex = index;
                 return curPresentation.SlideAtIndex(index);
             }
             else
@@ -52,8 +55,13 @@ namespace POIProxy
         {
             List<POISlide> myList = new List<POISlide>();
 
-            int index = curSlideIndex + preloadOffset;
-            for (int i = 0; i <= index && i < curPresentation.Count; i++)
+            if (!preloadStarted)
+            {
+                curPreloadIndex = preloadOffset;
+                preloadStarted = true;
+            }
+            
+            for (int i = 0; i <= curPreloadIndex && i < curPresentation.Count; i++)
             {
                 myList.Add(curPresentation.SlideAtIndex(i));
             }
@@ -85,11 +93,18 @@ namespace POIProxy
 
                 if (curDuration < 0)
                 {
-                    //LoadSlide(curSlideIndex + 1);
-                    curSlideIndex++;
-                    LoadSlide(curPresentation.SlideAtIndex(curSlideIndex));
+                    if (curSlideIndex + 1 < curPresentation.Count)
+                    {
+                        curSlideIndex++;
+                        LoadSlide(curPresentation.SlideAtIndex(curSlideIndex));
 
-                    mySession.BroadcastPreloadSlide();
+                        mySession.BroadcastPreloadSlide();
+                    }
+                    else
+                    {
+                        //Undo the increment of current duration list
+                        curDurationIndex--;
+                    }
                 }
                 else
                 {

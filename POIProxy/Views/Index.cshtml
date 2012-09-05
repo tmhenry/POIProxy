@@ -165,13 +165,20 @@
     }
 
     function presentationNext() {
-        curSlideIndex++;
-        showSlideInMainView(curSlideIndex);
+        if(curSlideIndex < preloadSlideIndex)
+        {
+            curSlideIndex++;
+            console.log("Current slide: " + curSlideIndex);
+            showSlideInMainView(curSlideIndex);
+        }
     }
 
     function presentationPrev() {
-        curSlideIndex++;
-        showSlideInMainView(curSlideIndex);
+        if(curSlideIndex > 0) {
+            curSlideIndex--;
+            console.log("Current slide: " + curSlideIndex);
+            showSlideInMainView(curSlideIndex);
+        }
     }
 
     function showSlideInMainView(slideIndex) {
@@ -179,6 +186,11 @@
     }
 
     function getSlide(slideIndex) {
+        console.log("Get slide: " + slideIndex);
+        if(slideIndex > preloadSlideIndex) {
+            preloadSlideIndex = slideIndex;
+        }
+        
         url = "@(Model.SessionUrl)" + "?sessionId=0&slideIndex=" + slideIndex;
 
         var img = $('<img>', {
@@ -504,8 +516,8 @@
                 position: "absolute",
                 left: textComment.X * 100 + "%",
                 top: textComment.Y * 100 + "%",
-                width: "100%",
-                height: "100%"
+                width: "1%",
+                height: "1%"
             });
             
             //An image tag
@@ -515,7 +527,7 @@
 
             icon.css({
                 position: "absolute",
-                width: "4%",
+                width: "400%",
                 height: "auto",
             });
 
@@ -527,8 +539,8 @@
 
             textField.css({
                 position: "absolute",
-                width: "30%",
-                height: "50%"
+                width: "3000%",
+                height: "5000%"
             });
 
             var iconContainer = $('<div></div>', {
@@ -760,5 +772,6 @@
 
     //For showing presentation
     var curSlideIndex = 0;
+    var preloadSlideIndex = 0;
 
 </script>
