@@ -8,7 +8,7 @@ using System.Web.Http.SelfHost;
 using System.Net.Http;
 using System.Web;
 using System.Web.Routing;
-
+using System.Net;
 
 using System.IO;
 using RazorEngine;
@@ -35,6 +35,7 @@ namespace POIProxy
 
         public void Run()
         {
+            InitServerBaseAddr();
             RunSignalRServer();
             RunMainServer();
         }
@@ -42,6 +43,22 @@ namespace POIProxy
         private void ShowError(string msg)
         {
             Console.WriteLine(msg);
+        }
+
+        private void InitServerBaseAddr()
+        {
+            IPAddress[] localAddrs = Dns.GetHostAddresses(Dns.GetHostName());
+            IPAddress ip4Addr = localAddrs[0];
+
+            foreach (IPAddress curIP in localAddrs)
+            {
+                if (curIP.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
+                {
+                    ip4Addr = curIP;
+                }
+            }
+
+            baseAddr = "http://" + ip4Addr.ToString() + ":";
         }
 
         private void RunMainServer()
