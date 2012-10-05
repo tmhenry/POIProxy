@@ -169,6 +169,7 @@
     <Resource Include="Images\speech_bubble.png" />
     <Resource Include="Images\graph_bar.png" />
     <Content Include="CSS\poi.css" />
+    <Resource Include="Images\laser.png" />
     <Content Include="Scripts\jquery-1.6.4-vsdoc.js">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

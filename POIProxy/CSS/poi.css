@@ -148,3 +148,15 @@ textarea {
 {
     left: 75%;
 }
+
+
+#LaserPointerLayer
+{
+    position: absolute; top: 15%; left: 18%; height: 80%; width: 80%;
+}
+
+#laserPointer
+{
+    position: absolute;
+    height: 5%;   
+}
