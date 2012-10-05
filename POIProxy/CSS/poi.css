@@ -150,13 +150,26 @@ textarea {
 }
 
 
-#LaserPointerLayer
+#laserPointerLayer
 {
     position: absolute; top: 15%; left: 18%; height: 80%; width: 80%;
+    pointer-events: none;
 }
 
 #laserPointer
 {
     position: absolute;
+    top: 0%;
+    left: 0%;
     height: 5%;   
+}
+
+#username
+{
+    width: 30%;
+}
+
+#password
+{
+    width: 30%;
 }

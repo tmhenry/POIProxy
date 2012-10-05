@@ -121,8 +121,8 @@
     }
 
     function updateLaserPointerPosition(point) {
-        var x = point.X / $("#canvasStack").width();
-        var y = point.Y / $("#canvasStack").height();
+        var x = 100 * point.X / $("#canvasStack").width();
+        var y = 100 * point.Y / $("#canvasStack").height();
 
         $("#laserPointer").css({
             left: parseInt(x) + "%",

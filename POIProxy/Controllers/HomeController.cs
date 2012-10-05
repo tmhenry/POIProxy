@@ -14,6 +14,8 @@ namespace POIProxy.Controllers
     {
         public HttpResponseMessage Get()
         {
+            bool userLogin = true;
+
             var model = new 
             { 
                 Name = "POI Web End", 
@@ -25,7 +27,16 @@ namespace POIProxy.Controllers
                 SessionUrl = POIProxyGlobalVar.MainUrl + "api/Sessions"
             };
 
-            string result = Razor.Resolve("Index.cshtml", model).Run(new ExecuteContext());
+            string result;
+
+            if (userLogin)
+            {
+                result = Razor.Resolve("Index.cshtml", model).Run(new ExecuteContext());
+            }
+            else
+            {
+                result = Razor.Resolve("Login.cshtml", model).Run(new ExecuteContext());
+            }  
 
             var response = new HttpResponseMessage();
             response.Content = new StringContent(result, System.Text.Encoding.UTF8, "text/html");

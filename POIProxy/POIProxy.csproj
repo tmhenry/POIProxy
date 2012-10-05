@@ -157,11 +157,13 @@
     </None>
     <AppDesigner Include="Properties\" />
     <EmbeddedResource Include="Views\Index.cshtml" />
+    <EmbeddedResource Include="Views\Login.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Models\" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="Views\Layout_login.htm" />
     <Resource Include="Images\background.png" />
     <Content Include="CSS\jMenu.jquery.css" />
     <Resource Include="Images\Control_icon.png" />
