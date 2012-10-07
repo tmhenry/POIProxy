@@ -28,8 +28,11 @@
         poiProxy.handlePresCtrlMsg = handlePresCtrlMsg;
         poiProxy.handleWhiteboardMsg = handleWhiteboardMsg;
         poiProxy.handleCommentMsg = handleCommentMsg;
+        poiProxy.handlePtrCtrlMsg = handlePtrCtrlMsg;
+
         poiProxy.getSlide = getSlide;
         poiProxy.startPresentation = startPresentation;
+        
 
         //Connect to the hub
         $.connection.hub.start().done(function () {
@@ -120,15 +123,7 @@
         $("#laserPointer").attr("src", "@(Model.ImageUrl)laser.png");
     }
 
-    function updateLaserPointerPosition(point) {
-        var x = 100 * point.X / $("#canvasStack").width();
-        var y = 100 * point.Y / $("#canvasStack").height();
-
-        $("#laserPointer").css({
-            left: parseInt(x) + "%",
-            top:  parseInt(y) + "%"
-        });
-    }
+    
 
 </script>
 
@@ -283,6 +278,50 @@
         
         //alert('Handle comment!');
     }
+
+    function handlePtrCtrlMsg(msgString) {
+        var msg = jQuery.parseJSON(msgString);
+
+        //Update pointer position
+        $("#laserPointer").css({
+            left: parseInt(100 * msg.X) + "%",
+            top:  parseInt(100 * msg.Y) + "%"
+        });
+
+        switch (msg.Type) {
+            case 0: //Start
+                showPointer();
+                break;
+
+            case 1: //Move
+
+                break;
+
+            case 2: //End
+                hidePointer();
+                break;
+        }
+    }
+
+    function showPointer() {
+        $("#laserPointer").show();
+    }
+
+
+    function hidePointer() {
+        $("#laserPointer").hide();
+    }
+
+    function updateLaserPointerPosition(point) {
+        var x = 100 * point.X / $("#canvasStack").width();
+        var y = 100 * point.Y / $("#canvasStack").height();
+
+        $("#laserPointer").css({
+            left: parseInt(x) + "%",
+            top: parseInt(y) + "%"
+        });
+    }
+
 </script>
 
 <!--Comment tools-->

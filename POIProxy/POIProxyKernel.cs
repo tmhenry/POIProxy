@@ -57,7 +57,9 @@ namespace POIProxy
             user.CommentHandler = handler;
 
             user.SessionHandler = mySessionManager;
+            user.PointerHandler = new POIProxyPtrCtrlHandler(user);
         }
+
         public void HandleUserLeave(POIUser user) { }
 
         #endregion
