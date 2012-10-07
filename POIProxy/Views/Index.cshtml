@@ -280,36 +280,8 @@
     }
 
     function handlePtrCtrlMsg(msgString) {
-        var msg = jQuery.parseJSON(msgString);
-
-        //Update pointer position
-        $("#laserPointer").css({
-            left: parseInt(100 * msg.X) + "%",
-            top:  parseInt(100 * msg.Y) + "%"
-        });
-
-        switch (msg.Type) {
-            case 0: //Start
-                showPointer();
-                break;
-
-            case 1: //Move
-
-                break;
-
-            case 2: //End
-                hidePointer();
-                break;
-        }
-    }
-
-    function showPointer() {
-        $("#laserPointer").show();
-    }
-
-
-    function hidePointer() {
-        $("#laserPointer").hide();
+        //Pass it to the controller
+        ptrController.ProcessMsg(msgString);
     }
 
     function updateLaserPointerPosition(point) {
@@ -578,8 +550,120 @@
     }
 </script>
 
+<!--Pointer control tool-->
+<script type = "text/javascript">
+    function LaserPointerController() {
+        var dataManager = new StreamDataManager(100);
+
+        this.ProcessMsg = ProcessMsg;
+
+        function showPointer() {
+            $("#laserPointer").show();
+        }
+
+
+        function hidePointer() {
+            $("#laserPointer").hide();
+        }
+
+        function eventExecution(ptrEvent) {
+            var msg = ptrEvent;
+            
+            //Update pointer position
+            $("#laserPointer").css({
+                left: parseInt(100 * msg.X) + "%",
+                top: parseInt(100 * msg.Y) + "%"
+            });
+
+            switch (msg.Type) {
+                case 0: //Start
+                    showPointer();
+                    break;
+
+                case 1: //Move
+
+                    break;
+
+                case 2: //End
+                    hidePointer();
+                    break;
+            }
+        }
+
+
+        function ProcessMsg(msgString) {
+            var msg = jQuery.parseJSON(msgString);
+
+            dataManager.scheduleEvent(msg, eventExecution);
+        }
+    }
+</script>
+
+<!--Data smoother: in charge of stream data display-->
 <script type="text/javascript">
-    
+    function StreamDataManager(myBufferSize) {
+        //Data variables
+        var isFirstEvent = true;
+        var sendStartTime = 0;
+        var recvStartTime = 0;
+        var timeSyncSkew = 0;
+        var bufferSize = myBufferSize;
+        var minE2eDelay = -1;
+
+        var counter = 1;
+
+        this.scheduleEvent = scheduleEvent;
+
+        function scheduleEvent(event, callback) {
+            var timeNow = new Date();
+            var timeNowMsRef = timeNow.getTime();
+            var bufferDelay = 0;
+
+            if (isFirstEvent) {
+                //If it is the first event
+                isFirstEvent = false;
+
+                recvStartTime = timeNowMsRef;
+                sendStartTime = event.Timestamp * 1000;
+
+                //Calculate the initial sync skew
+                if (sendStartTime > recvStartTime) {
+                    timeSyncSkew = sendStartTime - recvStartTime;
+                }
+                else {
+                    timeSyncSkew = 0;
+                }
+            }
+            else {
+                var e2eDelay = timeSyncSkew + timeNowMsRef - event.Timestamp * 1000;
+                if (e2eDelay < 0) {
+                    timeSyncSkew = timeSyncSkew - e2eDelay;
+                    e2eDelay = 0;
+                }
+                
+
+                counter = (counter + 1) % 30;
+                if (e2eDelay < minE2eDelay || minE2eDelay == -1) {
+                    minE2eDelay = e2eDelay;
+                }
+
+                if (counter == 0) {
+                    if (minE2eDelay > bufferDelay)
+                        timeSyncSkew = timeSyncSkew - minE2eDelay;
+                }
+
+                bufferDelay = bufferSize - e2eDelay;
+
+                console.log("buffer delay is: " + bufferDelay);
+                if (bufferDelay < 0) {
+                    bufferDelay = 0;
+                }
+                
+                //Schedule the event with given buffering delay
+                setTimeout(callback(event), bufferDelay);
+            }
+        }
+    }
 </script>
 
 <!--Textcomment class-->
@@ -858,6 +942,9 @@
 
     // The pencil tool instance.
     var tool = new tool_pencil();
+
+    // The laser pointer controller
+    var ptrController = new LaserPointerController();
     
     //For slider region control
     var isStart = false;
