@@ -22,6 +22,8 @@ namespace POIProxy.Handlers
 
         public void pointerCtrlMsgReceived(POIPointerMsg msg)
         {
+            Console.WriteLine("Time is: " + msg.Timestamp);
+
             var registery = POIProxyGlobalVar.Kernel.mySessionManager.Registery;
             var session = registery.GetSessionByUser(myUser);
 
