@@ -641,15 +641,18 @@
                     e2eDelay = 0;
                 }
                 
-
+                //Track the minimum e2e delay
                 counter = (counter + 1) % 30;
                 if (e2eDelay < minE2eDelay || minE2eDelay == -1) {
                     minE2eDelay = e2eDelay;
                 }
 
+
                 if (counter == 0) {
                     if (minE2eDelay > bufferDelay)
                         timeSyncSkew = timeSyncSkew - minE2eDelay;
+                    //Reset the minimum e2e delay
+                    minE2eDelay = -1;
                 }
 
                 bufferDelay = bufferSize - e2eDelay;
