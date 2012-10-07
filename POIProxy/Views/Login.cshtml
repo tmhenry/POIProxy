@@ -1,0 +1,16 @@
+﻿@{
+    _Layout = "Layout_login.htm";
+    ViewBag.Title = @Model.Name;
+}
+
+<link type="text/css" href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.21/themes/ui-lightness/jquery-ui.css" rel="Stylesheet" />
+<link type="text/css" href="@(Model.CSSUrl)poi.css" rel="Stylesheet" />
+
+<script src = "@(Model.ScriptUrl)jquery-1.6.4.js" type = "text/javascript"></script>
+<script src = "@(Model.ScriptUrl)jquery.signalR-0.5.2.min.js" type ="text/javascript"></script>
+<script src = "@(Model.SignalrUrl)hubs" type="text/javascript"></script>
+<script src = "@(Model.ScriptUrl)jquery-ui-1.8.22.custom.min.js" type="text/javascript"></script>
+<script src = "@(Model.ScriptUrl)jquery.corner.js" type="text/javascript"></script>
+
+
+

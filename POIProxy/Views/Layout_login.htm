@@ -1,0 +1,50 @@
+﻿<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+    <head>
+        <title></title>
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <meta name="viewport" content="width=device-width, initial-scale=1"> 
+        <link rel="stylesheet" href="http://code.jquery.com/mobile/1.1.1/jquery.mobile-1.1.1.min.css" />
+        <script src="http://code.jquery.com/jquery-1.7.1.min.js"></script>
+        <script src="http://code.jquery.com/mobile/1.1.1/jquery.mobile-1.1.1.min.js"></script>
+    </head>
+
+    <body>
+        @RenderBody()
+        <div id="example"></div>
+        <script>
+
+            txt = "<p>Browser CodeName: " + navigator.appCodeName + "</p>";
+            txt += "<p>Browser Name: " + navigator.appName + "</p>";
+            txt += "<p>Browser Version: " + navigator.appVersion + "</p>";
+            txt += "<p>Cookies Enabled: " + navigator.cookieEnabled + "</p>";
+            txt += "<p>Platform: " + navigator.platform + "</p>";
+            txt += "<p>User-agent header: " + navigator.userAgent + "</p>";
+
+            document.getElementById("example").innerHTML = txt;
+
+        </script>
+
+        <div data-role="page">
+
+            <div data-role="header">
+                <h1>POI Login</h1>
+            </div><!-- /header -->
+
+            <div data-role="content">
+                
+                    
+                <div data-role="fieldcontain">
+                    <label for="username" class="ui-hidden-accessible">Username:</label>
+                    <input type="text" name="username" id="username" value="" placeholder="Username" width = "100px"/>
+                </div>
+                
+                <div data-role="fieldcontain">
+                    <label for="password" class="ui-hidden-accessible">Password:</label>
+                    <input type="text" name="password" id="password" value="" placeholder="Password" width = "100px"/>
+                </div>		
+            </div><!-- /content -->
+
+        </div><!-- /page -->
+    </body>
+</html>
