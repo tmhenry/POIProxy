@@ -658,9 +658,11 @@
                 bufferDelay = bufferSize - e2eDelay;
 
                 console.log("buffer delay is: " + bufferDelay);
+                console.log("min e2e delay is: " + minE2eDelay);
                 if (bufferDelay < 0) {
                     bufferDelay = 0;
                 }
+
                 
                 //Schedule the event with given buffering delay
                 setTimeout(callback(event), bufferDelay);
