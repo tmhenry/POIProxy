@@ -4,9 +4,9 @@
         <title></title>
         <meta name="apple-mobile-web-app-capable" content="yes">
         <meta name="viewport" content="width=device-width, initial-scale=1"> 
-        <link rel="stylesheet" href="http://code.jquery.com/mobile/1.1.1/jquery.mobile-1.1.1.min.css" />
+        <link rel="stylesheet" href="http://code.jquery.com/mobile/1.2.0/jquery.mobile-1.2.0.min.css" />
         <script src="http://code.jquery.com/jquery-1.7.1.min.js"></script>
-        <script src="http://code.jquery.com/mobile/1.1.1/jquery.mobile-1.1.1.min.js"></script>
+        <script src="http://code.jquery.com/mobile/1.2.0/jquery.mobile-1.2.0.min.js"></script>
     </head>
 
     <body>
@@ -42,9 +42,37 @@
                 <div data-role="fieldcontain">
                     <label for="password" class="ui-hidden-accessible">Password:</label>
                     <input type="text" name="password" id="password" value="" placeholder="Password" width = "100px"/>
-                </div>		
+                </div>	
+                
+                <a href="#popupBasic" data-rel="popup">Tooltip</a>
+
+                <div data-role="popup" id="popupBasic">
+	                This is a completely basic popup, no options set.
+                </div>
+
+                <a href="#popupLogin" data-rel="popup">Open Popup</a>
+
+                
+                    <div data-role="popup" id="popupLogin" data-theme="a" class="ui-corner-all ui-popup ui-body-a ui-overlay-shadow" aria-disabled="false" data-disabled="false" data-shadow="true" data-corners="true" data-transition="none" data-position-to="origin">
+                    <form>
+                        <div style="padding:10px 20px;">
+                          <h3>Please sign in</h3>
+                          <label for="un" class="ui-hidden-accessible ui-input-text">Username:</label>
+                          <input type="text" name="user" id="un" value="" placeholder="username" data-theme="a" class="ui-input-text ui-body-a ui-corner-all ui-shadow-inset">
+
+                          <label for="pw" class="ui-hidden-accessible ui-input-text">Password:</label>
+                          <input type="password" name="pass" id="pw" value="" placeholder="password" data-theme="a" class="ui-input-text ui-body-a ui-corner-all ui-shadow-inset">
+
+                          
+                        </div>
+                    </form>
+                    </div>
+                
+                <div class="ui-popup-screen fade ui-body-a ui-screen-hidden" id="popupDialog-screen"></div>
             </div><!-- /content -->
 
         </div><!-- /page -->
+
+
     </body>
 </html>
