@@ -68,6 +68,17 @@
         initMenuBar();
         initDrawing();
         initLaserPointerLayer();
+
+        var comment = new POITextComment();
+        comment.createComment({
+            "X" : 10,
+            "Y" : 20,
+            "Depth" : 0,
+            "Msg": "How are you"
+        });
+
+        var testCmntObject = new POICommentMsg();
+        console.log(JSON.stringify(testCmntObject));
     });
 
     function updateUI() {
@@ -121,6 +132,7 @@
     function initLaserPointerLayer() {
         //Set the src for the laser pointer
         $("#laserPointer").attr("src", "@(Model.ImageUrl)laser.png");
+        ptrController.HidePointer();
     }
 
     
@@ -556,6 +568,8 @@
         var dataManager = new StreamDataManager(100);
 
         this.ProcessMsg = ProcessMsg;
+        this.ShowPointer = showPointer;
+        this.HidePointer = hidePointer;
 
         function showPointer() {
             $("#laserPointer").show();
@@ -675,6 +689,33 @@
 
 <!--POI Textcomment and Drawing comment class-->
 <script type="text/javascript">
+    function POICommentMsg() {
+        var numOfText = 0;
+        var numOfDrawing = 0;
+
+        var textCmnts = new Array();
+        var drawingCmnts = new Array();
+
+        this.numOfText = numOfText;
+        this.numOfDrawing = numOfDrawing;
+        this.textCmnts = textCmnts;
+        this.drawingCmnts = drawingCmnts;
+
+        this.pushDrawingCmnt = pushDrawingCmnt;
+        this.pushTextCmnt = pushTextCmnt;
+
+
+        function pushDrawingCmnt() {
+
+        }
+
+        function pushTextCmnt(text) {
+            this.textCmnts.push(text);
+            this.numOfText++;
+        }
+        
+    }
+
     function POITextComment() {
         var Depth = 0;
         var OperationMode = 0;
@@ -688,58 +729,52 @@
         this.X = X;
         this.Y = Y;
 
-        function createComment(valueArray) {
-            X = valueArray["X"];
-            Y = valueArray["Y"];
-            Msg = valueArray["Msg"];
-            Depth = valueArray["Depth"];
+        this.createComment = createComment;
+        this.popComment = popComment;
+        this.collapseComment = collapseComment;
+        this.changeCommentPosition = changeCommentPosition;
+        this.changeCommentContent = changeCommentContent;
 
-            OperationMode = 0;
+        function createComment(valueArray) {
+            this.X = valueArray["X"];
+            this.Y = valueArray["Y"];
+            this.Msg = valueArray["Msg"];
+            this.Depth = valueArray["Depth"];
+
+            this.OperationMode = 0;
         }
 
         function popComment(valueArray) {
-            Depth = valueArray["Depth"];
+            this.Depth = valueArray["Depth"];
 
-            OperationMode = 1;
+            this.OperationMode = 1;
         }
 
         function collapseComment(valueArray) {
-            Depth = valueArray["Depth"];
+            this.Depth = valueArray["Depth"];
 
-            OperationMode = 2;
+            this.OperationMode = 2;
         }
 
         function changeCommentPosition(valueArray) {
-            Depth = valueArray["Depth"];
-            X = valueArray["X"];
-            Y = valueArray["Y"];
+            this.Depth = valueArray["Depth"];
+            this.X = valueArray["X"];
+            this.Y = valueArray["Y"];
 
-            OperationMode = 3;
+            this.OperationMode = 3;
         }
 
         function changeCommentContent(valueArray) {
-            Depth = valueArray["Depth"];
-            Msg = valueArray["Msg"];
+            this.Depth = valueArray["Depth"];
+            this.Msg = valueArray["Msg"];
 
-            OperationMode = 4;
+            this.OperationMode = 4;
         }
 
         function deleteComment(valueArray) {
-            Depth = valueArray["Depth"];
+            this.Depth = valueArray["Depth"];
 
-            OperationMode = 5;
-        }
-
-        function serialize() {
-            var valueArray = {
-                "Depth": Depth,
-                "X": X,
-                "Y": Y,
-                "OperationMode": OperationMode,
-                "Msg": Msg
-            };
-
-            return JSON.stringfy(valueArray);
+            this.OperationMode = 5;
         }
     }
 
@@ -1024,6 +1059,7 @@
 
     // The laser pointer controller
     var ptrController = new LaserPointerController();
+    
     
     //For slider region control
     var isStart = false;
