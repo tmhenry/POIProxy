@@ -599,6 +599,8 @@
     }
 </script>
 
+
+
 <!--Data smoother: in charge of stream data display-->
 <script type="text/javascript">
     function StreamDataManager(myBufferSize) {
@@ -671,7 +673,79 @@
     }
 </script>
 
-<!--Textcomment class-->
+<!--POI Textcomment and Drawing comment class-->
+<script type="text/javascript">
+    function POITextComment() {
+        var Depth = 0;
+        var OperationMode = 0;
+        var Msg = "";
+        var X = 0;
+        var Y = 0;
+
+        this.Depth = Depth;
+        this.OperationMode = OperationMode;
+        this.Msg = Msg;
+        this.X = X;
+        this.Y = Y;
+
+        function createComment(valueArray) {
+            X = valueArray["X"];
+            Y = valueArray["Y"];
+            Msg = valueArray["Msg"];
+            Depth = valueArray["Depth"];
+
+            OperationMode = 0;
+        }
+
+        function popComment(valueArray) {
+            Depth = valueArray["Depth"];
+
+            OperationMode = 1;
+        }
+
+        function collapseComment(valueArray) {
+            Depth = valueArray["Depth"];
+
+            OperationMode = 2;
+        }
+
+        function changeCommentPosition(valueArray) {
+            Depth = valueArray["Depth"];
+            X = valueArray["X"];
+            Y = valueArray["Y"];
+
+            OperationMode = 3;
+        }
+
+        function changeCommentContent(valueArray) {
+            Depth = valueArray["Depth"];
+            Msg = valueArray["Msg"];
+
+            OperationMode = 4;
+        }
+
+        function deleteComment(valueArray) {
+            Depth = valueArray["Depth"];
+
+            OperationMode = 5;
+        }
+
+        function serialize() {
+            var valueArray = {
+                "Depth": Depth,
+                "X": X,
+                "Y": Y,
+                "OperationMode": OperationMode,
+                "Msg": Msg
+            };
+
+            return JSON.stringfy(valueArray);
+        }
+    }
+
+</script>
+
+<!--Textcomment rendering class-->
 <script type="text/javascript">
     function POITextBox(textComment) {
         var isCollapsed;
@@ -785,7 +859,7 @@
     }
 </script>
 
-<!--Drawingcomment class-->
+<!--Drawingcomment rendering class-->
 <script type = "text/javascript">
     function POIDrawingCurve(myContext) {
         //Private variables
