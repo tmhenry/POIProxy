@@ -155,6 +155,7 @@
 
         $("#ControlItem > img").click(function(){
             //Save the current drawing
+            tool.saveComment();
         });
     }
 
@@ -343,6 +344,7 @@
 
         this.undo = removeLastDrawing;
         this.loadComment = loadComment;
+        this.saveComment = saveComment;
 
         var drawings = [];
         var textboxes = [];
@@ -480,6 +482,7 @@
                 case 0: //Create
                     if (textboxes[text.Depth.toString()] == null) {
                         textboxes[text.Depth.toString()] = new POITextBox(text);
+                        console.log("Msg: " + textboxes[text.Depth.toString()].Msg);
                     }
                     break;
                 case 1: //Pop
@@ -503,6 +506,18 @@
 
                     break;                
             }
+        }
+
+        function saveComment() {
+
+            var curComment = {
+                "NumBeizerPath": stackSize,
+                "NumText" : textStackSize,
+                "Paths": drawings,
+                "Texts" : textboxes,
+            };
+
+            console.log(JSON.stringify(curComment));
         }
 
 
@@ -558,8 +573,16 @@
                 "X": ev._x / $("#canvasStack").width(),
                 "Y": ev._y / $("#canvasStack").height(),
                 "Depth": textStackSize,
-                "Msg": ""
+                "Msg": ev._x + " " + ev._y
             });
+
+            /*
+            comment.createComment({
+                "X": 0.5,
+                "Y": 0.5,
+                "Depth": textStackSize,
+                "Msg": ev._x + " " + ev._y
+            });*/
 
             textStackSize++;
             updateTextbox(comment);
@@ -755,8 +778,9 @@
         this.pushTextCmnt = pushTextCmnt;
 
 
-        function pushDrawingCmnt() {
-
+        function pushDrawingCmnt(drawing) {
+            
+            this.numOfDrawing++;
         }
 
         function pushTextCmnt(text) {
@@ -791,19 +815,19 @@
             this.Msg = valueArray["Msg"];
             this.Depth = valueArray["Depth"];
 
-            OperationMode = 0;
+            this.OperationMode = 0;
         }
 
         function popComment(valueArray) {
             this.Depth = valueArray["Depth"];
 
-            OperationMode = 1;
+            this.OperationMode = 1;
         }
 
         function collapseComment(valueArray) {
             this.Depth = valueArray["Depth"];
 
-            OperationMode = 2;
+            this.OperationMode = 2;
         }
 
         function changeCommentPosition(valueArray) {
@@ -811,20 +835,20 @@
             this.X = valueArray["X"];
             this.Y = valueArray["Y"];
 
-            OperationMode = 3;
+            this.OperationMode = 3;
         }
 
         function changeCommentContent(valueArray) {
             this.Depth = valueArray["Depth"];
             this.Msg = valueArray["Msg"];
 
-            OperationMode = 4;
+            this.OperationMode = 4;
         }
 
         function deleteComment(valueArray) {
             this.Depth = valueArray["Depth"];
 
-            OperationMode = 5;
+            this.OperationMode = 5;
         }
     }
 
@@ -834,16 +858,22 @@
 <script type="text/javascript">
     function POITextBox(textComment) {
         var isCollapsed;
-        var depth;
+        var myself = this;
+
+        this.Mode = 0;
+        this.Depth = 0;
+        this.Msg = "";
+        this.X = 0;
+        this.Y = 0;
 
         this.init = init;
         this.updateContent = updateContent;
         this.updatePosition = updatePosition;
         this.popOut = popOut;
         this.collapse = collapse;
-
+        
         //Initialize the text comment box
-        init(textComment);
+        this.init(textComment);
 
         function init(textComment) {
             var container = $('<div></div>', {
@@ -910,17 +940,25 @@
 
             $("#textbox" + textComment.Depth + " > div > textarea").hide();
             isCollapsed = true;
-            depth = textComment.Depth;
+            
+            myself.Depth = textComment.Depth;
+            myself.X = textComment.X;
+            myself.Y = textComment.Y;
+            myself.Msg = textComment.Msg;
 
-            $("#textbox" + depth + " > div > img").click(function(){
+            updateContent(myself.Msg);
+
+            $("#textbox" + myself.Depth + " > div > img").click(function(){
                 popOut();
             });
+
+            popOut();
         }
 
         function collapse() {
             if (!isCollapsed) {
-                $("#textbox" + depth + " > div > textarea").hide();
-                $("#textbox" + depth + " > div > img").show();
+                $("#textbox" + myself.Depth + " > div > textarea").hide();
+                $("#textbox" + myself.Depth + " > div > img").show();
 
                 isCollapsed = true;
             }
@@ -928,23 +966,27 @@
 
         function popOut() {
             if (isCollapsed) {
-                $("#textbox" + depth + " > div > textarea").show();
-                $("#textbox" + depth + " > div > img").hide();
+                $("#textbox" + myself.Depth + " > div > textarea").show();
+                $("#textbox" + myself.Depth + " > div > img").hide();
 
                 isCollapsed = false;
             }
         }
         
         function updateContent(msg) {
-            $("#textbox" + depth + " > div > textarea").val(msg);
+            $("#textbox" + myself.Depth + " > div > textarea").val(msg);
+            this.Msg = msg;
         }
 
         function updatePosition(x, y) {
             //Update the container position
-            $("#textbox" + depth).css({
+            $("#textbox" + myself.Depth).css({
                 left: x * 100 + "%",
                 top: y * 100 + "%"
             });
+
+            myself.X = x;
+            myself.Y = y;
         }
     }
 </script>
@@ -958,12 +1000,15 @@
         var startPoint;
         var context = myContext;
         var color;
+        var points = [];
 
         //Public functions
         this.render = render;
         this.addPointToCurve = addPointToCurve;
         this.updateDrawing = updateDrawing;
         this.setupColor = setupColor;
+        this.Points = points;
+        this.NumPoints = numPoints;
 
         function updateDrawing(path) {
             for (var i = 0; i < path.NumPoints; i++) {
@@ -972,6 +1017,7 @@
                     path.Points[i].X * $("#canvasStack").width(),
                     path.Points[i].Y * $("#canvasStack").height()
                 );
+
 
                 addPointToCurve(curPoint);
             }
@@ -983,7 +1029,8 @@
 
         //Function definitions
         function addPointToCurve(point) {
-            
+
+                      
             //For testing purpose only
             updateLaserPointerPosition(point);
 
@@ -1021,7 +1068,16 @@
                 segments.push(newSegment);
             }
 
+            //Update the point array
+            var pointPercentage = new point2D();
+            pointPercentage.construct(
+                point.X / $("#canvasStack").width(),
+                point.Y / $("#canvasStack").height()
+            );
+            points.push(pointPercentage);
+
             numPoints = numPoints + 1;
+            this.NumPoints = numPoints;
         }
 
         function render() {
