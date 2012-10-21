@@ -59,10 +59,6 @@
 
         //$("#PresBoardSideBarSlideRegion").slider("disable");
 
-        $("#whiteBoard").click(function(){
-            hideWhiteboard();
-        });
-
         
         updateUI();
         initMenuBar();
@@ -149,6 +145,16 @@
 
         $("#DrawingItem > img").click(function(){
             showWhiteboard();
+            tool.switchToDrawingMode();
+        });
+
+        $("#CommentItem > img").click(function(){
+            showWhiteboard();
+            tool.switchToTextMode();
+        });
+
+        $("#ControlItem > img").click(function(){
+            //Save the current drawing
         });
     }
 
@@ -333,11 +339,44 @@
         var curve;
 
         var stackSize = 0;
+        var textStackSize = 0;
+
         this.undo = removeLastDrawing;
         this.loadComment = loadComment;
 
         var drawings = [];
         var textboxes = [];
+
+        this.switchToDrawingMode = function() {
+            this.mousedown = startDrawing;
+            this.mousemove = moveDrawing;
+            this.mouseup = mouseendDrawing;
+
+            this.touchstart = startDrawing;
+            this.touchmove = moveDrawing;
+            this.touchend = touchendDrawing;
+        }
+
+        this.switchToTextMode = function() {
+            this.mousedown = dummyHandler;
+            this.mousemove = dummyHandler;
+            this.mouseup = createTextbox;
+
+            this.touchstart = dummyHandler;
+            this.touchmove = dummyHandler;
+            this.touchend = createTextbox;
+        }
+
+        this.switchToIdleMode = function () {
+            this.mousedown = dummyHandler;
+            this.mousemove = dummyHandler;
+            this.mouseup = dummyHandler;
+
+            this.touchstart = dummyHandler;
+            this.touchmove = dummyHandler;
+            this.touchend = dummyHandler;
+        }
+
 
         function initDrawingContext() {
             var canvas = document.getElementById("canvas" + stackSize);
@@ -469,16 +508,7 @@
 
         // This is called when you start holding down the mouse button.
         // This starts the pencil drawing.
-        this.mousedown = function (ev) {
-            initDrawingContext();
-
-            var point = new point2D();
-            point.construct(ev._x, ev._y);
-            curve.addPointToCurve(point);
-            tool.started = true;
-        };
-
-        this.touchstart = function (ev) {
+        function startDrawing(ev) {
             initDrawingContext();
 
             var point = new point2D();
@@ -490,18 +520,7 @@
         // This function is called every time you move the mouse. Obviously, it only 
         // draws if the tool.started state is set to true (when you are holding down 
         // the mouse button).
-        this.mousemove = function (ev) {
-            if (tool.started) {
-                //context.lineTo(ev._x, ev._y);
-                //context.stroke();
-                var point = new point2D();
-                point.construct(ev._x, ev._y);
-                curve.addPointToCurve(point);
-                curve.render();
-            }
-        };
-
-        this.touchmove = function (ev) {
+        function moveDrawing(ev) {
             if (tool.started) {
                 //context.lineTo(ev._x, ev._y);
                 //context.stroke();
@@ -513,19 +532,50 @@
         };
 
         // This is called when you release the mouse button.
-        this.mouseup = function (ev) {
+        function mouseendDrawing(ev) {
             if (tool.started) {
                 tool.mousemove(ev);
                 tool.started = false;
             }
         };
 
-        this.touchend = function (ev) {
+        function touchendDrawing(ev) {
             if (tool.started) {
                 //tool.touchmove(ev);
                 tool.started = false;
             }
         };
+
+        function dummyHandler(ev) {
+            //Do nothing
+        }
+
+        //Handlers for textmode
+        function createTextbox(ev) {
+            var comment = new POITextComment();
+
+            comment.createComment({
+                "X": ev._x / $("#canvasStack").width(),
+                "Y": ev._y / $("#canvasStack").height(),
+                "Depth": textStackSize,
+                "Msg": ""
+            });
+
+            textStackSize++;
+            updateTextbox(comment);
+
+            tool.mouseup = function () {
+                for(var i=0; i<textStackSize; i++)
+                {
+                    textboxes[i.toString()].collapse();
+                }
+            }
+
+            tool.touchend = tool.mouseup;
+            
+        }
+
+
     }
 
 
@@ -724,7 +774,7 @@
         var Y = 0;
 
         this.Depth = Depth;
-        this.OperationMode = OperationMode;
+        this.Mode = OperationMode;
         this.Msg = Msg;
         this.X = X;
         this.Y = Y;
@@ -741,19 +791,19 @@
             this.Msg = valueArray["Msg"];
             this.Depth = valueArray["Depth"];
 
-            this.OperationMode = 0;
+            OperationMode = 0;
         }
 
         function popComment(valueArray) {
             this.Depth = valueArray["Depth"];
 
-            this.OperationMode = 1;
+            OperationMode = 1;
         }
 
         function collapseComment(valueArray) {
             this.Depth = valueArray["Depth"];
 
-            this.OperationMode = 2;
+            OperationMode = 2;
         }
 
         function changeCommentPosition(valueArray) {
@@ -761,20 +811,20 @@
             this.X = valueArray["X"];
             this.Y = valueArray["Y"];
 
-            this.OperationMode = 3;
+            OperationMode = 3;
         }
 
         function changeCommentContent(valueArray) {
             this.Depth = valueArray["Depth"];
             this.Msg = valueArray["Msg"];
 
-            this.OperationMode = 4;
+            OperationMode = 4;
         }
 
         function deleteComment(valueArray) {
             this.Depth = valueArray["Depth"];
 
-            this.OperationMode = 5;
+            OperationMode = 5;
         }
     }
 
@@ -792,6 +842,7 @@
         this.popOut = popOut;
         this.collapse = collapse;
 
+        //Initialize the text comment box
         init(textComment);
 
         function init(textComment) {
@@ -860,6 +911,10 @@
             $("#textbox" + textComment.Depth + " > div > textarea").hide();
             isCollapsed = true;
             depth = textComment.Depth;
+
+            $("#textbox" + depth + " > div > img").click(function(){
+                popOut();
+            });
         }
 
         function collapse() {
