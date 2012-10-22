@@ -43,7 +43,10 @@
 
         $("#whiteboard").hide();
 
-        $("#PresBoard").css("background-image", "url(@(Model.ImageUrl)background.png)");
+        $("#PresBoard").css({
+            "background-image": "url(@(Model.ImageUrl)background_mini.png)",
+            "background-repeat": "repeat"
+        });
         //$("#PresBoard").resizable().draggable();
 
         
