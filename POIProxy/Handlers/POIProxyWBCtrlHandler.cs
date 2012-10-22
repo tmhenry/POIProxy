@@ -70,5 +70,34 @@ namespace POIProxy.Handlers
             JavaScriptSerializer jsHandler = new JavaScriptSerializer();
             context.Clients.handleCommentMsg(jsHandler.Serialize(comment));
         }
+
+        //Handle comment in the format of a json string
+        public void handleStringComment(string cmntString)
+        {
+            JavaScriptSerializer jsHandler = new JavaScriptSerializer();
+            POIComment comment = jsHandler.Deserialize(cmntString, typeof(POIComment)) as POIComment;
+
+            comment.calculateSize();
+
+            //Send the comment to the presenters
+            //Forward the message to every other commanders
+            try
+            {
+                //TO-DO: do not use the hard coded session id in the future
+                var registery = POIProxyGlobalVar.Kernel.mySessionManager.Registery;
+                var session = registery.GetSessionById(0);
+
+                foreach (POIUser user in session.Commanders)
+                {
+                    if (user != myUser || true)
+                        user.SendData(comment.getPacket(), ConType.TCP_CONTROL);
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("Error in forwarding audience comment to presenter");
+            }
+
+        }
     }
 }

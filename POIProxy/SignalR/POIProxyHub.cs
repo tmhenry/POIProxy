@@ -5,15 +5,23 @@ using System.Text;
 
 using SignalR.Hubs;
 using POILibCommunication;
+using POIProxy.Handlers;
 
 namespace POIProxy.SignalRFun
 {
     [HubName("proxyHub")]
     public class POIProxyHub : Hub
     {
+        POIProxyWBCtrlHandler webWBHandler = new POIProxyWBCtrlHandler(new POIUser());
+
         public void EchoOnServer()
         {
             Clients.echoOnClient();
+        }
+
+        public void HandleCommentMsgOnServer(string msg)
+        {
+            webWBHandler.handleStringComment(msg);
         }
 
         public void JoinSession(int sessionId)

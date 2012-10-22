@@ -17,7 +17,7 @@
 <script type = "text/jscript">
     $(document).ready(function () {
         $.connection.hub.url = '@Model.SignalrUrl';
-        var poiProxy = $.connection.proxyHub;
+        poiProxy = $.connection.proxyHub;
 
         //Initialize the callback function for the hub
         poiProxy.echoOnClient = function () {
@@ -131,12 +131,6 @@
         ptrController.HidePointer();
     }
 
-    
-
-</script>
-
-<!--Handler functions -->
-<script type = "text/jscript">
     function initMenuBar() {
         $("#DrawingItem > img").attr("src", "@(Model.ImageUrl)pencil.png");
         $("#ColorItem > img").attr("src", "@(Model.ImageUrl)laser_icon.jpg");
@@ -159,6 +153,10 @@
         });
     }
 
+</script>
+
+<!--Handler functions -->
+<script type = "text/jscript">
     
     function duringSlideOnSideBar(event, ui) {
         if (!isStart) {
@@ -217,7 +215,8 @@
     }
 
     function showSlideInMainView(slideIndex) {
-        $(".MainSlideView").attr("src", $("#"+slideIndex).attr("src"));
+        $(".MainSlideView").attr("src", $("#" + slideIndex).attr("src"));
+        mainSlideViewIndex = slideIndex;
     }
 
     function getSlide(slideIndex) {
@@ -379,13 +378,22 @@
             this.touchend = dummyHandler;
         }
 
+        function clearCommentBoard() {
+            //Remove all the children under canvas stack
+            $("#canvasStack > .drawing").remove();
+            $("#canvasStack > .textbox").remove();
+            stackSize = 0;
+            textStackSize = 0;
+
+            drawings = [];
+            textboxes = [];
+        }
 
         function initDrawingContext() {
             var canvas = document.getElementById("canvas" + stackSize);
             if(canvas === null)
             {
                 setupDrawingCanvas(stackSize);
-                stackSize++;
             }
             else
             {
@@ -396,7 +404,9 @@
         function setupDrawingCanvas (canvasId) {
 
             var newCanvas = $('<canvas>Not supported!</canvas>');
+
             newCanvas.attr("id", "canvas" + canvasId);
+            newCanvas.attr("class", "drawing");
             newCanvas.attr("width", $("#canvasStack").width());
             newCanvas.attr("height", $("#canvasStack").height());
 
@@ -407,9 +417,17 @@
 
             $("#canvasStack").append(newCanvas);
             var newCurve = new POIDrawingCurve(newCanvas[0].getContext('2d'));
+            newCurve.Depth = canvasId;
+            newCurve.setupColor({
+                R: 255,
+                G: 255,
+                B: 255
+            });
+
             curve = newCurve;
 
             drawings[canvasId.toString()] = newCurve;
+            stackSize++;
         }
 
         function removeLastDrawing() {
@@ -463,9 +481,6 @@
                     }
 
                     var curDrawing = drawings[path.Depth.toString()];
-                    curDrawing.setupColor(
-                        "rgb(" + path.Color.R + ", " + path.Color.G + ", " + path.Color.B + " )"
-                    );
                     curDrawing.updateDrawing(path);
                     curDrawing.render();
 
@@ -510,14 +525,21 @@
 
         function saveComment() {
 
-            var curComment = {
+            var curComment = JSON.stringify({
+                "FrameNum" : mainSlideViewIndex,
                 "NumBeizerPath": stackSize,
                 "NumText" : textStackSize,
                 "Paths": drawings,
                 "Texts" : textboxes,
-            };
+            });
 
-            console.log(JSON.stringify(curComment));
+            console.log(curComment);
+
+            clearCommentBoard();
+            
+            poiProxy.handleCommentMsgOnServer(curComment);
+
+            handleCommentMsg(curComment);
         }
 
 
@@ -685,8 +707,6 @@
         }
     }
 </script>
-
-
 
 <!--Data smoother: in charge of stream data display-->
 <script type="text/javascript">
@@ -877,7 +897,8 @@
 
         function init(textComment) {
             var container = $('<div></div>', {
-                id: "textbox" + textComment.Depth
+                id: "textbox" + textComment.Depth,
+                class: "textbox"
             });
 
             container.css({
@@ -995,6 +1016,7 @@
 <script type = "text/javascript">
     function POIDrawingCurve(myContext) {
         //Private variables
+        var myself = this;
         var segments = [];
         var numPoints = 0;
         var startPoint;
@@ -1007,8 +1029,12 @@
         this.addPointToCurve = addPointToCurve;
         this.updateDrawing = updateDrawing;
         this.setupColor = setupColor;
+
         this.Points = points;
         this.NumPoints = numPoints;
+
+        this.Mode = 0;
+        this.Depth = 0;
 
         function updateDrawing(path) {
             for (var i = 0; i < path.NumPoints; i++) {
@@ -1018,13 +1044,14 @@
                     path.Points[i].Y * $("#canvasStack").height()
                 );
 
-
+                setupColor(path.Color);
                 addPointToCurve(curPoint);
             }
         }
 
         function setupColor(myColor) {
-            color = myColor;
+            myself.Color = myColor;
+            color = "rgb(" + myColor.R + ", " + myColor.G + ", " + myColor.B + " )";
         }
 
         //Function definitions
@@ -1077,7 +1104,7 @@
             points.push(pointPercentage);
 
             numPoints = numPoints + 1;
-            this.NumPoints = numPoints;
+            myself.NumPoints = numPoints;
         }
 
         function render() {
@@ -1165,6 +1192,9 @@
 <script type="text/javascript">
     //Global variables definitions
 
+    //Variable for connecting to POI Proxy
+    var poiProxy;
+
     // The pencil tool instance.
     var tool = new tool_pencil();
 
@@ -1180,8 +1210,9 @@
     //For showing presentation
     var curSlideIndex = 0;
     var preloadSlideIndex = 0;
+    var mainSlideViewIndex = 2;
 
     //For switching between drawing and pointer mode
-    var isPointerMode = true;
+    var isPointerMode = false;
 
 </script>
