@@ -159,6 +159,7 @@
         $("#MailItem > img").click(function(){
             //Save the current drawing
             tool.saveComment();
+            alert("Comment has been sent!");
         });
     }
 
@@ -527,7 +528,7 @@
             
             poiProxy.handleCommentMsgOnServer(curComment);
 
-            handleCommentMsg(curComment);
+            //handleCommentMsg(curComment);
         }
 
 
