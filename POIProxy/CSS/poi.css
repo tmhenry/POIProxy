@@ -108,6 +108,7 @@ textarea {
 {
     height: 100%;
     margin: auto;
+    border-radius: 5px ;
 }
     
 #MenuBar
