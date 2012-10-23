@@ -605,24 +605,17 @@
                 "Msg": ev._x + " " + ev._y
             });
 
-            /*
-            comment.createComment({
-                "X": 0.5,
-                "Y": 0.5,
-                "Depth": textStackSize,
-                "Msg": ev._x + " " + ev._y
-            });*/
-
             textStackSize++;
             updateTextbox(comment);
 
-            tool.mouseup = function () {
+            $("#canvasStack").click(function(event) {
                 for(var i=0; i<textStackSize; i++)
                 {
                     textboxes[i.toString()].collapse();
                 }
-            }
+            });
 
+            tool.mouseup = dummyHandler;
             tool.touchend = tool.mouseup;
             
         }
@@ -988,7 +981,12 @@
             updateContent(myself.Msg);
 
             $("#textbox" + myself.Depth + " > div > img").click(function(){
+                event.stopPropagation();
                 popOut();
+            });
+
+            $("#textbox" + myself.Depth + " > div > textarea").click(function(event){
+                event.stopPropagation();
             });
 
             popOut();
