@@ -89,6 +89,26 @@ textarea {
     height: 100%; 
     width: 90%;
 }
+
+#Logo
+{
+    position: absolute; 
+    width: 10%; 
+    left: 85%; 
+    top: 5%; 
+    height: 7%;
+    border-radius: 5px;
+    
+     -webkit-box-shadow: 0 8px 6px -6px black;
+    -moz-box-shadow: 0 8px 6px -6px black;
+        box-shadow: 0 8px 6px -6px black;
+}
+
+#Logo > img
+{
+    height: 100%;
+    margin: auto;
+}
     
 #MenuBar
 {
