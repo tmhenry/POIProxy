@@ -154,24 +154,16 @@
         });
 
          $("#PointerItem > img").click(function(){
-            if(!whiteboardEnabled) {
-                showWhiteboard();
-                drawingTool.switchToPointerMode();
-            }
-            else {
-                hideWhiteboard();
-            }
+           
+            showWhiteboard();
+            drawingTool.switchToPointerMode();
             
         });
 
         $("#CommentItem > img").click(function(){
-            if(!whiteboardEnabled) {
-                showWhiteboard();
-                drawingTool.switchToTextMode();
-            }
-            else {
-                hideWhiteboard();
-            }
+
+            showWhiteboard();
+            drawingTool.switchToTextMode();
         });
 
         $("#MailItem > img").click(function(){
@@ -396,6 +388,7 @@
         this.undo = removeLastDrawing;
         this.loadComment = loadComment;
         this.saveComment = saveComment;
+        this.collapseAllTextboxes = collapseAllTextboxes;
 
         var drawings = [];
         var textboxes = [];
@@ -444,6 +437,8 @@
             tool.touchstart = dummyHandler;
             tool.touchmove = dummyHandler;
             tool.touchend = dummyHandler;
+
+            $(context).click(collapseAllTextboxes);
         }
 
         function clearCommentBoard() {
@@ -544,6 +539,7 @@
                 case 0: //Create
                     if (textboxes[text.Depth.toString()] == null) {
                         textboxes[text.Depth.toString()] = new POITextBox(text, context);
+                        textStackSize++;
                         console.log("Msg: " + textboxes[text.Depth.toString()].Msg);
                     }
                     break;
@@ -588,6 +584,8 @@
 
             var cacheDrawingTool = new tool_pencil("#CommentCacheNext");
             cacheDrawingTool.loadComment(jQuery.parseJSON(curComment));
+            cacheDrawingTool.collapseAllTextboxes();
+            cacheDrawingTool.switchToIdleMode();
         }
 
 
@@ -664,18 +662,17 @@
                 "Msg": ev._x + " " + ev._y
             });
 
-            textStackSize++;
             updateTextbox(comment);
 
-            $(context).click(function(event) {
-                for(var i=0; i<textStackSize; i++)
-                {
-                    textboxes[i.toString()].collapse();
-                }
-            });
+            tool.switchToIdleMode();
+        }
 
-            tool.mouseup = dummyHandler;
-            tool.touchend = tool.mouseup;
+
+        function collapseAllTextboxes() {
+            for(var i=0; i<textStackSize; i++)
+            {
+                textboxes[i.toString()].collapse();
+            }
         }
 
 
