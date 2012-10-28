@@ -51,14 +51,8 @@
         //$("#PresBoard").resizable().draggable();
 
         
-        $("#PresBoardSideBarSlideRegion").slider({
-            orientation: "vertical",
-            slide: duringSlideOnSideBar,
-            start: startSlideOnSideBar,
-            stop: stopSlideOnSideBar
-        });
-
-        $(".ui-slider-handle").hide();
+        initSideBarSliding();
+        initMainContentSliding();
 
 
         //$("#PresBoardSideBarSlideRegion").slider("disable");
@@ -80,6 +74,29 @@
         var testCmntObject = new POICommentMsg();
         console.log(JSON.stringify(testCmntObject));
     });
+
+    function initSideBarSliding() {
+        $("#PresBoardSideBarSlideRegion").slider({
+            orientation: "vertical",
+            slide: duringSlideOnSideBar,
+            start: startSlide,
+            stop: stopSlide
+        });
+
+        $(".ui-slider-handle").hide();
+    }
+
+
+    function initMainContentSliding() {
+        $("#MainContentSlideRegion").slider({
+            orientation: "horizontal",
+            slide: duringSlideOnMainContent,
+            start: startSlide,
+            stop: stopSlide
+        });
+
+        $(".ui-slider-handle").hide();
+    }
 
     function updateUI() {
         // Apple detection object  
@@ -183,7 +200,20 @@
 
 <!--Handler functions -->
 <script type = "text/jscript">
-    
+
+    function duringSlideOnMainContent(event, ui) {
+        if (!isStart) {
+            startValue = ui.value;
+            //console.log("Start: " + startValue);
+            isStart = true;
+        }
+        else {
+            var percent = -(curTransformValue - (ui.value - startValue)) + "%";
+            //console.log("Slide: " + percent);
+            $("#MainContentContainer").css("left", percent);
+        }
+    }
+
     function duringSlideOnSideBar(event, ui) {
         if (!isStart) {
             startValue = ui.value;
@@ -197,11 +227,11 @@
         }
     }
 
-    function startSlideOnSideBar(event, ui) {
+    function startSlide(event, ui) {
         isStart = false;
     }
 
-    function stopSlideOnSideBar(event, ui) {
+    function stopSlide(event, ui) {
         curTransformValue = curTransformValue - (ui.value - startValue);
     }
 

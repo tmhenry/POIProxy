@@ -40,9 +40,15 @@ textarea {
     position: absolute; height: 17%; width: 100%; left: 0%; top: 0%;
 }
 
+#MainContentSlideRegion
+{
+    overflow: hidden; 
+    position: absolute; top: 15%; left: 18%; height: 80%; width: 80%;
+}
+
 #MainContentContainer
 {
-    position: absolute; top: 15%; left: 18%; height: 80%; width: 80%;
+    position: absolute; height: 100%; width: 100%; left: 0%; top: 0%;
 }
 
 #PresBoardMainDisplay
