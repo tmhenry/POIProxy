@@ -40,9 +40,29 @@ textarea {
     position: absolute; height: 17%; width: 100%; left: 0%; top: 0%;
 }
 
-#PresBoardMainDisplay
+#MainContentContainer
 {
     position: absolute; top: 15%; left: 18%; height: 80%; width: 80%;
+}
+
+#PresBoardMainDisplay
+{
+    position: absolute; height: 100%; width: 100%; left: 0%; top: 0%;
+}
+
+.CommentCache
+{
+    position: absolute; height: 100%; width: 100%; top: 0%;
+}
+
+#CommentCachePrev
+{
+    left: -100%;
+}
+
+#CommentCacheNext
+{
+    left: 100%;   
 }
             
             

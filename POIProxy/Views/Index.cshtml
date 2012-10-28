@@ -143,23 +143,40 @@
         $("#Logo > img").attr("src", "@(Model.ImageUrl)logo.png");
 
         $("#DrawingItem > img").click(function(){
-            showWhiteboard();
-            tool.switchToDrawingMode();
+            if(!whiteboardEnabled) {
+                showWhiteboard();
+                drawingTool.switchToDrawingMode();
+            }
+            else {
+                hideWhiteboard();
+            }
+            
         });
 
          $("#PointerItem > img").click(function(){
-            showWhiteboard();
-            tool.switchToPointerMode();
+            if(!whiteboardEnabled) {
+                showWhiteboard();
+                drawingTool.switchToPointerMode();
+            }
+            else {
+                hideWhiteboard();
+            }
+            
         });
 
         $("#CommentItem > img").click(function(){
-            showWhiteboard();
-            tool.switchToTextMode();
+            if(!whiteboardEnabled) {
+                showWhiteboard();
+                drawingTool.switchToTextMode();
+            }
+            else {
+                hideWhiteboard();
+            }
         });
 
         $("#MailItem > img").click(function(){
             //Save the current drawing
-            tool.saveComment();
+            drawingTool.saveComment();
             alert("Comment has been sent!");
         });
 
@@ -274,7 +291,8 @@
     }
 
     function showWhiteboard() {
-        
+        whiteboardEnabled = true;
+
         $("#whiteBoard").animate({
             top : "15%"
         },  200, 'linear', function () {
@@ -296,6 +314,9 @@
     }
 
     function hideWhiteboard() {
+
+        whiteboardEnabled = false;
+
         $("#whiteBoard").animate({
             top : "19%"
         },  50, 'linear', function () {
@@ -309,7 +330,7 @@
 
     function handleCommentMsg(msgString) {
         var comment = jQuery.parseJSON(msgString);
-        tool.loadComment(comment);
+        drawingTool.loadComment(comment);
         
         //alert('Handle comment!');
     }
@@ -325,22 +346,46 @@
 <script type="text/javascript">
 
     function initDrawing() {
-        var canvasStack = document.getElementById('canvasStack');
+        $(drawingTool.Context).bind(
+            'mousedown mousemove mouseup touchstart touchmove touchend',
+            ev_canvas
+        );
+    }
 
-        // Attach the mousedown, mousemove and mouseup event listeners.
-        canvasStack.addEventListener('mousedown', ev_canvas, false);
-        canvasStack.addEventListener('mousemove', ev_canvas, false);
-        canvasStack.addEventListener('mouseup', ev_canvas, false);
+    // The general-purpose event handler. This function just determines the mouse 
+    // position relative to the canvas element.
+    function ev_canvas(ev) {
+        switch (ev.type) {
+            case "touchstart":
+            case "touchmove":
+            case "touchend":
+                ev.preventDefault();
+                break;
+        }
 
-        //Attach the touchstart, touchmove and touchend event listeners.
-        canvasStack.addEventListener('touchstart', ev_canvas, false);
-        canvasStack.addEventListener('touchmove', ev_canvas, false);
-        canvasStack.addEventListener('touchend', ev_canvas, false);
+        /*
+        if (ev.layerX || ev.layerX == 0) { // Firefox
+            ev._x = ev.layerX;
+            ev._y = ev.layerY;
+        } else if (ev.offsetX || ev.offsetX == 0) { // Opera
+            ev._x = ev.offsetX;
+            ev._y = ev.offsetY;
+        }
+        */
+
+        ev._x = ev.pageX - $(drawingTool.Context).offset().left;
+        ev._y = ev.pageY - $(drawingTool.Context).offset().top;
+
+        // Call the event handler of the tool.
+        var func = drawingTool[ev.type];
+        if (func) {
+            func(ev);
+        }
     }
     
     // This painting tool works like a drawing pencil which tracks the mouse 
     // movements.
-    function tool_pencil() {
+    function tool_pencil(myContext) {
         var tool = this;
         this.started = false;
         var curve;
@@ -355,50 +400,56 @@
         var drawings = [];
         var textboxes = [];
 
-        this.switchToDrawingMode = function() {
-            this.mousedown = startDrawing;
-            this.mousemove = moveDrawing;
-            this.mouseup = mouseendDrawing;
+        //Initial the context of the tool
+        //For loading comment purpose
+        var context = myContext;
+        this.Context = context;
 
-            this.touchstart = startDrawing;
-            this.touchmove = moveDrawing;
-            this.touchend = touchendDrawing;
+
+        this.switchToDrawingMode = function() {
+            tool.mousedown = startDrawing;
+            tool.mousemove = moveDrawing;
+            tool.mouseup = mouseendDrawing;
+
+            tool.touchstart = startDrawing;
+            tool.touchmove = moveDrawing;
+            tool.touchend = touchendDrawing;
         }
 
         this.switchToTextMode = function() {
-            this.mousedown = dummyHandler;
-            this.mousemove = dummyHandler;
-            this.mouseup = createTextbox;
+            tool.mousedown = dummyHandler;
+            tool.mousemove = dummyHandler;
+            tool.mouseup = createTextbox;
 
-            this.touchstart = dummyHandler;
-            this.touchmove = dummyHandler;
-            this.touchend = createTextbox;
+            tool.touchstart = dummyHandler;
+            tool.touchmove = dummyHandler;
+            tool.touchend = createTextbox;
         }
 
         this.switchToPointerMode = function () {
-            this.mousedown = startPointer;
-            this.mousemove = movePointer;
-            this.mouseup = endPointer;
+            tool.mousedown = startPointer;
+            tool.mousemove = movePointer;
+            tool.mouseup = endPointer;
 
-            this.touchstart = startPointer;
-            this.touchmove = movePointer;
-            this.touchend = endPointer;
+            tool.touchstart = startPointer;
+            tool.touchmove = movePointer;
+            tool.touchend = endPointer;
         }
 
         this.switchToIdleMode = function () {
-            this.mousedown = dummyHandler;
-            this.mousemove = dummyHandler;
-            this.mouseup = dummyHandler;
+            tool.mousedown = dummyHandler;
+            tool.mousemove = dummyHandler;
+            tool.mouseup = dummyHandler;
 
-            this.touchstart = dummyHandler;
-            this.touchmove = dummyHandler;
-            this.touchend = dummyHandler;
+            tool.touchstart = dummyHandler;
+            tool.touchmove = dummyHandler;
+            tool.touchend = dummyHandler;
         }
 
         function clearCommentBoard() {
             //Remove all the children under canvas stack
-            $("#canvasStack > .drawing").remove();
-            $("#canvasStack > .textbox").remove();
+            $(context + " > .drawing").remove();
+            $(context + " > .textbox").remove();
             stackSize = 0;
             textStackSize = 0;
 
@@ -424,21 +475,21 @@
 
             newCanvas.attr("id", "canvas" + canvasId);
             newCanvas.attr("class", "drawing");
-            newCanvas.attr("width", $("#canvasStack").width());
-            newCanvas.attr("height", $("#canvasStack").height());
+            newCanvas.attr("width", $(context).width());
+            newCanvas.attr("height", $(context).height());
 
             newCanvas.css({
                 position: "absolute",
                 left: "0%"
             });
 
-            $("#canvasStack").append(newCanvas);
+            $(context).append(newCanvas);
             var newCurve = new POIDrawingCurve(newCanvas[0].getContext('2d'));
             newCurve.Depth = canvasId;
             newCurve.setupColor({
-                R: 255,
-                G: 255,
-                B: 255
+                R: 0,
+                G: 0,
+                B: 0
             });
 
             curve = newCurve;
@@ -492,7 +543,7 @@
             switch (text.Mode) {
                 case 0: //Create
                     if (textboxes[text.Depth.toString()] == null) {
-                        textboxes[text.Depth.toString()] = new POITextBox(text);
+                        textboxes[text.Depth.toString()] = new POITextBox(text, context);
                         console.log("Msg: " + textboxes[text.Depth.toString()].Msg);
                     }
                     break;
@@ -535,7 +586,8 @@
             
             poiProxy.handleCommentMsgOnServer(curComment);
 
-            //handleCommentMsg(curComment);
+            var cacheDrawingTool = new tool_pencil("#CommentCacheNext");
+            cacheDrawingTool.loadComment(jQuery.parseJSON(curComment));
         }
 
 
@@ -572,8 +624,8 @@
 
         function movePointer(ev) {
             ptrController.UpdateLocation({
-                "X": ev._x / $("#canvasStack").width(),
-                "Y": ev._y / $("#canvasStack").height()
+                "X": ev._x / $(context).width(),
+                "Y": ev._y / $(context).height()
             });
         }
 
@@ -606,8 +658,8 @@
             var comment = new POITextComment();
 
             comment.createComment({
-                "X": ev._x / $("#canvasStack").width(),
-                "Y": ev._y / $("#canvasStack").height(),
+                "X": ev._x / $(context).width(),
+                "Y": ev._y / $(context).height(),
                 "Depth": textStackSize,
                 "Msg": ev._x + " " + ev._y
             });
@@ -615,7 +667,7 @@
             textStackSize++;
             updateTextbox(comment);
 
-            $("#canvasStack").click(function(event) {
+            $(context).click(function(event) {
                 for(var i=0; i<textStackSize; i++)
                 {
                     textboxes[i.toString()].collapse();
@@ -624,7 +676,6 @@
 
             tool.mouseup = dummyHandler;
             tool.touchend = tool.mouseup;
-            
         }
 
 
@@ -632,36 +683,7 @@
 
 
 
-    // The general-purpose event handler. This function just determines the mouse 
-    // position relative to the canvas element.
-    function ev_canvas(ev) {
-        switch (ev.type) {
-            case "touchstart":
-            case "touchmove":
-            case "touchend":
-                ev.preventDefault();
-                break;
-        }
-
-        /*
-        if (ev.layerX || ev.layerX == 0) { // Firefox
-            ev._x = ev.layerX;
-            ev._y = ev.layerY;
-        } else if (ev.offsetX || ev.offsetX == 0) { // Opera
-            ev._x = ev.offsetX;
-            ev._y = ev.offsetY;
-        }
-        */
-
-        ev._x = ev.pageX - $('#canvasStack').offset().left;
-        ev._y = ev.pageY - $('#canvasStack').offset().top;
-
-        // Call the event handler of the tool.
-        var func = tool[ev.type];
-        if (func) {
-            func(ev);
-        }
-    }
+    
 </script>
 
 <!--Pointer control tool-->
@@ -894,9 +916,11 @@
 
 <!--Textcomment rendering class-->
 <script type="text/javascript">
-    function POITextBox(textComment) {
+    function POITextBox(textComment, myContext) {
         var isCollapsed;
         var myself = this;
+
+        var context = myContext;
 
         this.Mode = 0;
         this.Depth = 0;
@@ -975,7 +999,7 @@
 
             container.append(iconContainer);
             container.append(textFieldContainer);
-            $("#canvasStack").append(container);
+            $(context).append(container);
 
             $("#textbox" + textComment.Depth + " > div > textarea").hide();
             isCollapsed = true;
@@ -1215,7 +1239,7 @@
     var poiProxy;
 
     // The pencil tool instance.
-    var tool = new tool_pencil();
+    var drawingTool = new tool_pencil("#canvasStack");
 
     // The laser pointer controller
     var ptrController = new LaserPointerController();
@@ -1229,5 +1253,11 @@
     var curSlideIndex = 0;
     var preloadSlideIndex = 0;
     var mainSlideViewIndex = 2;
+
+    //For comments
+    var slideComments;
+
+    //For whiteboard control
+    var whiteboardEnabled = false;
 
 </script>
