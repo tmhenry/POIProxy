@@ -388,6 +388,7 @@
         this.undo = removeLastDrawing;
         this.loadComment = loadComment;
         this.saveComment = saveComment;
+        this.clearCommentBoard = clearCommentBoard;
         this.collapseAllTextboxes = collapseAllTextboxes;
 
         var drawings = [];
@@ -453,14 +454,11 @@
         }
 
         function initDrawingContext() {
-            var canvas = document.getElementById("canvas" + stackSize);
-            if(canvas === null)
-            {
+            if(drawings[stackSize.toString()] == null) {
                 setupDrawingCanvas(stackSize);
             }
-            else
-            {
-                curve = new POIDrawingCurve(canvas.getContext('2d'));
+            else{
+                curve = drawings[stackSize.toString()];
             }
         }
 
@@ -583,6 +581,7 @@
             poiProxy.handleCommentMsgOnServer(curComment);
 
             var cacheDrawingTool = new tool_pencil("#CommentCacheNext");
+            cacheDrawingTool.clearCommentBoard();
             cacheDrawingTool.loadComment(jQuery.parseJSON(curComment));
             cacheDrawingTool.collapseAllTextboxes();
             cacheDrawingTool.switchToIdleMode();
