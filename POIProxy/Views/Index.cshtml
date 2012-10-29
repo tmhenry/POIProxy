@@ -237,15 +237,12 @@
 
     function stopSlideMainContent(event, ui) {
         curTransformValueMainContent = curTransformValueMainContent + (ui.value - startValue);
+        loadCommentIntoCache();
+
+        var transformNeeded = false;
         if (curTransformValueMainContent > 0) {
-            $("#MainContentContainer").animate({
-                left: "0%"
-            }, 200, 'linear', function () {
-
-            });
-
-            
             curTransformValueMainContent = 0;
+            transformNeeded = true;
         }
         else {
             var numViews = $("#MainContentContainer > div").size() - 1;
@@ -253,27 +250,40 @@
             console.log(numViews + " " + curTransformValueMainContent);
 
             if (curTransformValueMainContent + numViews * 100 < 0) {
-                $("#MainContentContainer").animate({
-                    left: - numViews * 100 + "%"
-                }, 200, 'linear', function () {
-
-                });
-
+                transformNeeded = true;
                 curTransformValueMainContent = -numViews * 100;
+            }
+            else {
+                var gridCount = parseInt(curTransformValueMainContent / 100);
+                if (curTransformValueMainContent < gridCount * 100 - 50) {
+                    curTransformValueMainContent = gridCount * 100 - 100;
+                } else {
+                    curTransformValueMainContent = gridCount * 100;
+                }
+                
+                transformNeeded = true;
             }
         }
 
-        loadCommentIntoCache();
+        if (transformNeeded) {
+            $("#MainContentContainer").animate({
+                left: curTransformValueMainContent + "%"
+            }, 200, 'linear', function () {
+
+            });
+        }
     }
 
     function stopSlideSideBar(event, ui) {
         curTransformValueSideBar = curTransformValueSideBar - (ui.value - startValue);
-        if (curTransformValueSideBar < 0) {
+        if (curTransformValueSideBar > 0) {
             $("#PresBoardSideBar").animate({
                 top: "0%"
             }, 200, 'linear', function () {
 
             });
+
+            curTransformValueSideBar = 0;
         }
     }
 
