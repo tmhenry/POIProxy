@@ -283,7 +283,7 @@
         if (curTransformValueMainContent + numViews * 100 < 50) {
 
             //load comment with index equals to numViews
-            var comment = myStorage.getComment(curSlideIndex, numViews);
+            var comment = myStorage.getComment(mainSlideViewIndex, numViews);
             if (comment != undefined) {
                 var curCommentCache = $('<div></div>', {
                     id: "commentCache" + numViews,
@@ -294,6 +294,7 @@
                     class: "CommentCacheView"
                 });
 
+                curCacheView.attr('src', $("#" + mainSlideViewIndex).attr("src"));
                 curCommentCache.append(curCacheView);
                 curCommentCache.css('left', (numViews + 1) * 100 + '%');
 
@@ -346,6 +347,10 @@
     function showSlideInMainView(slideIndex) {
         $(".MainSlideView").attr("src", $("#" + slideIndex).attr("src"));
         mainSlideViewIndex = slideIndex;
+
+        //Clear the comment cache
+        $("#MainContentContainer > .CommentCache").remove();
+        loadCommentIntoCache();
     }
 
     function getSlide(slideIndex) {
@@ -686,7 +691,7 @@
             poiProxy.handleCommentMsgOnServer(curCommentStr);
 
             //Save the comment into the local storage
-            myStorage.saveComment(curSlideIndex, curComment);
+            myStorage.saveComment(mainSlideViewIndex, curComment);
 
             //If necessary, load the comments into cache view
             loadCommentIntoCache();
