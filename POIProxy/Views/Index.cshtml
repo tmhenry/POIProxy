@@ -81,7 +81,7 @@
             orientation: "vertical",
             slide: duringSlideOnSideBar,
             start: startSlide,
-            stop: stopSlide
+            stop: stopSlideSideBar
         });
 
         $(".ui-slider-handle").hide();
@@ -93,7 +93,7 @@
             orientation: "horizontal",
             slide: duringSlideOnMainContent,
             start: startSlide,
-            stop: stopSlide
+            stop: stopSlideMainContent
         });
 
         $(".ui-slider-handle").hide();
@@ -202,6 +202,7 @@
 <!--Handler functions -->
 <script type = "text/jscript">
 
+
     function duringSlideOnMainContent(event, ui) {
         if (!isStart) {
             startValue = ui.value;
@@ -209,8 +210,8 @@
             isStart = true;
         }
         else {
-            var percent = -(curTransformValue - (ui.value - startValue)) + "%";
-            //console.log("Slide: " + percent);
+            var percent = curTransformValueMainContent + (ui.value - startValue) + "%";
+            console.log("Slide: " + percent);
             $("#MainContentContainer").css("left", percent);
         }
     }
@@ -222,7 +223,7 @@
             isStart = true;
         }
         else {
-            var percent = curTransformValue - (ui.value - startValue) + "%";
+            var percent = curTransformValueSideBar - (ui.value - startValue) + "%";
             //console.log("Slide: " + percent);
             $("#PresBoardSideBar").css("top", percent);
         }
@@ -232,8 +233,77 @@
         isStart = false;
     }
 
-    function stopSlide(event, ui) {
-        curTransformValue = curTransformValue - (ui.value - startValue);
+    function stopSlideMainContent(event, ui) {
+        curTransformValueMainContent = curTransformValueMainContent + (ui.value - startValue);
+        if (curTransformValueMainContent > 0) {
+            $("#MainContentContainer").animate({
+                left: "0%"
+            }, 200, 'linear', function () {
+
+            });
+
+            
+            curTransformValueMainContent = 0;
+        }
+        else {
+            var numViews = $("#MainContentContainer > div").size() - 1;
+
+            console.log(numViews + " " + curTransformValueMainContent);
+
+            if (curTransformValueMainContent + numViews * 100 < 0) {
+                $("#MainContentContainer").animate({
+                    left: - numViews * 100 + "%"
+                }, 200, 'linear', function () {
+
+                });
+
+                curTransformValueMainContent = -numViews * 100;
+            }
+        }
+
+        loadCommentIntoCache();
+    }
+
+    function stopSlideSideBar(event, ui) {
+        curTransformValueSideBar = curTransformValueSideBar - (ui.value - startValue);
+        if (curTransformValueSideBar < 0) {
+            $("#PresBoardSideBar").animate({
+                top: "0%"
+            }, 200, 'linear', function () {
+
+            });
+        }
+    }
+
+    function loadCommentIntoCache() {
+        var numViews = $("#MainContentContainer > div").size() - 1;
+
+        if (curTransformValueMainContent + numViews * 100 < 50) {
+
+            //load comment with index equals to numViews
+            var comment = myStorage.getComment(curSlideIndex, numViews);
+            if (comment != undefined) {
+                var curCommentCache = $('<div></div>', {
+                    id: "commentCache" + numViews,
+                    class: "CommentCache"
+                });
+
+                var curCacheView = $('<img>', {
+                    class: "CommentCacheView"
+                });
+
+                curCommentCache.append(curCacheView);
+                curCommentCache.css('left', (numViews + 1) * 100 + '%');
+
+                $("#MainContentContainer").append(curCommentCache);
+
+                var cacheDrawingTool = new tool_pencil("#commentCache" + numViews);
+                cacheDrawingTool.clearCommentBoard();
+                cacheDrawingTool.loadComment(comment);
+                cacheDrawingTool.collapseAllTextboxes();
+                cacheDrawingTool.switchToIdleMode();
+            }
+        }
     }
 
     function handlePresCtrlMsg(msgString) {
@@ -273,8 +343,6 @@
 
     function showSlideInMainView(slideIndex) {
         $(".MainSlideView").attr("src", $("#" + slideIndex).attr("src"));
-        $("#CommentCachePrev > img").attr("src", $("#" + slideIndex).attr("src"));
-        $("#CommentCacheNext > img").attr("src", $("#" + slideIndex).attr("src"));
         mainSlideViewIndex = slideIndex;
     }
 
@@ -599,25 +667,27 @@
 
         function saveComment() {
 
-            var curComment = JSON.stringify({
+            var curComment = {
                 "FrameNum" : mainSlideViewIndex,
                 "NumBeizerPath": stackSize,
                 "NumText" : textStackSize,
                 "Paths": drawings,
                 "Texts" : textboxes,
-            });
+            };
+            var curCommentStr = JSON.stringify(curComment);
 
-            console.log(curComment);
+            console.log(curCommentStr);
 
             clearCommentBoard();
             
-            poiProxy.handleCommentMsgOnServer(curComment);
+            //Send the comment to the proxy
+            poiProxy.handleCommentMsgOnServer(curCommentStr);
 
-            var cacheDrawingTool = new tool_pencil("#CommentCacheNext");
-            cacheDrawingTool.clearCommentBoard();
-            cacheDrawingTool.loadComment(jQuery.parseJSON(curComment));
-            cacheDrawingTool.collapseAllTextboxes();
-            cacheDrawingTool.switchToIdleMode();
+            //Save the comment into the local storage
+            myStorage.saveComment(curSlideIndex, curComment);
+
+            //If necessary, load the comments into cache view
+            loadCommentIntoCache();
         }
 
 
@@ -1261,6 +1331,50 @@
     }
 </script>
 
+<!--Comment Storage tool-->
+<script type="text/javascript">
+    function storageTool() {
+        var storage = this;
+
+        //Comment should be a json string
+        this.saveComment = function (slideIndex, comment) {
+            var numComments = storage.getNumComments(slideIndex);
+            localStorage.setItem(
+                "comment_" + slideIndex + "_" + numComments,
+                JSON.stringify(comment)
+            );
+
+            setNumComments(numComments + 1);
+        }
+
+        this.getComment = function (slideIndex, commentIndex) {
+            var comment = localStorage.getItem("comment_" + slideIndex + "_" + commentIndex);
+            if (comment == undefined) {
+                return undefined;
+            }
+            else {
+                return jQuery.parseJSON(comment);
+            }
+        }
+
+
+        this.getNumComments = function (slideIndex) {
+            var numComments = localStorage.getItem("numComment_" + slideIndex);
+            if(numComments == undefined) {
+                localStorage.setItem("numComment_" + slideIndex, 0);
+                return 0;
+            }
+            else {
+                return parseInt(numComments);
+            }
+        }
+
+        function setNumComments(slideIndex, numComments) {
+            localStorage.setItem("numComment_" + slideIndex, numComments);
+        }
+        
+    }
+</script>
 
 <!--Global variables definition-->
 <script type="text/javascript">
@@ -1278,7 +1392,8 @@
     //For slider region control
     var isStart = false;
     var startValue;
-    var curTransformValue = 0;
+    var curTransformValueSideBar = 0;
+    var curTransformValueMainContent = 0;
 
     //For showing presentation
     var curSlideIndex = 0;
@@ -1286,7 +1401,7 @@
     var mainSlideViewIndex = 2;
 
     //For comments storage
-    var slideComments;
+    var myStorage = new storageTool();
 
     //For whiteboard control
     var whiteboardEnabled = false;
