@@ -78,6 +78,20 @@ textarea {
     position: absolute; top: 1%; left: 1%; height: 98%; width: 98%; 
     background-image: none;
 }
+
+#CacheNextView
+{
+    border-radius: 8px ;
+    position: absolute; top: 1%; left: 1%; height: 98%; width: 98%; 
+    background-image: none;
+}
+
+#CachePrevView
+{
+    border-radius: 8px ;
+    position: absolute; top: 1%; left: 1%; height: 98%; width: 98%; 
+    background-image: none;   
+}
             
 .ui-slider .ui-slider-handle 
 { 

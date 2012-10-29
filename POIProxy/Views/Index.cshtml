@@ -14,6 +14,7 @@
 <script src = "@(Model.ScriptUrl)jquery.ui.touch-punch.min.js" type="text/javascript"></script>
 
 
+
 <!--Initialization routines-->
 <script type = "text/jscript">
     $(document).ready(function () {
@@ -272,6 +273,8 @@
 
     function showSlideInMainView(slideIndex) {
         $(".MainSlideView").attr("src", $("#" + slideIndex).attr("src"));
+        $("#CommentCachePrev > img").attr("src", $("#" + slideIndex).attr("src"));
+        $("#CommentCacheNext > img").attr("src", $("#" + slideIndex).attr("src"));
         mainSlideViewIndex = slideIndex;
     }
 
@@ -510,7 +513,7 @@
             var newCurve = new POIDrawingCurve(newCanvas[0].getContext('2d'));
             newCurve.Depth = canvasId;
             newCurve.setupColor({
-                R: 0,
+                R: 255,
                 G: 0,
                 B: 0
             });
@@ -1258,6 +1261,8 @@
     }
 </script>
 
+
+<!--Global variables definition-->
 <script type="text/javascript">
     //Global variables definitions
 
@@ -1269,7 +1274,7 @@
 
     // The laser pointer controller
     var ptrController = new LaserPointerController();
-    
+
     //For slider region control
     var isStart = false;
     var startValue;
@@ -1280,7 +1285,7 @@
     var preloadSlideIndex = 0;
     var mainSlideViewIndex = 2;
 
-    //For comments
+    //For comments storage
     var slideComments;
 
     //For whiteboard control
