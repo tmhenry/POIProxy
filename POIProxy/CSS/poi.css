@@ -68,11 +68,31 @@ textarea {
     background-image: none;
 }
 
-#CommentCacheNext
+#FootBarContainer
 {
-    left: 100%;   
-}
-            
+    border-radius: 3px;
+    position: absolute; top: 93%; left: 93%; height: 5%; width: 5%;
+    background-color: White;
+    border-style:solid;
+    border-color:Black;
+    border-width: 1px; 
+}   
+
+#NumCommentsLabel
+{
+    position: absolute;
+    width: 30%;
+    height: 10%;
+    line-height: 10%;
+    top: 45%;
+    left: 0%;
+    text-align:center;
+} 
+
+#CommentsLabel
+{
+    position: absolute; height: 90%; width: 65%; top: 5%; left:32%;  
+}     
             
 .MainSlideView
 {

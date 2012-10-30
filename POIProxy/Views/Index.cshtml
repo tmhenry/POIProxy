@@ -1,6 +1,6 @@
 ﻿@{
-    _Layout = "Layout.htm";
-    ViewBag.Title = @Model.Name;
+	_Layout = "Layout.htm";
+	ViewBag.Title = @Model.Name;
 }
 
 <link type="text/css" href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.21/themes/ui-lightness/jquery-ui.css" rel="Stylesheet" />
@@ -17,186 +17,196 @@
 
 <!--Initialization routines-->
 <script type = "text/jscript">
-    $(document).ready(function () {
-        $.connection.hub.url = '@Model.SignalrUrl';
-        poiProxy = $.connection.proxyHub;
+	$(document).ready(function () {
+		$.connection.hub.url = '@Model.SignalrUrl';
+		poiProxy = $.connection.proxyHub;
 
-        //Initialize the callback function for the hub
-        poiProxy.echoOnClient = function () {
-            //alert("LZ SB!!!");
-        }
+		//Initialize the callback function for the hub
+		poiProxy.echoOnClient = function () {
+			//alert("LZ SB!!!");
+		}
 
-        //Register handlers
-        poiProxy.handlePresCtrlMsg = handlePresCtrlMsg;
-        poiProxy.handleWhiteboardMsg = handleWhiteboardMsg;
-        poiProxy.handleCommentMsg = handleCommentMsg;
-        poiProxy.handlePtrCtrlMsg = handlePtrCtrlMsg;
+		//Register handlers
+		poiProxy.handlePresCtrlMsg = handlePresCtrlMsg;
+		poiProxy.handleWhiteboardMsg = handleWhiteboardMsg;
+		poiProxy.handleCommentMsg = handleCommentMsg;
+		poiProxy.handlePtrCtrlMsg = handlePtrCtrlMsg;
 
-        poiProxy.getSlide = getSlide;
-        poiProxy.startPresentation = startPresentation;
-        
+		poiProxy.getSlide = getSlide;
+		poiProxy.startPresentation = startPresentation;
+		
 
-        //Connect to the hub
-        $.connection.hub.start().done(function () {
-            //alert("Start done!");
-            poiProxy.echoOnServer();
-            poiProxy.joinSession(0);
+		//Connect to the hub
+		$.connection.hub.start().done(function () {
+			//alert("Start done!");
+			poiProxy.echoOnServer();
+			poiProxy.joinSession(0);
+		});
+
+		$("#whiteboard").hide();
+
+		$("#PresBoard").css({
+			"background-image": "url(@(Model.ImageUrl)background_mini.png)",
+			"background-repeat": "repeat"
+		});
+		//$("#PresBoard").resizable().draggable();
+
+		
+		initSideBarSliding();
+		initMainContentSliding();
+		
+
+		//$("#PresBoardSideBarSlideRegion").slider("disable");
+
+		
+		updateUI();
+		initMenuBar();
+        initFootBar();
+		initDrawing();
+		initLaserPointerLayer();
+
+		var comment = new POITextComment();
+		comment.createComment({
+			"X" : 10,
+			"Y" : 20,
+			"Depth" : 0,
+			"Msg": "How are you"
+		});
+
+		var testCmntObject = new POICommentMsg();
+		console.log(JSON.stringify(testCmntObject));
+	});
+
+	function initSideBarSliding() {
+		$("#PresBoardSideBarSlideRegion").slider({
+			orientation: "vertical",
+			slide: duringSlideOnSideBar,
+			start: startSlide,
+			stop: stopSlideSideBar
+		});
+
+		$(".ui-slider-handle").hide();
+	}
+
+
+	function initMainContentSliding() {
+		$("#MainContentSlideRegion").slider({
+			orientation: "horizontal",
+			slide: duringSlideOnMainContent,
+			start: startSlide,
+			stop: stopSlideMainContent
+		});
+
+		$(".ui-slider-handle").hide();
+	}
+
+	function updateUI() {
+		// Apple detection object  
+		var Apple = {};
+		Apple.UA = navigator.userAgent;
+		Apple.Device = false;
+		Apple.Types = ["iPhone", "iPod", "iPad"];
+		for (var d = 0; d < Apple.Types.length; d++) {
+			var t = Apple.Types[d];
+			Apple[t] = !!Apple.UA.match(new RegExp(t, "i"));
+			Apple.Device = Apple.Device || Apple[t];
+		}
+
+		if (Apple.iPad) {
+			initIpadLayout();
+		}
+		else {
+			initCommonLayout();
+		}
+	}
+
+	function initCommonLayout() {
+		var board = $("#PresBoard");
+		var totalWidth = board.width();
+		var myHeight = parseInt((totalWidth) / 100 * 75);
+
+		board.css({
+			height: myHeight
+		});
+	}
+
+	function initIpadLayout() {
+		$("#PresBoard").css({
+			width: "100%",
+			left: "0%",
+			top: "0%",
+		});
+
+		$("#PresBoard").css("border-radius", 0);
+
+		var board = $("#PresBoard");
+		var totalWidth = board.width();
+		var myHeight = parseInt((totalWidth) / 100 * 74);
+
+		board.css({
+			height: myHeight
+		});
+	}
+
+	function initLaserPointerLayer() {
+		//Set the src for the laser pointer
+		$("#laserPointer").attr("src", "@(Model.ImageUrl)laser.png");
+		ptrController.HidePointer();
+	}
+
+	function initMenuBar() {
+		$("#DrawingItem > img").attr("src", "@(Model.ImageUrl)pencil.png");
+		$("#PointerItem > img").attr("src", "@(Model.ImageUrl)laser_icon.jpg");
+		$("#CommentItem > img").attr("src", "@(Model.ImageUrl)speech_bubble.png");
+		$("#MailItem > img").attr("src", "@(Model.ImageUrl)mail.png");
+		$("#Logo > img").attr("src", "@(Model.ImageUrl)logo.png");
+
+		$("#DrawingItem > img").click(function(){
+			if(!whiteboardEnabled) {
+				showWhiteboard();
+				drawingTool.switchToDrawingMode();
+			}
+			else {
+				hideWhiteboard();
+			}
+			
+		});
+
+		 $("#PointerItem > img").click(function(){
+		   
+			showWhiteboard();
+			drawingTool.switchToPointerMode();
+			
+		});
+
+		$("#CommentItem > img").click(function(){
+
+			showWhiteboard();
+			drawingTool.switchToTextMode();
+		});
+
+		$("#MailItem > img").click(function(){
+			//Save the current drawing
+			drawingTool.saveComment();
+            updateNumCommentsLabel();
+
+			alert("Comment has been sent!");
+			hideWhiteboard();
+		});
+
+		$("#Logo").css("cursor", "hand");
+
+		$("#Logo > img").click(function(){
+			window.location.href = "http://www.pipeofinsight.com";
+		});
+	}
+
+    function initFootBar() {
+        $("#CommentsLabel").attr("src", "@(Model.ImageUrl)comment_drawing.png");
+        $("#FootBarContainer").click(function(){
+            alert("Drag on the slide horizontally to see the comments");
         });
-
-        $("#whiteboard").hide();
-
-        $("#PresBoard").css({
-            "background-image": "url(@(Model.ImageUrl)background_mini.png)",
-            "background-repeat": "repeat"
-        });
-        //$("#PresBoard").resizable().draggable();
-
-        
-        initSideBarSliding();
-        initMainContentSliding();
-
-
-        //$("#PresBoardSideBarSlideRegion").slider("disable");
-
-        
-        updateUI();
-        initMenuBar();
-        initDrawing();
-        initLaserPointerLayer();
-
-        var comment = new POITextComment();
-        comment.createComment({
-            "X" : 10,
-            "Y" : 20,
-            "Depth" : 0,
-            "Msg": "How are you"
-        });
-
-        var testCmntObject = new POICommentMsg();
-        console.log(JSON.stringify(testCmntObject));
-    });
-
-    function initSideBarSliding() {
-        $("#PresBoardSideBarSlideRegion").slider({
-            orientation: "vertical",
-            slide: duringSlideOnSideBar,
-            start: startSlide,
-            stop: stopSlideSideBar
-        });
-
-        $(".ui-slider-handle").hide();
-    }
-
-
-    function initMainContentSliding() {
-        $("#MainContentSlideRegion").slider({
-            orientation: "horizontal",
-            slide: duringSlideOnMainContent,
-            start: startSlide,
-            stop: stopSlideMainContent
-        });
-
-        $(".ui-slider-handle").hide();
-    }
-
-    function updateUI() {
-        // Apple detection object  
-        var Apple = {};
-        Apple.UA = navigator.userAgent;
-        Apple.Device = false;
-        Apple.Types = ["iPhone", "iPod", "iPad"];
-        for (var d = 0; d < Apple.Types.length; d++) {
-            var t = Apple.Types[d];
-            Apple[t] = !!Apple.UA.match(new RegExp(t, "i"));
-            Apple.Device = Apple.Device || Apple[t];
-        }
-
-        if (Apple.iPad) {
-            initIpadLayout();
-        }
-        else {
-            initCommonLayout();
-        }
-    }
-
-    function initCommonLayout() {
-        var board = $("#PresBoard");
-        var totalWidth = board.width();
-        var myHeight = parseInt((totalWidth) / 100 * 75);
-
-        board.css({
-            height: myHeight
-        });
-    }
-
-    function initIpadLayout() {
-        $("#PresBoard").css({
-            width: "100%",
-            left: "0%",
-            top: "0%",
-        });
-
-        $("#PresBoard").css("border-radius", 0);
-
-        var board = $("#PresBoard");
-        var totalWidth = board.width();
-        var myHeight = parseInt((totalWidth) / 100 * 74);
-
-        board.css({
-            height: myHeight
-        });
-    }
-
-    function initLaserPointerLayer() {
-        //Set the src for the laser pointer
-        $("#laserPointer").attr("src", "@(Model.ImageUrl)laser.png");
-        ptrController.HidePointer();
-    }
-
-    function initMenuBar() {
-        $("#DrawingItem > img").attr("src", "@(Model.ImageUrl)pencil.png");
-        $("#PointerItem > img").attr("src", "@(Model.ImageUrl)laser_icon.jpg");
-        $("#CommentItem > img").attr("src", "@(Model.ImageUrl)speech_bubble.png");
-        $("#MailItem > img").attr("src", "@(Model.ImageUrl)mail.png");
-        $("#Logo > img").attr("src", "@(Model.ImageUrl)logo.png");
-
-        $("#DrawingItem > img").click(function(){
-            if(!whiteboardEnabled) {
-                showWhiteboard();
-                drawingTool.switchToDrawingMode();
-            }
-            else {
-                hideWhiteboard();
-            }
-            
-        });
-
-         $("#PointerItem > img").click(function(){
-           
-            showWhiteboard();
-            drawingTool.switchToPointerMode();
-            
-        });
-
-        $("#CommentItem > img").click(function(){
-
-            showWhiteboard();
-            drawingTool.switchToTextMode();
-        });
-
-        $("#MailItem > img").click(function(){
-            //Save the current drawing
-            drawingTool.saveComment();
-            alert("Comment has been sent!");
-
-            hideWhiteboard();
-        });
-
-        $("#Logo").css("cursor", "hand");
-
-        $("#Logo > img").click(function(){
-            window.location.href = "http://www.pipeofinsight.com";
-        });
+        updateNumCommentsLabel();
     }
 
 </script>
@@ -205,1222 +215,1265 @@
 <script type = "text/jscript">
 
 
-    function duringSlideOnMainContent(event, ui) {
-        if (!isStart) {
-            startValue = ui.value;
-            //console.log("Start: " + startValue);
-            isStart = true;
-        }
-        else {
-            var percent = curTransformValueMainContent + (ui.value - startValue) + "%";
-            console.log("Slide: " + percent);
-            $("#MainContentContainer").css("left", percent);
-        }
-    }
+	function duringSlideOnMainContent(event, ui) {
+		if (!isStart) {
+			startValue = ui.value;
+			//console.log("Start: " + startValue);
+			isStart = true;
+		}
+		else {
+			var percent = curTransformValueMainContent + (ui.value - startValue) + "%";
+			console.log("Slide: " + percent);
+			$("#MainContentContainer").css("left", percent);
+		}
+	}
 
-    function duringSlideOnSideBar(event, ui) {
-        if (!isStart) {
-            startValue = ui.value;
-            //console.log("Start: " + startValue);
-            isStart = true;
-        }
-        else {
-            var percent = curTransformValueSideBar - (ui.value - startValue) + "%";
-            //console.log("Slide: " + percent);
-            $("#PresBoardSideBar").css("top", percent);
-        }
-    }
+	function duringSlideOnSideBar(event, ui) {
+		if (!isStart) {
+			startValue = ui.value;
+			//console.log("Start: " + startValue);
+			isStart = true;
+		}
+		else {
+			var percent = curTransformValueSideBar - (ui.value - startValue) + "%";
+			//console.log("Slide: " + percent);
+			$("#PresBoardSideBar").css("top", percent);
+		}
+	}
 
-    function startSlide(event, ui) {
-        isStart = false;
-    }
+	function startSlide(event, ui) {
+		isStart = false;
+	}
 
-    function stopSlideMainContent(event, ui) {
-        curTransformValueMainContent = curTransformValueMainContent + (ui.value - startValue);
-        loadCommentIntoCache();
+	function stopSlideMainContent(event, ui) {
+		curTransformValueMainContent = curTransformValueMainContent + (ui.value - startValue);
+		loadCommentIntoCache();
 
-        var transformNeeded = false;
-        if (curTransformValueMainContent > 0) {
-            curTransformValueMainContent = 0;
-            transformNeeded = true;
-        }
-        else {
-            var numViews = $("#MainContentContainer > div").size() - 1;
+		var transformNeeded = false;
+		if (curTransformValueMainContent > 0) {
+			curTransformValueMainContent = 0;
+			transformNeeded = true;
+		}
+		else {
+			var numViews = $("#MainContentContainer > div").size() - 1;
 
-            console.log(numViews + " " + curTransformValueMainContent);
+			console.log(numViews + " " + curTransformValueMainContent);
 
-            if (curTransformValueMainContent + numViews * 100 < 0) {
-                transformNeeded = true;
-                curTransformValueMainContent = -numViews * 100;
-            }
-            else {
-                var gridCount = parseInt(curTransformValueMainContent / 100);
-                if (curTransformValueMainContent < gridCount * 100 - 50) {
-                    curTransformValueMainContent = gridCount * 100 - 100;
-                } else {
-                    curTransformValueMainContent = gridCount * 100;
-                }
-                
-                transformNeeded = true;
-            }
-        }
+			if (curTransformValueMainContent + numViews * 100 < 0) {
+				transformNeeded = true;
+				curTransformValueMainContent = -numViews * 100;
+			}
+			else {
+				var gridCount = parseInt(curTransformValueMainContent / 100);
+				if (curTransformValueMainContent < gridCount * 100 - 50) {
+					curTransformValueMainContent = gridCount * 100 - 100;
+				} else {
+					curTransformValueMainContent = gridCount * 100;
+				}
+				
+				transformNeeded = true;
+			}
+		}
 
-        if (transformNeeded) {
-            $("#MainContentContainer").animate({
-                left: curTransformValueMainContent + "%"
-            }, 200, 'linear', function () {
+		if (transformNeeded) {
+			$("#MainContentContainer").animate({
+				left: curTransformValueMainContent + "%"
+			}, 200, 'linear', function () {
 
-            });
-        }
-    }
+			});
+		}
+	}
 
-    function stopSlideSideBar(event, ui) {
-        curTransformValueSideBar = curTransformValueSideBar - (ui.value - startValue);
-        if (curTransformValueSideBar > 0) {
-            $("#PresBoardSideBar").animate({
-                top: "0%"
-            }, 200, 'linear', function () {
+	function stopSlideSideBar(event, ui) {
+		curTransformValueSideBar = curTransformValueSideBar - (ui.value - startValue);
+		if (curTransformValueSideBar > 0) {
+			$("#PresBoardSideBar").animate({
+				top: "0%"
+			}, 200, 'linear', function () {
 
-            });
+			});
 
-            curTransformValueSideBar = 0;
-        }
-    }
+			curTransformValueSideBar = 0;
+		}
+	}
 
-    function loadCommentIntoCache() {
-        var numViews = $("#MainContentContainer > div").size() - 1;
+	function updateNumCommentsLabel() {
+	    var numComments;
+	    if (showPublicComment) {
+	        numComments = myStorage.getNumPublicComments(mainSlideViewIndex);
+	    } else {
+	        numComments = myStorage.getNumPrivateComments(mainSlideViewIndex);
+	    }
 
-        if (curTransformValueMainContent + numViews * 100 < 50) {
+        $("#NumCommentsLabel").html(numComments);
+	}
 
+	function loadCommentIntoCache() {
+		var numViews = $("#MainContentContainer > div").size() - 1;
+
+		if (curTransformValueMainContent + numViews * 100 < 50) {
+			
             //load comment with index equals to numViews
-            var comment = myStorage.getComment(mainSlideViewIndex, numViews);
-            if (comment != undefined) {
-                var curCommentCache = $('<div></div>', {
-                    id: "commentCache" + numViews,
-                    class: "CommentCache"
-                });
+            var comment;
+			if (showPublicComment) {
+			    comment = myStorage.getPublicComment(mainSlideViewIndex, numViews);
+			} else {
+                comment = myStorage.getPrivateComment(mainSlideViewIndex, numViews);
+			}
+			
+			if (comment != undefined) {
+				var curCommentCache = $('<div></div>', {
+					id: "commentCache" + numViews,
+					class: "CommentCache"
+				});
 
-                var curCacheView = $('<img>', {
-                    class: "CommentCacheView"
-                });
+				var curCacheView = $('<img>', {
+					class: "CommentCacheView"
+				});
 
-                curCacheView.attr('src', $("#" + mainSlideViewIndex).attr("src"));
-                curCommentCache.append(curCacheView);
-                curCommentCache.css('left', (numViews + 1) * 100 + '%');
+				curCacheView.attr('src', $("#" + mainSlideViewIndex).attr("src"));
+				curCommentCache.append(curCacheView);
+				curCommentCache.css('left', (numViews + 1) * 100 + '%');
 
-                $("#MainContentContainer").append(curCommentCache);
+				$("#MainContentContainer").append(curCommentCache);
 
-                var cacheDrawingTool = new tool_pencil("#commentCache" + numViews);
-                cacheDrawingTool.clearCommentBoard();
-                cacheDrawingTool.loadComment(comment);
-                cacheDrawingTool.collapseAllTextboxes();
-                cacheDrawingTool.switchToIdleMode();
-            }
-        }
-    }
+				var cacheDrawingTool = new tool_pencil("#commentCache" + numViews);
+				cacheDrawingTool.clearCommentBoard();
+				cacheDrawingTool.loadComment(comment);
+				cacheDrawingTool.collapseAllTextboxes();
+				cacheDrawingTool.switchToIdleMode();
+			}
+		}
+	}
 
-    function handlePresCtrlMsg(msgString) {
-        var msg = jQuery.parseJSON(msgString);
+	function handlePresCtrlMsg(msgString) {
+		var msg = jQuery.parseJSON(msgString);
 
-        switch (msg['CtrlType']) {
-            case 0: //Next
-                presentationNext();
-                break;
-            case 1: //Prev
-                presentationPrev();
-                break;
-        };
-    }
+		switch (msg['CtrlType']) {
+			case 0: //Next
+				presentationNext();
+				break;
+			case 1: //Prev
+				presentationPrev();
+				break;
+		};
+	}
 
-    function startPresentation() {
-        curSlideIndex = 0;
-        showSlideInMainView(curSlideIndex);
-    }
+	function startPresentation() {
+		curSlideIndex = 0;
+		showSlideInMainView(curSlideIndex);
+	}
 
-    function presentationNext() {
-        if(curSlideIndex < preloadSlideIndex)
-        {
-            curSlideIndex++;
-            console.log("Current slide: " + curSlideIndex);
-            showSlideInMainView(curSlideIndex);
-        }
-    }
+	function presentationNext() {
+		if(curSlideIndex < preloadSlideIndex)
+		{
+			curSlideIndex++;
+			console.log("Current slide: " + curSlideIndex);
+			showSlideInMainView(curSlideIndex);
+		}
+	}
 
-    function presentationPrev() {
-        if(curSlideIndex > 0) {
-            curSlideIndex--;
-            console.log("Current slide: " + curSlideIndex);
-            showSlideInMainView(curSlideIndex);
-        }
-    }
+	function presentationPrev() {
+		if(curSlideIndex > 0) {
+			curSlideIndex--;
+			console.log("Current slide: " + curSlideIndex);
+			showSlideInMainView(curSlideIndex);
+		}
+	}
 
-    function showSlideInMainView(slideIndex) {
-        $(".MainSlideView").attr("src", $("#" + slideIndex).attr("src"));
-        mainSlideViewIndex = slideIndex;
+	function showSlideInMainView(slideIndex) {
+		$(".MainSlideView").attr("src", $("#" + slideIndex).attr("src"));
+		mainSlideViewIndex = slideIndex;
 
-        //Clear the comment cache
-        $("#MainContentContainer > .CommentCache").remove();
-        loadCommentIntoCache();
-    }
+		//Clear the comment cache
+		$("#MainContentContainer > .CommentCache").remove();
+        updateNumCommentsLabel();
+		loadCommentIntoCache();
+	}
 
-    function getSlide(slideIndex) {
-        console.log("Get slide: " + slideIndex);
-        if(slideIndex > preloadSlideIndex) {
-            preloadSlideIndex = slideIndex;
-        }
-        
-        url = "@(Model.SessionUrl)" + "?sessionId=0&slideIndex=" + slideIndex;
+	function getSlide(slideIndex) {
+		console.log("Get slide: " + slideIndex);
+		if(slideIndex > preloadSlideIndex) {
+			preloadSlideIndex = slideIndex;
+		}
+		
+		url = "@(Model.SessionUrl)" + "?sessionId=0&slideIndex=" + slideIndex;
 
-        var img = $('<img>', {
-            id: slideIndex,
-            class: 'SlideAbstractView',
-            src: url
-        });
+		var img = $('<img>', {
+			id: slideIndex,
+			class: 'SlideAbstractView',
+			src: url
+		});
 
-        img.click(function () {
-            showSlideInMainView(slideIndex);
-        });
+		img.click(function () {
+			showSlideInMainView(slideIndex);
+		});
 
-        var topPercent = slideIndex*110 + 5;
-        img.css('top', topPercent + "%");
+		var topPercent = slideIndex*110 + 5;
+		img.css('top', topPercent + "%");
 
-        $("#PresBoardSideBar").append(img);
-    }
+		$("#PresBoardSideBar").append(img);
+	}
 
-    function handleWhiteboardMsg(msgString) {
-        var msg = jQuery.parseJSON(msgString);
+	function handleWhiteboardMsg(msgString) {
+		var msg = jQuery.parseJSON(msgString);
 
-        switch(msg['CtrlType']) {
-            case 0:
-                showWhiteboard();
-                break;
-            case 1:
-                hideWhiteboard();
-                break;
-        };
-    }
+		switch(msg['CtrlType']) {
+			case 0:
+				showWhiteboard();
+				break;
+			case 1:
+				hideWhiteboard();
+				break;
+		};
+	}
 
-    function showWhiteboard() {
-        whiteboardEnabled = true;
+	function showWhiteboard() {
+		whiteboardEnabled = true;
 
-        $("#whiteBoard").animate({
-            top : "15%"
-        },  200, 'linear', function () {
-        
-        /*
-            //Start another round 
-            $("#whiteBoard").animate({
-                top : "13%"
-            },  50, 'linear', function () {
-                $("#whiteBoard").animate({
-                    top : "15%"
-                },  50, 'linear', function () {
-                
-                });
-            });*/
-        });
+		$("#whiteBoard").animate({
+			top : "15%"
+		},  200, 'linear', function () {
+		
+		/*
+			//Start another round 
+			$("#whiteBoard").animate({
+				top : "13%"
+			},  50, 'linear', function () {
+				$("#whiteBoard").animate({
+					top : "15%"
+				},  50, 'linear', function () {
+				
+				});
+			});*/
+		});
 
-        //$("#whiteBoard").slideDown('slow', function(){});
-    }
+		//$("#whiteBoard").slideDown('slow', function(){});
+	}
 
-    function hideWhiteboard() {
+	function hideWhiteboard() {
 
-        whiteboardEnabled = false;
+		whiteboardEnabled = false;
 
-        $("#whiteBoard").animate({
-            top : "19%"
-        },  50, 'linear', function () {
-            $("#whiteBoard").animate({
-                top : "-82%"
-            },  400, 'linear', function () {
-                
-            });
-        });
-    }
+		$("#whiteBoard").animate({
+			top : "19%"
+		},  50, 'linear', function () {
+			$("#whiteBoard").animate({
+				top : "-82%"
+			},  400, 'linear', function () {
+				
+			});
+		});
+	}
 
-    function handleCommentMsg(msgString) {
-        var comment = jQuery.parseJSON(msgString);
-        drawingTool.loadComment(comment);
-        
-        //alert('Handle comment!');
-    }
+	function handleCommentMsg(msgString) {
+		var comment = jQuery.parseJSON(msgString);
+		drawingTool.loadComment(comment);
+		
+		//alert('Handle comment!');
+	}
 
-    function handlePtrCtrlMsg(msgString) {
-        //Pass it to the controller
-        ptrController.ProcessMsg(msgString);
-    }
+	function handlePtrCtrlMsg(msgString) {
+		//Pass it to the controller
+		ptrController.ProcessMsg(msgString);
+	}
 
 </script>
 
 <!--Comment tools-->
 <script type="text/javascript">
 
-    function initDrawing() {
-        $(drawingTool.Context).bind(
-            'mousedown mousemove mouseup touchstart touchmove touchend',
-            ev_canvas
-        );
-    }
-
-    // The general-purpose event handler. This function just determines the mouse 
-    // position relative to the canvas element.
-    function ev_canvas(ev) {
-        switch (ev.type) {
-            case "touchstart":
-            case "touchmove":
-            case "touchend":
-                ev.preventDefault();
-                break;
-        }
-
-        /*
-        if (ev.layerX || ev.layerX == 0) { // Firefox
-            ev._x = ev.layerX;
-            ev._y = ev.layerY;
-        } else if (ev.offsetX || ev.offsetX == 0) { // Opera
-            ev._x = ev.offsetX;
-            ev._y = ev.offsetY;
-        }
-        */
-
-        ev._x = ev.pageX - $(drawingTool.Context).offset().left;
-        ev._y = ev.pageY - $(drawingTool.Context).offset().top;
-
-        // Call the event handler of the tool.
-        var func = drawingTool[ev.type];
-        if (func) {
-            func(ev);
-        }
-    }
-    
-    // This painting tool works like a drawing pencil which tracks the mouse 
-    // movements.
-    function tool_pencil(myContext) {
-        var tool = this;
-        this.started = false;
-        var curve;
-
-        var stackSize = 0;
-        var textStackSize = 0;
-
-        this.undo = removeLastDrawing;
-        this.loadComment = loadComment;
-        this.saveComment = saveComment;
-        this.clearCommentBoard = clearCommentBoard;
-        this.collapseAllTextboxes = collapseAllTextboxes;
-
-        var drawings = [];
-        var textboxes = [];
-
-        //Initial the context of the tool
-        //For loading comment purpose
-        var context = myContext;
-        this.Context = context;
-
-
-        this.switchToDrawingMode = function() {
-            tool.mousedown = startDrawing;
-            tool.mousemove = moveDrawing;
-            tool.mouseup = mouseendDrawing;
-
-            tool.touchstart = startDrawing;
-            tool.touchmove = moveDrawing;
-            tool.touchend = touchendDrawing;
-        }
-
-        this.switchToTextMode = function() {
-            tool.mousedown = dummyHandler;
-            tool.mousemove = dummyHandler;
-            tool.mouseup = createTextbox;
-
-            tool.touchstart = dummyHandler;
-            tool.touchmove = dummyHandler;
-            tool.touchend = createTextbox;
-        }
-
-        this.switchToPointerMode = function () {
-            tool.mousedown = startPointer;
-            tool.mousemove = movePointer;
-            tool.mouseup = endPointer;
-
-            tool.touchstart = startPointer;
-            tool.touchmove = movePointer;
-            tool.touchend = endPointer;
-        }
-
-        this.switchToIdleMode = function () {
-            tool.mousedown = dummyHandler;
-            tool.mousemove = dummyHandler;
-            tool.mouseup = dummyHandler;
-
-            tool.touchstart = dummyHandler;
-            tool.touchmove = dummyHandler;
-            tool.touchend = dummyHandler;
-
-            $(context).click(collapseAllTextboxes);
-        }
-
-        function clearCommentBoard() {
-            //Remove all the children under canvas stack
-            $(context + " > .drawing").remove();
-            $(context + " > .textbox").remove();
-            stackSize = 0;
-            textStackSize = 0;
-
-            drawings = [];
-            textboxes = [];
-        }
-
-        function initDrawingContext() {
-            if(drawings[stackSize.toString()] == null) {
-                setupDrawingCanvas(stackSize);
-            }
-            else{
-                curve = drawings[stackSize.toString()];
-            }
-        }
-
-        function setupDrawingCanvas (canvasId) {
-
-            var newCanvas = $('<canvas>Not supported!</canvas>');
-
-            newCanvas.attr("id", "canvas" + canvasId);
-            newCanvas.attr("class", "drawing");
-            newCanvas.attr("width", $(context).width());
-            newCanvas.attr("height", $(context).height());
-
-            newCanvas.css({
-                position: "absolute",
-                left: "0%"
-            });
-
-            $(context).append(newCanvas);
-            var newCurve = new POIDrawingCurve(newCanvas[0].getContext('2d'));
-            newCurve.Depth = canvasId;
-            newCurve.setupColor({
-                R: 255,
-                G: 0,
-                B: 0
-            });
-
-            curve = newCurve;
-
-            drawings[canvasId.toString()] = newCurve;
-            stackSize++;
-        }
-
-        function removeLastDrawing() {
-            var canvas = document.getElementById(stackSize - 1);
-            if (canvas !== null) {
-                canvas.parentNode.removeChild(canvas);
-
-                delete drawings[stackSize.toString()];
-                stackSize--;
-            }
-        }
-
-        function loadComment(comment) {
-
-            for (var i = 0; i < comment.NumBeizerPath; i++) {
-                updateDrawing(comment.Paths[i]);
-            }
-
-            for (var i = 0; i < comment.NumText; i++) {
-                updateTextbox(comment.Texts[i]);
-            }
-        }
-
-        function updateDrawing(path) {
-            switch (path.Mode) {
-                case 0: //Realtime
-                    //Check if the context with given depth exists
-                    if (drawings[path.Depth.toString()] == null) {
-                        setupDrawingCanvas(path.Depth);
-                    }
-
-                    var curDrawing = drawings[path.Depth.toString()];
-                    curDrawing.updateDrawing(path);
-                    curDrawing.render();
-
-                    break;
-                case 1: //All
-                    break;
-            };
-        }
-
-        //Load the text comment 
-        function updateTextbox(text) {
-           
-            switch (text.Mode) {
-                case 0: //Create
-                    if (textboxes[text.Depth.toString()] == null) {
-                        textboxes[text.Depth.toString()] = new POITextBox(text, context);
-                        textStackSize++;
-                        console.log("Msg: " + textboxes[text.Depth.toString()].Msg);
-                    }
-                    break;
-                case 1: //Pop
-                    var curText = textboxes[text.Depth.toString()];
-                    curText.popOut();
-                    break;
-                case 2: //Collapse
-                    var curText = textboxes[text.Depth.toString()];
-                    curText.collapse();
-                    break;
-                case 3: //Position changed
-                    var curText = textboxes[text.Depth.toString()];
-                    curText.updatePosition(text.X, text.Y);
-                    break;
-                case 4: //Content changed
-                    var curText = textboxes[text.Depth.toString()];
-                    curText.updateContent(text.Msg);
-                    break;
-                case 5: //Delete
-                    //To be completed
-
-                    break;                
-            }
-        }
-
-        function saveComment() {
-
-            var curComment = {
-                "FrameNum" : mainSlideViewIndex,
-                "NumBeizerPath": stackSize,
-                "NumText" : textStackSize,
-                "Paths": drawings,
-                "Texts" : textboxes,
-            };
-            var curCommentStr = JSON.stringify(curComment);
-
-            console.log(curCommentStr);
-
-            clearCommentBoard();
-            
-            //Send the comment to the proxy
-            poiProxy.handleCommentMsgOnServer(curCommentStr);
-
-            //Save the comment into the local storage
-            myStorage.saveComment(mainSlideViewIndex, curComment);
-
-            //If necessary, load the comments into cache view
-            loadCommentIntoCache();
-        }
-
-
-        // This is called when you start holding down the mouse button.
-        // This starts the pencil drawing.
-        function startDrawing(ev) {
-            initDrawingContext();
-
-            var point = new point2D();
-            point.construct(ev._x, ev._y);
-            curve.addPointToCurve(point);
-            tool.started = true;
-        };
-
-        function startPointer(ev) {
-            movePointer(ev);
-            $("#whiteBoard").css("cursor", "none");
-            ptrController.ShowPointer();
-        }
-
-        // This function is called every time you move the mouse. Obviously, it only 
-        // draws if the tool.started state is set to true (when you are holding down 
-        // the mouse button).
-        function moveDrawing(ev) {
-            if (tool.started) {
-                //context.lineTo(ev._x, ev._y);
-                //context.stroke();
-                var point = new point2D();
-                point.construct(ev._x, ev._y);
-                curve.addPointToCurve(point);
-                curve.render();
-            }
-        };
-
-        function movePointer(ev) {
-            ptrController.UpdateLocation({
-                "X": ev._x / $(context).width(),
-                "Y": ev._y / $(context).height()
-            });
-        }
-
-        // This is called when you release the mouse button.
-        function mouseendDrawing(ev) {
-            if (tool.started) {
-                tool.mousemove(ev);
-                tool.started = false;
-            }
-        };
-
-        function touchendDrawing(ev) {
-            if (tool.started) {
-                //tool.touchmove(ev);
-                tool.started = false;
-            }
-        };
-
-        function endPointer(ev) {
-            $("#whiteBoard").css("cursor", "auto");
-            ptrController.HidePointer();
-        }
-
-        function dummyHandler(ev) {
-            //Do nothing
-        }
-
-        //Handlers for textmode
-        function createTextbox(ev) {
-            var comment = new POITextComment();
-
-            comment.createComment({
-                "X": ev._x / $(context).width(),
-                "Y": ev._y / $(context).height(),
-                "Depth": textStackSize,
-                "Msg": ev._x + " " + ev._y
-            });
-
-            updateTextbox(comment);
-
-            tool.switchToIdleMode();
-        }
-
-
-        function collapseAllTextboxes() {
-            for(var i=0; i<textStackSize; i++)
-            {
-                textboxes[i.toString()].collapse();
-            }
-        }
-
-
-    }
-
-
-
-    
+	function initDrawing() {
+		$(drawingTool.Context).bind(
+			'mousedown mousemove mouseup touchstart touchmove touchend',
+			ev_canvas
+		);
+	}
+
+	// The general-purpose event handler. This function just determines the mouse 
+	// position relative to the canvas element.
+	function ev_canvas(ev) {
+		switch (ev.type) {
+			case "touchstart":
+			case "touchmove":
+			case "touchend":
+				ev.preventDefault();
+				break;
+		}
+
+		/*
+		if (ev.layerX || ev.layerX == 0) { // Firefox
+			ev._x = ev.layerX;
+			ev._y = ev.layerY;
+		} else if (ev.offsetX || ev.offsetX == 0) { // Opera
+			ev._x = ev.offsetX;
+			ev._y = ev.offsetY;
+		}
+		*/
+
+		ev._x = ev.pageX - $(drawingTool.Context).offset().left;
+		ev._y = ev.pageY - $(drawingTool.Context).offset().top;
+
+		// Call the event handler of the tool.
+		var func = drawingTool[ev.type];
+		if (func) {
+			func(ev);
+		}
+	}
+	
+	// This painting tool works like a drawing pencil which tracks the mouse 
+	// movements.
+	function tool_pencil(myContext) {
+		var tool = this;
+		this.started = false;
+		var curve;
+
+		var stackSize = 0;
+		var textStackSize = 0;
+
+		this.undo = removeLastDrawing;
+		this.loadComment = loadComment;
+		this.saveComment = saveComment;
+		this.clearCommentBoard = clearCommentBoard;
+		this.collapseAllTextboxes = collapseAllTextboxes;
+
+		var drawings = [];
+		var textboxes = [];
+
+		//Initial the context of the tool
+		//For loading comment purpose
+		var context = myContext;
+		this.Context = context;
+
+
+		this.switchToDrawingMode = function() {
+			tool.mousedown = startDrawing;
+			tool.mousemove = moveDrawing;
+			tool.mouseup = mouseendDrawing;
+
+			tool.touchstart = startDrawing;
+			tool.touchmove = moveDrawing;
+			tool.touchend = touchendDrawing;
+		}
+
+		this.switchToTextMode = function() {
+			tool.mousedown = dummyHandler;
+			tool.mousemove = dummyHandler;
+			tool.mouseup = createTextbox;
+
+			tool.touchstart = dummyHandler;
+			tool.touchmove = dummyHandler;
+			tool.touchend = createTextbox;
+		}
+
+		this.switchToPointerMode = function () {
+			tool.mousedown = startPointer;
+			tool.mousemove = movePointer;
+			tool.mouseup = endPointer;
+
+			tool.touchstart = startPointer;
+			tool.touchmove = movePointer;
+			tool.touchend = endPointer;
+		}
+
+		this.switchToIdleMode = function () {
+			tool.mousedown = dummyHandler;
+			tool.mousemove = dummyHandler;
+			tool.mouseup = dummyHandler;
+
+			tool.touchstart = dummyHandler;
+			tool.touchmove = dummyHandler;
+			tool.touchend = dummyHandler;
+
+			$(context).click(collapseAllTextboxes);
+		}
+
+		function clearCommentBoard() {
+			//Remove all the children under canvas stack
+			$(context + " > .drawing").remove();
+			$(context + " > .textbox").remove();
+			stackSize = 0;
+			textStackSize = 0;
+
+			drawings = [];
+			textboxes = [];
+		}
+
+		function initDrawingContext() {
+			if(drawings[stackSize.toString()] == null) {
+				setupDrawingCanvas(stackSize);
+			}
+			else{
+				curve = drawings[stackSize.toString()];
+			}
+		}
+
+		function setupDrawingCanvas (canvasId) {
+
+			var newCanvas = $('<canvas>Not supported!</canvas>');
+
+			newCanvas.attr("id", "canvas" + canvasId);
+			newCanvas.attr("class", "drawing");
+			newCanvas.attr("width", $(context).width());
+			newCanvas.attr("height", $(context).height());
+
+			newCanvas.css({
+				position: "absolute",
+				left: "0%"
+			});
+
+			$(context).append(newCanvas);
+			var newCurve = new POIDrawingCurve(newCanvas[0].getContext('2d'));
+			newCurve.Depth = canvasId;
+			newCurve.setupColor({
+				R: 255,
+				G: 0,
+				B: 0
+			});
+
+			curve = newCurve;
+
+			drawings[canvasId.toString()] = newCurve;
+			stackSize++;
+		}
+
+		function removeLastDrawing() {
+			var canvas = document.getElementById(stackSize - 1);
+			if (canvas !== null) {
+				canvas.parentNode.removeChild(canvas);
+
+				delete drawings[stackSize.toString()];
+				stackSize--;
+			}
+		}
+
+		function loadComment(comment) {
+
+			for (var i = 0; i < comment.NumBeizerPath; i++) {
+				updateDrawing(comment.Paths[i]);
+			}
+
+			for (var i = 0; i < comment.NumText; i++) {
+				updateTextbox(comment.Texts[i]);
+			}
+		}
+
+		function updateDrawing(path) {
+			switch (path.Mode) {
+				case 0: //Realtime
+					//Check if the context with given depth exists
+					if (drawings[path.Depth.toString()] == null) {
+						setupDrawingCanvas(path.Depth);
+					}
+
+					var curDrawing = drawings[path.Depth.toString()];
+					curDrawing.updateDrawing(path);
+					curDrawing.render();
+
+					break;
+				case 1: //All
+					break;
+			};
+		}
+
+		//Load the text comment 
+		function updateTextbox(text) {
+		   
+			switch (text.Mode) {
+				case 0: //Create
+					if (textboxes[text.Depth.toString()] == null) {
+						textboxes[text.Depth.toString()] = new POITextBox(text, context);
+						textStackSize++;
+						console.log("Msg: " + textboxes[text.Depth.toString()].Msg);
+					}
+					break;
+				case 1: //Pop
+					var curText = textboxes[text.Depth.toString()];
+					curText.popOut();
+					break;
+				case 2: //Collapse
+					var curText = textboxes[text.Depth.toString()];
+					curText.collapse();
+					break;
+				case 3: //Position changed
+					var curText = textboxes[text.Depth.toString()];
+					curText.updatePosition(text.X, text.Y);
+					break;
+				case 4: //Content changed
+					var curText = textboxes[text.Depth.toString()];
+					curText.updateContent(text.Msg);
+					break;
+				case 5: //Delete
+					//To be completed
+
+					break;                
+			}
+		}
+
+		function saveComment() {
+
+			var curComment = {
+				"FrameNum" : mainSlideViewIndex,
+				"NumBeizerPath": stackSize,
+				"NumText" : textStackSize,
+				"Paths": drawings,
+				"Texts" : textboxes,
+			};
+			var curCommentStr = JSON.stringify(curComment);
+
+			console.log(curCommentStr);
+
+			clearCommentBoard();
+			
+			//Send the comment to the proxy
+			poiProxy.handleCommentMsgOnServer(curCommentStr);
+
+			//Save the comment into the local storage
+			myStorage.savePrivateComment(mainSlideViewIndex, curComment);
+
+			//If necessary, load the comments into cache view
+			loadCommentIntoCache();
+		}
+
+
+		// This is called when you start holding down the mouse button.
+		// This starts the pencil drawing.
+		function startDrawing(ev) {
+			initDrawingContext();
+
+			var point = new point2D();
+			point.construct(ev._x, ev._y);
+			curve.addPointToCurve(point);
+			tool.started = true;
+		};
+
+		function startPointer(ev) {
+			movePointer(ev);
+			$("#whiteBoard").css("cursor", "none");
+			ptrController.ShowPointer();
+		}
+
+		// This function is called every time you move the mouse. Obviously, it only 
+		// draws if the tool.started state is set to true (when you are holding down 
+		// the mouse button).
+		function moveDrawing(ev) {
+			if (tool.started) {
+				//context.lineTo(ev._x, ev._y);
+				//context.stroke();
+				var point = new point2D();
+				point.construct(ev._x, ev._y);
+				curve.addPointToCurve(point);
+				curve.render();
+			}
+		};
+
+		function movePointer(ev) {
+			ptrController.UpdateLocation({
+				"X": ev._x / $(context).width(),
+				"Y": ev._y / $(context).height()
+			});
+		}
+
+		// This is called when you release the mouse button.
+		function mouseendDrawing(ev) {
+			if (tool.started) {
+				tool.mousemove(ev);
+				tool.started = false;
+			}
+		};
+
+		function touchendDrawing(ev) {
+			if (tool.started) {
+				//tool.touchmove(ev);
+				tool.started = false;
+			}
+		};
+
+		function endPointer(ev) {
+			$("#whiteBoard").css("cursor", "auto");
+			ptrController.HidePointer();
+		}
+
+		function dummyHandler(ev) {
+			//Do nothing
+		}
+
+		//Handlers for textmode
+		function createTextbox(ev) {
+			var comment = new POITextComment();
+
+			comment.createComment({
+				"X": ev._x / $(context).width(),
+				"Y": ev._y / $(context).height(),
+				"Depth": textStackSize,
+				"Msg": ev._x + " " + ev._y
+			});
+
+			updateTextbox(comment);
+
+			tool.switchToIdleMode();
+		}
+
+
+		function collapseAllTextboxes() {
+			for(var i=0; i<textStackSize; i++)
+			{
+				textboxes[i.toString()].collapse();
+			}
+		}
+
+
+	}
+
+
+
+	
 </script>
 
 <!--Pointer control tool-->
 <script type = "text/javascript">
-    function LaserPointerController() {
-        var dataManager = new StreamDataManager(100);
+	function LaserPointerController() {
+		var dataManager = new StreamDataManager(100);
 
-        this.ProcessMsg = ProcessMsg;
-        this.ShowPointer = showPointer;
-        this.HidePointer = hidePointer;
-        this.UpdateLocation = updateLocation;
+		this.ProcessMsg = ProcessMsg;
+		this.ShowPointer = showPointer;
+		this.HidePointer = hidePointer;
+		this.UpdateLocation = updateLocation;
 
-        function showPointer() {
-            $("#laserPointer").show();
-        }
-
-
-        function hidePointer() {
-            $("#laserPointer").hide();
-        }
-
-        function eventExecution(ptrEvent) {
-            var msg = ptrEvent;
-
-            //Update pointer position
-            /*
-            $("#laserPointer").css({
-                left: parseInt(100 * msg.X) + "%",
-                top: parseInt(100 * msg.Y) + "%"
-            });*/
-
-            updateLocation(msg);
-
-            switch (msg.Type) {
-                case 0: //Start
-                    showPointer();
-                    break;
-
-                case 1: //Move
-
-                    break;
-
-                case 2: //End
-                    hidePointer();
-                    break;
-            }
-        }
-
-        function updateLocation(point) {
-            $("#laserPointer").css({
-                left: parseInt(100 * point.X) + "%",
-                top: parseInt(100 * point.Y) + "%"
-            });
-        }
+		function showPointer() {
+			$("#laserPointer").show();
+		}
 
 
-        function ProcessMsg(msgString) {
-            var msg = jQuery.parseJSON(msgString);
+		function hidePointer() {
+			$("#laserPointer").hide();
+		}
 
-            dataManager.scheduleEvent(msg, eventExecution);
-        }
-    }
+		function eventExecution(ptrEvent) {
+			var msg = ptrEvent;
+
+			//Update pointer position
+			/*
+			$("#laserPointer").css({
+				left: parseInt(100 * msg.X) + "%",
+				top: parseInt(100 * msg.Y) + "%"
+			});*/
+
+			updateLocation(msg);
+
+			switch (msg.Type) {
+				case 0: //Start
+					showPointer();
+					break;
+
+				case 1: //Move
+
+					break;
+
+				case 2: //End
+					hidePointer();
+					break;
+			}
+		}
+
+		function updateLocation(point) {
+			$("#laserPointer").css({
+				left: parseInt(100 * point.X) + "%",
+				top: parseInt(100 * point.Y) + "%"
+			});
+		}
+
+
+		function ProcessMsg(msgString) {
+			var msg = jQuery.parseJSON(msgString);
+
+			dataManager.scheduleEvent(msg, eventExecution);
+		}
+	}
 </script>
 
 <!--Data smoother: in charge of stream data display-->
 <script type="text/javascript">
-    function StreamDataManager(myBufferSize) {
-        //Data variables
-        var isFirstEvent = true;
-        var sendStartTime = 0;
-        var recvStartTime = 0;
-        var timeSyncSkew = 0;
-        var bufferSize = myBufferSize;
-        var minE2eDelay = -1;
+	function StreamDataManager(myBufferSize) {
+		//Data variables
+		var isFirstEvent = true;
+		var sendStartTime = 0;
+		var recvStartTime = 0;
+		var timeSyncSkew = 0;
+		var bufferSize = myBufferSize;
+		var minE2eDelay = -1;
 
-        var counter = 1;
+		var counter = 1;
 
-        this.scheduleEvent = scheduleEvent;
+		this.scheduleEvent = scheduleEvent;
 
-        function scheduleEvent(event, callback) {
-            var timeNow = new Date();
-            var timeNowMsRef = timeNow.getTime();
-            var bufferDelay = 0;
+		function scheduleEvent(event, callback) {
+			var timeNow = new Date();
+			var timeNowMsRef = timeNow.getTime();
+			var bufferDelay = 0;
 
-            if (isFirstEvent) {
-                //If it is the first event
-                isFirstEvent = false;
+			if (isFirstEvent) {
+				//If it is the first event
+				isFirstEvent = false;
 
-                recvStartTime = timeNowMsRef;
-                sendStartTime = event.Timestamp * 1000;
+				recvStartTime = timeNowMsRef;
+				sendStartTime = event.Timestamp * 1000;
 
-                //Calculate the initial sync skew
-                if (sendStartTime > recvStartTime) {
-                    timeSyncSkew = sendStartTime - recvStartTime;
-                }
-                else {
-                    timeSyncSkew = 0;
-                }
-            }
-            else {
-                var e2eDelay = timeSyncSkew + timeNowMsRef - event.Timestamp * 1000;
-                if (e2eDelay < 0) {
-                    timeSyncSkew = timeSyncSkew - e2eDelay;
-                    e2eDelay = 0;
-                }
-                
-                //Track the minimum e2e delay
-                counter = (counter + 1) % 30;
-                if (e2eDelay < minE2eDelay || minE2eDelay == -1) {
-                    minE2eDelay = e2eDelay;
-                }
+				//Calculate the initial sync skew
+				if (sendStartTime > recvStartTime) {
+					timeSyncSkew = sendStartTime - recvStartTime;
+				}
+				else {
+					timeSyncSkew = 0;
+				}
+			}
+			else {
+				var e2eDelay = timeSyncSkew + timeNowMsRef - event.Timestamp * 1000;
+				if (e2eDelay < 0) {
+					timeSyncSkew = timeSyncSkew - e2eDelay;
+					e2eDelay = 0;
+				}
+				
+				//Track the minimum e2e delay
+				counter = (counter + 1) % 30;
+				if (e2eDelay < minE2eDelay || minE2eDelay == -1) {
+					minE2eDelay = e2eDelay;
+				}
 
 
-                if (counter == 0) {
-                    if (minE2eDelay > bufferDelay)
-                        timeSyncSkew = timeSyncSkew - minE2eDelay;
-                    //Reset the minimum e2e delay
-                    minE2eDelay = -1;
-                }
+				if (counter == 0) {
+					if (minE2eDelay > bufferDelay)
+						timeSyncSkew = timeSyncSkew - minE2eDelay;
+					//Reset the minimum e2e delay
+					minE2eDelay = -1;
+				}
 
-                bufferDelay = bufferSize - e2eDelay;
+				bufferDelay = bufferSize - e2eDelay;
 
-                console.log("buffer delay is: " + bufferDelay);
-                console.log("min e2e delay is: " + minE2eDelay);
-                if (bufferDelay < 0) {
-                    bufferDelay = 0;
-                }
+				console.log("buffer delay is: " + bufferDelay);
+				console.log("min e2e delay is: " + minE2eDelay);
+				if (bufferDelay < 0) {
+					bufferDelay = 0;
+				}
 
-                
-                //Schedule the event with given buffering delay
-                setTimeout(callback(event), bufferDelay);
-            }
-        }
-    }
+				
+				//Schedule the event with given buffering delay
+				setTimeout(callback(event), bufferDelay);
+			}
+		}
+	}
 </script>
 
 <!--POI Textcomment and Drawing comment class-->
 <script type="text/javascript">
-    function POICommentMsg() {
-        var numOfText = 0;
-        var numOfDrawing = 0;
+	function POICommentMsg() {
+		var numOfText = 0;
+		var numOfDrawing = 0;
 
-        var textCmnts = new Array();
-        var drawingCmnts = new Array();
+		var textCmnts = new Array();
+		var drawingCmnts = new Array();
 
-        this.numOfText = numOfText;
-        this.numOfDrawing = numOfDrawing;
-        this.textCmnts = textCmnts;
-        this.drawingCmnts = drawingCmnts;
+		this.numOfText = numOfText;
+		this.numOfDrawing = numOfDrawing;
+		this.textCmnts = textCmnts;
+		this.drawingCmnts = drawingCmnts;
 
-        this.pushDrawingCmnt = pushDrawingCmnt;
-        this.pushTextCmnt = pushTextCmnt;
+		this.pushDrawingCmnt = pushDrawingCmnt;
+		this.pushTextCmnt = pushTextCmnt;
 
 
-        function pushDrawingCmnt(drawing) {
-            
-            this.numOfDrawing++;
-        }
+		function pushDrawingCmnt(drawing) {
+			
+			this.numOfDrawing++;
+		}
 
-        function pushTextCmnt(text) {
-            this.textCmnts.push(text);
-            this.numOfText++;
-        }
-        
-    }
+		function pushTextCmnt(text) {
+			this.textCmnts.push(text);
+			this.numOfText++;
+		}
+		
+	}
 
-    function POITextComment() {
-        var Depth = 0;
-        var OperationMode = 0;
-        var Msg = "";
-        var X = 0;
-        var Y = 0;
+	function POITextComment() {
+		var Depth = 0;
+		var OperationMode = 0;
+		var Msg = "";
+		var X = 0;
+		var Y = 0;
 
-        this.Depth = Depth;
-        this.Mode = OperationMode;
-        this.Msg = Msg;
-        this.X = X;
-        this.Y = Y;
+		this.Depth = Depth;
+		this.Mode = OperationMode;
+		this.Msg = Msg;
+		this.X = X;
+		this.Y = Y;
 
-        this.createComment = createComment;
-        this.popComment = popComment;
-        this.collapseComment = collapseComment;
-        this.changeCommentPosition = changeCommentPosition;
-        this.changeCommentContent = changeCommentContent;
+		this.createComment = createComment;
+		this.popComment = popComment;
+		this.collapseComment = collapseComment;
+		this.changeCommentPosition = changeCommentPosition;
+		this.changeCommentContent = changeCommentContent;
 
-        function createComment(valueArray) {
-            this.X = valueArray["X"];
-            this.Y = valueArray["Y"];
-            this.Msg = valueArray["Msg"];
-            this.Depth = valueArray["Depth"];
+		function createComment(valueArray) {
+			this.X = valueArray["X"];
+			this.Y = valueArray["Y"];
+			this.Msg = valueArray["Msg"];
+			this.Depth = valueArray["Depth"];
 
-            this.OperationMode = 0;
-        }
+			this.OperationMode = 0;
+		}
 
-        function popComment(valueArray) {
-            this.Depth = valueArray["Depth"];
+		function popComment(valueArray) {
+			this.Depth = valueArray["Depth"];
 
-            this.OperationMode = 1;
-        }
+			this.OperationMode = 1;
+		}
 
-        function collapseComment(valueArray) {
-            this.Depth = valueArray["Depth"];
+		function collapseComment(valueArray) {
+			this.Depth = valueArray["Depth"];
 
-            this.OperationMode = 2;
-        }
+			this.OperationMode = 2;
+		}
 
-        function changeCommentPosition(valueArray) {
-            this.Depth = valueArray["Depth"];
-            this.X = valueArray["X"];
-            this.Y = valueArray["Y"];
+		function changeCommentPosition(valueArray) {
+			this.Depth = valueArray["Depth"];
+			this.X = valueArray["X"];
+			this.Y = valueArray["Y"];
 
-            this.OperationMode = 3;
-        }
+			this.OperationMode = 3;
+		}
 
-        function changeCommentContent(valueArray) {
-            this.Depth = valueArray["Depth"];
-            this.Msg = valueArray["Msg"];
+		function changeCommentContent(valueArray) {
+			this.Depth = valueArray["Depth"];
+			this.Msg = valueArray["Msg"];
 
-            this.OperationMode = 4;
-        }
+			this.OperationMode = 4;
+		}
 
-        function deleteComment(valueArray) {
-            this.Depth = valueArray["Depth"];
+		function deleteComment(valueArray) {
+			this.Depth = valueArray["Depth"];
 
-            this.OperationMode = 5;
-        }
-    }
+			this.OperationMode = 5;
+		}
+	}
 
 </script>
 
 <!--Textcomment rendering class-->
 <script type="text/javascript">
-    function POITextBox(textComment, myContext) {
-        var isCollapsed;
-        var myself = this;
+	function POITextBox(textComment, myContext) {
+		var isCollapsed;
+		var myself = this;
 
-        var context = myContext;
+		var context = myContext;
 
-        this.Mode = 0;
-        this.Depth = 0;
-        this.Msg = "";
-        this.X = 0;
-        this.Y = 0;
+		this.Mode = 0;
+		this.Depth = 0;
+		this.Msg = "";
+		this.X = 0;
+		this.Y = 0;
 
-        this.init = init;
-        this.updateContent = updateContent;
-        this.updatePosition = updatePosition;
-        this.popOut = popOut;
-        this.collapse = collapse;
-        
-        //Initialize the text comment box
-        this.init(textComment);
+		this.init = init;
+		this.updateContent = updateContent;
+		this.updatePosition = updatePosition;
+		this.popOut = popOut;
+		this.collapse = collapse;
+		
+		//Initialize the text comment box
+		this.init(textComment);
 
-        function init(textComment) {
-            var container = $('<div></div>', {
-                id: "textbox" + textComment.Depth,
-                class: "textbox"
-            });
+		function init(textComment) {
+			var container = $('<div></div>', {
+				id: "textbox" + textComment.Depth,
+				class: "textbox"
+			});
 
-            container.css({
-                position: "absolute",
-                left: textComment.X * 100 + "%",
-                top: textComment.Y * 100 + "%",
-                width: "1%",
-                height: "1%"
-            });
-            
-            //An image tag
-            var icon = $('<img>', {
-                src: "@(Model.ImageUrl)speech_bubble.png"
-            });
+			container.css({
+				position: "absolute",
+				left: textComment.X * 100 + "%",
+				top: textComment.Y * 100 + "%",
+				width: "1%",
+				height: "1%"
+			});
+			
+			//An image tag
+			var icon = $('<img>', {
+				src: "@(Model.ImageUrl)speech_bubble.png"
+			});
 
-            icon.css({
-                position: "absolute",
-                width: "400%",
-                height: "auto",
-            });
+			icon.css({
+				position: "absolute",
+				width: "400%",
+				height: "auto",
+			});
 
-            //An text field
-            var textField = $('<textarea></textarea>', {
-                rows: 20,
-                cols: 10
-            });
+			//An text field
+			var textField = $('<textarea></textarea>', {
+				rows: 20,
+				cols: 10
+			});
 
-            textField.css({
-                position: "absolute",
-                width: "3000%",
-                height: "5000%"
-            });
+			textField.css({
+				position: "absolute",
+				width: "3000%",
+				height: "5000%"
+			});
 
-            var iconContainer = $('<div></div>', {
+			var iconContainer = $('<div></div>', {
 
-            });
+			});
 
-            var textFieldContainer = $('<div></div>', {
+			var textFieldContainer = $('<div></div>', {
 
-            });
+			});
 
-            iconContainer.css({
-                position: "absolute",
-                width: "100%",
-                height: "100%"
-            });
+			iconContainer.css({
+				position: "absolute",
+				width: "100%",
+				height: "100%"
+			});
 
-            textFieldContainer.css({
-                position: "absolute",
-                width: "100%",
-                height: "100%"
-            });
+			textFieldContainer.css({
+				position: "absolute",
+				width: "100%",
+				height: "100%"
+			});
 
-            iconContainer.append(icon);
-            textFieldContainer.append(textField);
+			iconContainer.append(icon);
+			textFieldContainer.append(textField);
 
-            container.append(iconContainer);
-            container.append(textFieldContainer);
-            $(context).append(container);
+			container.append(iconContainer);
+			container.append(textFieldContainer);
+			$(context).append(container);
 
-            $("#textbox" + textComment.Depth + " > div > textarea").hide();
-            isCollapsed = true;
-            
-            myself.Depth = textComment.Depth;
-            myself.X = textComment.X;
-            myself.Y = textComment.Y;
-            myself.Msg = textComment.Msg;
+			$("#textbox" + textComment.Depth + " > div > textarea").hide();
+			isCollapsed = true;
+			
+			myself.Depth = textComment.Depth;
+			myself.X = textComment.X;
+			myself.Y = textComment.Y;
+			myself.Msg = textComment.Msg;
 
-            updateContent(myself.Msg);
+			updateContent(myself.Msg);
 
-            $("#textbox" + myself.Depth + " > div > img").click(function(){
-                event.stopPropagation();
-                popOut();
-            });
+			$("#textbox" + myself.Depth + " > div > img").click(function(){
+				event.stopPropagation();
+				popOut();
+			});
 
-            $("#textbox" + myself.Depth + " > div > textarea").click(function(event){
-                event.stopPropagation();
-            });
+			$("#textbox" + myself.Depth + " > div > textarea").click(function(event){
+				event.stopPropagation();
+			});
 
-            popOut();
-        }
+			popOut();
+		}
 
-        function collapse() {
-            if (!isCollapsed) {
-                $("#textbox" + myself.Depth + " > div > textarea").hide();
-                $("#textbox" + myself.Depth + " > div > img").show();
+		function collapse() {
+			if (!isCollapsed) {
+				$("#textbox" + myself.Depth + " > div > textarea").hide();
+				$("#textbox" + myself.Depth + " > div > img").show();
 
-                isCollapsed = true;
-            }
-        }
+				isCollapsed = true;
+			}
+		}
 
-        function popOut() {
-            if (isCollapsed) {
-                $("#textbox" + myself.Depth + " > div > textarea").show();
-                $("#textbox" + myself.Depth + " > div > img").hide();
+		function popOut() {
+			if (isCollapsed) {
+				$("#textbox" + myself.Depth + " > div > textarea").show();
+				$("#textbox" + myself.Depth + " > div > img").hide();
 
-                isCollapsed = false;
-            }
-        }
-        
-        function updateContent(msg) {
-            $("#textbox" + myself.Depth + " > div > textarea").val(msg);
-            this.Msg = msg;
-        }
+				isCollapsed = false;
+			}
+		}
+		
+		function updateContent(msg) {
+			$("#textbox" + myself.Depth + " > div > textarea").val(msg);
+			this.Msg = msg;
+		}
 
-        function updatePosition(x, y) {
-            //Update the container position
-            $("#textbox" + myself.Depth).css({
-                left: x * 100 + "%",
-                top: y * 100 + "%"
-            });
+		function updatePosition(x, y) {
+			//Update the container position
+			$("#textbox" + myself.Depth).css({
+				left: x * 100 + "%",
+				top: y * 100 + "%"
+			});
 
-            myself.X = x;
-            myself.Y = y;
-        }
-    }
+			myself.X = x;
+			myself.Y = y;
+		}
+	}
 </script>
 
 <!--Drawingcomment rendering class-->
 <script type = "text/javascript">
-    function POIDrawingCurve(myContext) {
-        //Private variables
-        var myself = this;
-        var segments = [];
-        var numPoints = 0;
-        var startPoint;
-        var context = myContext;
-        var color;
-        var points = [];
+	function POIDrawingCurve(myContext) {
+		//Private variables
+		var myself = this;
+		var segments = [];
+		var numPoints = 0;
+		var startPoint;
+		var context = myContext;
+		var color;
+		var points = [];
 
-        //Public functions
-        this.render = render;
-        this.addPointToCurve = addPointToCurve;
-        this.updateDrawing = updateDrawing;
-        this.setupColor = setupColor;
+		//Public functions
+		this.render = render;
+		this.addPointToCurve = addPointToCurve;
+		this.updateDrawing = updateDrawing;
+		this.setupColor = setupColor;
 
-        this.Points = points;
-        this.NumPoints = numPoints;
+		this.Points = points;
+		this.NumPoints = numPoints;
 
-        this.Mode = 0;
-        this.Depth = 0;
+		this.Mode = 0;
+		this.Depth = 0;
 
-        function updateDrawing(path) {
-            for (var i = 0; i < path.NumPoints; i++) {
-                var curPoint = new point2D();
-                curPoint.construct(
-                    path.Points[i].X * $("#canvasStack").width(),
-                    path.Points[i].Y * $("#canvasStack").height()
-                );
+		function updateDrawing(path) {
+			for (var i = 0; i < path.NumPoints; i++) {
+				var curPoint = new point2D();
+				curPoint.construct(
+					path.Points[i].X * $("#canvasStack").width(),
+					path.Points[i].Y * $("#canvasStack").height()
+				);
 
-                setupColor(path.Color);
-                addPointToCurve(curPoint);
-            }
-        }
+				setupColor(path.Color);
+				addPointToCurve(curPoint);
+			}
+		}
 
-        function setupColor(myColor) {
-            myself.Color = myColor;
-            color = "rgb(" + myColor.R + ", " + myColor.G + ", " + myColor.B + " )";
-        }
+		function setupColor(myColor) {
+			myself.Color = myColor;
+			color = "rgb(" + myColor.R + ", " + myColor.G + ", " + myColor.B + " )";
+		}
 
-        //Function definitions
-        function addPointToCurve(point) {
+		//Function definitions
+		function addPointToCurve(point) {
 
-            var newSegment;
+			var newSegment;
 
-            if (numPoints < 1) {
-                startPoint = point;
-            }
-            else if (numPoints < 2) {
-                newSegment = findBezierSegment(startPoint, startPoint, point, point);
-                segments.push(newSegment);
-            }
-            else {
-                var lastSegment = segments.pop();
-                var lastPoint = lastSegment.endPoint;
+			if (numPoints < 1) {
+				startPoint = point;
+			}
+			else if (numPoints < 2) {
+				newSegment = findBezierSegment(startPoint, startPoint, point, point);
+				segments.push(newSegment);
+			}
+			else {
+				var lastSegment = segments.pop();
+				var lastPoint = lastSegment.endPoint;
 
-                var lastSecondPoint;
-                if (segments.length == 0) {
-                    lastSecondPoint = startPoint;
-                }
-                else {
-                    var lastSecondSegment = segments[segments.length - 1];
-                    lastSecondPoint = lastSecondSegment.endPoint;
-                }
+				var lastSecondPoint;
+				if (segments.length == 0) {
+					lastSecondPoint = startPoint;
+				}
+				else {
+					var lastSecondSegment = segments[segments.length - 1];
+					lastSecondPoint = lastSecondSegment.endPoint;
+				}
 
-                var updatedLastSegment = new bezierSegment(
-                    lastSegment.ctrlPoint1,
-                    findSecondCtrlPoint(lastSecondPoint, lastPoint, point),
-                    lastPoint
-                );
+				var updatedLastSegment = new bezierSegment(
+					lastSegment.ctrlPoint1,
+					findSecondCtrlPoint(lastSecondPoint, lastPoint, point),
+					lastPoint
+				);
 
-                newSegment = findBezierSegment(lastSecondPoint, lastPoint, point, point);
+				newSegment = findBezierSegment(lastSecondPoint, lastPoint, point, point);
 
-                segments.push(updatedLastSegment);
-                segments.push(newSegment);
-            }
+				segments.push(updatedLastSegment);
+				segments.push(newSegment);
+			}
 
-            //Update the point array
-            var pointPercentage = new point2D();
-            pointPercentage.construct(
-                point.X / $("#canvasStack").width(),
-                point.Y / $("#canvasStack").height()
-            );
-            points.push(pointPercentage);
+			//Update the point array
+			var pointPercentage = new point2D();
+			pointPercentage.construct(
+				point.X / $("#canvasStack").width(),
+				point.Y / $("#canvasStack").height()
+			);
+			points.push(pointPercentage);
 
-            numPoints = numPoints + 1;
-            myself.NumPoints = numPoints;
-        }
+			numPoints = numPoints + 1;
+			myself.NumPoints = numPoints;
+		}
 
-        function render() {
-            context.restore();
-            context.beginPath();
-            context.moveTo(startPoint.X, startPoint.Y);
+		function render() {
+			context.restore();
+			context.beginPath();
+			context.moveTo(startPoint.X, startPoint.Y);
 
-            var segment;
-            for (var i = 0; i < segments.length; i++) {
-                segment = segments[i];
-                context.bezierCurveTo(
-                    segment.ctrlPoint1.X, segment.ctrlPoint1.Y,
-                    segment.ctrlPoint2.X, segment.ctrlPoint2.Y,
-                    segment.endPoint.X, segment.endPoint.Y
-                );
-            }
+			var segment;
+			for (var i = 0; i < segments.length; i++) {
+				segment = segments[i];
+				context.bezierCurveTo(
+					segment.ctrlPoint1.X, segment.ctrlPoint1.Y,
+					segment.ctrlPoint2.X, segment.ctrlPoint2.Y,
+					segment.endPoint.X, segment.endPoint.Y
+				);
+			}
 
-            context.strokeStyle = color;
-            context.stroke();
-            context.closePath();
-            context.save();
-        }
+			context.strokeStyle = color;
+			context.stroke();
+			context.closePath();
+			context.save();
+		}
 
-        function findFirstCtrlPoint(prev, first, second) {
-            var myX = (second.X - prev.X) / 6 + first.X;
-            var myY = (second.Y - prev.Y) / 6 + first.Y;
+		function findFirstCtrlPoint(prev, first, second) {
+			var myX = (second.X - prev.X) / 6 + first.X;
+			var myY = (second.Y - prev.Y) / 6 + first.Y;
 
-            var newPoint = new point2D();
-            newPoint.construct(myX, myY);
-            return newPoint;
-        }
+			var newPoint = new point2D();
+			newPoint.construct(myX, myY);
+			return newPoint;
+		}
 
-        function findSecondCtrlPoint(first, second, next) {
-            var myX = (first.X - next.X) / 6 + second.X;
-            var myY = (first.Y - next.Y) / 6 + second.Y;
+		function findSecondCtrlPoint(first, second, next) {
+			var myX = (first.X - next.X) / 6 + second.X;
+			var myY = (first.Y - next.Y) / 6 + second.Y;
 
-            var newPoint = new point2D();
-            newPoint.construct(myX, myY);
-            return newPoint;
-        }
+			var newPoint = new point2D();
+			newPoint.construct(myX, myY);
+			return newPoint;
+		}
 
-        function findBezierSegment(prev, first, second, next) {
-            var segment = new bezierSegment(
-                findFirstCtrlPoint(prev, first, second),
-                findSecondCtrlPoint(first, second, next),
-                second
-            );
+		function findBezierSegment(prev, first, second, next) {
+			var segment = new bezierSegment(
+				findFirstCtrlPoint(prev, first, second),
+				findSecondCtrlPoint(first, second, next),
+				second
+			);
 
-            return segment;
-        }
+			return segment;
+		}
 
-    }
+	}
 
-    function point2D() {
-        var _point = this;
-        this.X = 0;
-        this.Y = 0;
+	function point2D() {
+		var _point = this;
+		this.X = 0;
+		this.Y = 0;
 
-        this.construct = construct;
-        this.copy = copy;
+		this.construct = construct;
+		this.copy = copy;
 
-        function construct(myX, myY) {
-            _point.X = myX;
-            _point.Y = myY;
-        }
+		function construct(myX, myY) {
+			_point.X = myX;
+			_point.Y = myY;
+		}
 
-        function copy(point) {
-            _point.X = point.X;
-            _point.Y = point.Y;
-        }
-    }
+		function copy(point) {
+			_point.X = point.X;
+			_point.Y = point.Y;
+		}
+	}
 
-    function bezierSegment(p1, p2, p3) {
-        this.ctrlPoint1 = new point2D();
-        this.ctrlPoint1.copy(p1);
+	function bezierSegment(p1, p2, p3) {
+		this.ctrlPoint1 = new point2D();
+		this.ctrlPoint1.copy(p1);
 
-        this.ctrlPoint2 = new point2D();
-        this.ctrlPoint2.copy(p2);
+		this.ctrlPoint2 = new point2D();
+		this.ctrlPoint2.copy(p2);
 
-        this.endPoint = new point2D();
-        this.endPoint.copy(p3);
-    }
+		this.endPoint = new point2D();
+		this.endPoint.copy(p3);
+	}
 </script>
 
 <!--Comment Storage tool-->
 <script type="text/javascript">
-    function storageTool() {
-        var storage = this;
+	function storageTool() {
+		var storage = this;
 
-        //Comment should be a json string
-        this.saveComment = function (slideIndex, comment) {
-            var numComments = storage.getNumComments(slideIndex);
-            localStorage.setItem(
-                "comment_" + slideIndex + "_" + numComments,
-                JSON.stringify(comment)
-            );
+		this.savePrivateComment = function (slideIndex, comment) {
+			saveComment(slideIndex, comment, "private");
+		}
 
-            setNumComments(slideIndex, numComments + 1);
-        }
+		this.getPrivateComment = function (slideIndex, commentIndex) {
+			return getComment(slideIndex, commentIndex, "private");
+		}
 
-        this.getComment = function (slideIndex, commentIndex) {
-            var comment = localStorage.getItem("comment_" + slideIndex + "_" + commentIndex);
-            if (comment == undefined) {
-                return undefined;
-            }
-            else {
-                return jQuery.parseJSON(comment);
-            }
-        }
+		this.getNumPrivateComments = function (slideIndex) {
+			return getNumComments(slideIndex, "private");
+		}
+
+		this.savePublicComment = function (slideIndex, comment) {
+			saveComment(slideIndex, comment, "public");
+		}
+
+		this.getPublicComment = function (slideIndex, commentIndex) {
+			return getComment(slideIndex, commentIndex, "public");
+		}
+
+		this.getNumPublicComments = function (slideIndex) {
+			return getNumComments(slideIndex, "public");
+		}
+
+		//Comment should be a json string
+		function saveComment (slideIndex, comment, type) {
+			var numComments = getNumComments(slideIndex, type);
+			localStorage.setItem(
+				type + "_comment_" + slideIndex + "_" + numComments,
+				JSON.stringify(comment)
+			);
+
+			setNumComments(slideIndex, numComments + 1, type);
+		}
+
+		function getComment (slideIndex, commentIndex, type) {
+			var comment = localStorage.getItem(type + "_comment_" + slideIndex + "_" + commentIndex);
+			if (comment == undefined) {
+				return undefined;
+			}
+			else {
+				return jQuery.parseJSON(comment);
+			}
+		}
 
 
-        this.getNumComments = function (slideIndex) {
-            var numComments = localStorage.getItem("numComment_" + slideIndex);
-            if(numComments == undefined) {
-                localStorage.setItem("numComment_" + slideIndex, 0);
-                return 0;
-            }
-            else {
-                return parseInt(numComments);
-            }
-        }
+		function getNumComments (slideIndex, type) {
+			var numComments = localStorage.getItem(type + "_numComment_" + slideIndex);
+			if(numComments == undefined) {
+				localStorage.setItem(type + "_numComment_" + slideIndex, 0);
+				return 0;
+			}
+			else {
+				return parseInt(numComments);
+			}
+		}
 
-        function setNumComments(slideIndex, numComments) {
-            localStorage.setItem("numComment_" + slideIndex, numComments);
-        }
-        
-    }
+		function setNumComments(slideIndex, numComments, type) {
+			localStorage.setItem(type + "_numComment_" + slideIndex, numComments);
+		}
+		
+	}
 </script>
 
 <!--Global variables definition-->
 <script type="text/javascript">
-    //Global variables definitions
+	//Global variables definitions
 
-    //Variable for connecting to POI Proxy
-    var poiProxy;
+	//Variable for connecting to POI Proxy
+	var poiProxy;
 
-    // The pencil tool instance.
-    var drawingTool = new tool_pencil("#canvasStack");
+	// The pencil tool instance.
+	var drawingTool = new tool_pencil("#canvasStack");
 
-    // The laser pointer controller
-    var ptrController = new LaserPointerController();
+	// The laser pointer controller
+	var ptrController = new LaserPointerController();
 
-    //For slider region control
-    var isStart = false;
-    var startValue;
-    var curTransformValueSideBar = 0;
-    var curTransformValueMainContent = 0;
+	//For slider region control
+	var isStart = false;
+	var startValue;
+	var curTransformValueSideBar = 0;
+	var curTransformValueMainContent = 0;
 
-    //For showing presentation
-    var curSlideIndex = 0;
-    var preloadSlideIndex = 0;
-    var mainSlideViewIndex = 2;
+	//For showing presentation
+	var curSlideIndex = 0;
+	var preloadSlideIndex = 0;
+	var mainSlideViewIndex = 2;
 
-    //For comments storage
-    var myStorage = new storageTool();
+	//For comments storage
+	var myStorage = new storageTool();
+	var showPublicComment = false;
 
-    //For whiteboard control
-    var whiteboardEnabled = false;
+	//For whiteboard control
+	var whiteboardEnabled = false;
 
 </script>
