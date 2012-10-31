@@ -595,7 +595,9 @@
 			tool.touchmove = dummyHandler;
 			tool.touchend = dummyHandler;
 
-			$(context).bind('mousedown touchstart', collapseAllTextboxes);
+			$(context).bind('mousedown touchstart', function () { 
+                collapseAllTextboxes();
+            });
             
             //click(collapseAllTextboxes);
 		}
@@ -1182,6 +1184,7 @@
 
 		function collapse() {
 			if (!isCollapsed) {
+                $("#textbox" + myself.Depth + " > div > textarea").blur();
 				$("#textbox" + myself.Depth + " > div > textarea").hide();
 				$("#textbox" + myself.Depth + " > div > img").show();
 
