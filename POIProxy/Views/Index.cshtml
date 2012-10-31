@@ -54,6 +54,7 @@
 		
 		initSideBarSliding();
 		initMainContentSliding();
+        initVideoTesting();
 		
 
 		//$("#PresBoardSideBarSlideRegion").slider("disable");
@@ -77,6 +78,44 @@
 		console.log(JSON.stringify(testCmntObject));
 	});
 
+    function initVideoTesting() {
+        var myVideo = $('<video></video>',{
+            id: 'myVideo',
+            'controls': 'controls'
+        });
+
+        var videoSrc = $('<source>');
+        videoSrc.attr('src', "@(Model.ImageUrl)test.mp4");
+        videoSrc.attr('type', 'video/mp4');
+
+        myVideo.append(videoSrc);
+
+        myVideo.css({
+            width: "100%",
+            height: "100%",
+            position: "absolute"
+        });
+
+        $("#MainContentContainer").append(myVideo);
+
+        /*
+        $("#myVideo").bind('timeupdate', function() {
+            var curVideo = $('#myVideo')[0];
+            if( curVideo.currentTime >= curDuration + 0.5) {
+                curVideo.pause();
+                curDuration = curDuration + 0.5;
+            }
+        });*/
+
+        myVideo.click(function () {
+            var video = $("#myVideo")[0];
+            video.start = 1;
+            video.play();
+            video.currentTime = 1;
+            video.pause();
+        });        
+    }
+
 	function initSideBarSliding() {
 		$("#PresBoardSideBarSlideRegion").slider({
 			orientation: "vertical",
@@ -93,7 +132,7 @@
 		$("#MainContentSlideRegion").slider({
 			orientation: "horizontal",
 			slide: duringSlideOnMainContent,
-			start: startSlide,
+			start: startSlideMainContent,
 			stop: stopSlideMainContent
 		});
 
@@ -251,14 +290,37 @@
 		isStart = false;
 	}
 
+	function startSlideMainContent(event, ui) {
+        isStart = false;
+	}
+
 	function stopSlideMainContent(event, ui) {
 		curTransformValueMainContent = curTransformValueMainContent + (ui.value - startValue);
 		loadCommentIntoCache();
+		transformNeeded = false;
 
-		var transformNeeded = false;
+		var gridCount = parseInt(curTransformValueMainContent / 100);
+
+		//Detect if swipe is detected
+		var swipeDir = detectSwipeMainContent(
+            startingTransformValueMainContent,
+            curTransformValueMainContent
+        );
+
+		switch (swipeDir) {
+		    case 'left':
+		        curTransformValueMainContent = gridCount * 100 - 100;
+                transformNeeded = true;
+		        break;
+		    case 'right':
+		        curTransformValueMainContent = gridCount * 100 + 100;
+                transformNeeded = true;
+		        break;
+		};
+
 		if (curTransformValueMainContent > 0) {
-			curTransformValueMainContent = 0;
-			transformNeeded = true;
+		    curTransformValueMainContent = 0;
+            transformNeeded = true;
 		}
 		else {
 			var numViews = $("#MainContentContainer > div").size() - 1;
@@ -269,26 +331,24 @@
 				transformNeeded = true;
 				curTransformValueMainContent = -numViews * 100;
 			}
-			else {
-				var gridCount = parseInt(curTransformValueMainContent / 100);
-				if (curTransformValueMainContent < gridCount * 100 - 50) {
-					curTransformValueMainContent = gridCount * 100 - 100;
-				} else {
-					curTransformValueMainContent = gridCount * 100;
-				}
-				
-				transformNeeded = true;
-			}
 		}
 
-		if (transformNeeded) {
+        //Start animation if transform is needed
+        if (transformNeeded) {
 			$("#MainContentContainer").animate({
 				left: curTransformValueMainContent + "%"
 			}, 200, 'linear', function () {
 
 			});
-		}
-	}
+        }
+
+        startingTransformValueMainContent = curTransformValueMainContent;
+    }
+
+    function detectSwipeMainContent(start, end) {
+        if (start > end) return 'left';
+        else return 'right';
+    }
 
 	function stopSlideSideBar(event, ui) {
 		curTransformValueSideBar = curTransformValueSideBar - (ui.value - startValue);
@@ -1479,6 +1539,7 @@
 	var startValue;
 	var curTransformValueSideBar = 0;
 	var curTransformValueMainContent = 0;
+	var startingTransformValueMainContent = 0;
 
 	//For showing presentation
 	var curSlideIndex = 0;
@@ -1491,5 +1552,8 @@
 
 	//For whiteboard control
 	var whiteboardEnabled = false;
+
+	//For video control
+	var curDuration = 0.5;
 
 </script>
