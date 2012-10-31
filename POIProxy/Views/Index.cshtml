@@ -202,9 +202,15 @@
 	}
 
     function initFootBar() {
-        $("#CommentsLabel").attr("src", "@(Model.ImageUrl)comment_drawing.png");
+        var myWidth = $("#FootBarContainer").width();
+        $("#FootBarContainer").css({
+            height: myWidth + "px"
+        });
+        
+        $("#CommentsLabel").attr("src", "@(Model.ImageUrl)pencil-1.png");
+        $("#NumCommentsLabelContainer > img").attr("src", "@(Model.ImageUrl)circle.png");
         $("#FootBarContainer").click(function(){
-            alert("Drag on the slide horizontally to see the comments");
+            alert("Drag the slide to the left to see the comments");
         });
         updateNumCommentsLabel();
     }
