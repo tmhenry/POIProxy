@@ -517,8 +517,12 @@
 		}
 		*/
 
+        poiProxy.log(ev.pageX + " " + ev.pageY);
+
 		ev._x = ev.pageX - $(drawingTool.Context).offset().left;
 		ev._y = ev.pageY - $(drawingTool.Context).offset().top;
+
+        
 
 		// Call the event handler of the tool.
 		var func = drawingTool[ev.type];
@@ -563,13 +567,13 @@
 		}
 
 		this.switchToTextMode = function() {
-			tool.mousedown = dummyHandler;
+			tool.mousedown = createTextbox;
 			tool.mousemove = dummyHandler;
-			tool.mouseup = createTextbox;
+			tool.mouseup = dummyHandler;
 
-			tool.touchstart = dummyHandler;
+			tool.touchstart = createTextbox;
 			tool.touchmove = dummyHandler;
-			tool.touchend = createTextbox;
+			tool.touchend = dummyHandler;
 		}
 
 		this.switchToPointerMode = function () {
@@ -591,7 +595,9 @@
 			tool.touchmove = dummyHandler;
 			tool.touchend = dummyHandler;
 
-			$(context).click(collapseAllTextboxes);
+			$(context).bind('mousedown touchstart', collapseAllTextboxes);
+            
+            //click(collapseAllTextboxes);
 		}
 
 		function clearCommentBoard() {
@@ -812,9 +818,10 @@
 				"X": ev._x / $(context).width(),
 				"Y": ev._y / $(context).height(),
 				"Depth": textStackSize,
-				"Msg": ev._x + " " + ev._y
+				"Msg": ev._x + " " + ev._y 
 			});
 
+            poiProxy.log(ev._x + " " + ev._y);
 			updateTextbox(comment);
 
 			tool.switchToIdleMode();
@@ -1161,12 +1168,12 @@
 
 			updateContent(myself.Msg);
 
-			$("#textbox" + myself.Depth + " > div > img").click(function(){
+			$("#textbox" + myself.Depth + " > div > img").bind('mousedown touchstart',function(event){
 				event.stopPropagation();
 				popOut();
 			});
 
-			$("#textbox" + myself.Depth + " > div > textarea").click(function(event){
+			$("#textbox" + myself.Depth + " > div > textarea").bind('mousedown touchstart', function(event){
 				event.stopPropagation();
 			});
 

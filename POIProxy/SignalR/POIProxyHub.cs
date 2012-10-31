@@ -19,6 +19,11 @@ namespace POIProxy.SignalRFun
             Clients.echoOnClient();
         }
 
+        public void Log(string msg)
+        {
+            Console.WriteLine(msg);
+        }
+
         public void HandleCommentMsgOnServer(string msg)
         {
             webWBHandler.handleStringComment(msg);
