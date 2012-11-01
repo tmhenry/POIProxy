@@ -104,6 +104,7 @@
     <Compile Include="Controllers\ScriptsController.cs" />
     <Compile Include="Controllers\SessionsController.cs" />
     <Compile Include="Controllers\SlidesController.cs" />
+    <Compile Include="Controllers\VideosController.cs" />
     <Compile Include="Handlers\POIProxyPresCtrlHandler.cs" />
     <Compile Include="Handlers\POIProxyPtrCtrlHandler.cs" />
     <Compile Include="Handlers\POIProxyWBCtrlHandler.cs" />

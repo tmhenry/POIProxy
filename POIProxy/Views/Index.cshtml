@@ -79,13 +79,14 @@
 	});
 
     function initVideoTesting() {
+
+        
         var myVideo = $('<video></video>',{
             id: 'myVideo',
-            'controls': 'controls'
         });
 
         var videoSrc = $('<source>');
-        videoSrc.attr('src', "@(Model.ImageUrl)test.mp4");
+        videoSrc.attr('src', "@(Model.VideoUrl)test.mp4");
         videoSrc.attr('type', 'video/mp4');
 
         myVideo.append(videoSrc);
@@ -98,24 +99,28 @@
 
         $("#MainContentContainer").append(myVideo);
 
-        /*
+        
+
         $("#myVideo").bind('timeupdate', function() {
             var curVideo = $('#myVideo')[0];
-            if( curVideo.currentTime >= curDuration + 0.5) {
+            if( curVideo.currentTime >= curDuration + 0.5 - 0.25) {
                 curVideo.pause();
                 curDuration = curDuration + 0.5;
+
+                console.log('End:' + curVideo.currentTime);
+                console.log(curVideo.seekable);
+                curVideo.currentTime = curDuration;
             }
-        });*/
+        });
 
-        myVideo.click(function () {
-            var video = $("#myVideo")[0];
-            video.start = 1;
-            video.play();
-            video.currentTime = 1;
-            video.pause();
-        });        
+        $("#myVideo").click(function() {
+            var curVideo = $('#myVideo')[0];
+            console.log('start:' + curVideo.currentTime)
+            curVideo.play();
+        });
+        
     }
-
+    
 	function initSideBarSliding() {
 		$("#PresBoardSideBarSlideRegion").slider({
 			orientation: "vertical",
@@ -236,7 +241,8 @@
 		$("#Logo").css("cursor", "hand");
 
 		$("#Logo > img").click(function(){
-			window.location.href = "http://www.pipeofinsight.com";
+			//window.location.href = "http://www.pipeofinsight.com";
+            seekToPosition();
 		});
 	}
 
@@ -1554,6 +1560,32 @@
 	var whiteboardEnabled = false;
 
 	//For video control
-	var curDuration = 0.5;
+	var curDuration = 0;
 
 </script>
+
+
+<script>
+    var myVideo = document.getElementById("myVideo");
+
+    function playPause() {
+        
+        if (myVideo.paused)
+            myVideo.play();
+        else
+            myVideo.pause();
+    }
+
+    function makeBig() {
+        console.log(myVideo.seekable);
+        myVideo.currentTime = 1.1;
+    }
+
+    function makeSmall() {
+        myVideo.width = 320;
+    }
+
+    function makeNormal() {
+        myVideo.width = 420;
+    } 
+</script> 
