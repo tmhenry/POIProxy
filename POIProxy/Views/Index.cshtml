@@ -83,10 +83,12 @@
         
         var myVideo = $('<video></video>',{
             id: 'myVideo',
+           
         });
 
         var videoSrc = $('<source>');
         videoSrc.attr('src', "@(Model.VideoUrl)test.mp4");
+        //videoSrc.attr('src', "http://www.w3schools.com/html/mov_bbb.mp4");
         videoSrc.attr('type', 'video/mp4');
 
         myVideo.append(videoSrc);
@@ -107,15 +109,15 @@
                 curVideo.pause();
                 curDuration = curDuration + 0.5;
 
-                console.log('End:' + curVideo.currentTime);
-                console.log(curVideo.seekable);
+                //console.log('End:' + curVideo.currentTime);
+                //console.log(curVideo.seekable);
                 curVideo.currentTime = curDuration;
             }
         });
 
         $("#myVideo").click(function() {
             var curVideo = $('#myVideo')[0];
-            console.log('start:' + curVideo.currentTime)
+            //console.log('start:' + curVideo.currentTime)
             curVideo.play();
         });
         
