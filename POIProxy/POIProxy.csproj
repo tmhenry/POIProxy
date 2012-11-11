@@ -99,11 +99,13 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="Controllers\AudiosController.cs" />
     <Compile Include="Controllers\CSSController.cs" />
     <Compile Include="Controllers\ImagesController.cs" />
     <Compile Include="Controllers\ScriptsController.cs" />
     <Compile Include="Controllers\SessionsController.cs" />
     <Compile Include="Controllers\SlidesController.cs" />
+    <Compile Include="Controllers\StreamingController.cs" />
     <Compile Include="Controllers\VideosController.cs" />
     <Compile Include="Handlers\POIProxyPresCtrlHandler.cs" />
     <Compile Include="Handlers\POIProxyPtrCtrlHandler.cs" />

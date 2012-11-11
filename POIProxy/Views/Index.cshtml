@@ -54,7 +54,7 @@
 		
 		initSideBarSliding();
 		initMainContentSliding();
-        initVideoTesting();
+        //initVideoTesting();
 		
 
 		//$("#PresBoardSideBarSlideRegion").slider("disable");
@@ -307,8 +307,6 @@
 		loadCommentIntoCache();
 		transformNeeded = false;
 
-		var gridCount = parseInt(curTransformValueMainContent / 100);
-
 		//Detect if swipe is detected
 		var swipeDir = detectSwipeMainContent(
             startingTransformValueMainContent,
@@ -317,13 +315,17 @@
 
 		switch (swipeDir) {
 		    case 'left':
-		        curTransformValueMainContent = gridCount * 100 - 100;
+		        curTransformValueMainContent = startingTransformValueMainContent - 100;
                 transformNeeded = true;
 		        break;
 		    case 'right':
-		        curTransformValueMainContent = gridCount * 100 + 100;
+		        curTransformValueMainContent = startingTransformValueMainContent + 100;
                 transformNeeded = true;
 		        break;
+            case 'equal':
+                curTransformValueMainContent = startingTransformValueMainContent;
+                transformNeeded = true;
+                break;
 		};
 
 		if (curTransformValueMainContent > 0) {
@@ -354,8 +356,15 @@
     }
 
     function detectSwipeMainContent(start, end) {
-        if (start > end) return 'left';
-        else return 'right';
+        if(Math.abs(start - end) < 10) 
+            return 'equal';
+        else {
+            if (start > end) {
+                return 'left';
+            } else {
+                return 'right';
+            }
+        }
     }
 
 	function stopSlideSideBar(event, ui) {
@@ -380,7 +389,18 @@
 	    }
 
         $("#NumCommentsLabel").html(numComments);
-	}
+    }
+
+    function clearCommentCache() {
+        //Clear the comment cache
+        $("#MainContentContainer > .CommentCache").remove();
+
+        curTransformValueMainContent = 0;
+        startingTransformValueMainContent = curTransformValueMainContent;
+        $("#MainContentContainer").css({
+            left: "0%",
+        });
+    }
 
 	function loadCommentIntoCache() {
 		var numViews = $("#MainContentContainer > div").size() - 1;
@@ -430,6 +450,9 @@
 			case 1: //Prev
 				presentationPrev();
 				break;
+            case 2: //Jump
+                jumpToSlide(msg['Slide']);
+                break;
 		};
 	}
 
@@ -437,6 +460,14 @@
 		curSlideIndex = 0;
 		showSlideInMainView(curSlideIndex);
 	}
+
+    function jumpToSlide(slideIndex) {
+        if(slideIndex < preloadSlideIndex) {
+            curSlideIndex = slideIndex;
+            console.log("Current slide: " + curSlideIndex);
+			showSlideInMainView(curSlideIndex);
+        }
+    }
 
 	function presentationNext() {
 		if(curSlideIndex < preloadSlideIndex)
@@ -459,8 +490,7 @@
 		$(".MainSlideView").attr("src", $("#" + slideIndex).attr("src"));
 		mainSlideViewIndex = slideIndex;
 
-		//Clear the comment cache
-		$("#MainContentContainer > .CommentCache").remove();
+		clearCommentCache();
         updateNumCommentsLabel();
 		loadCommentIntoCache();
 	}
@@ -499,6 +529,9 @@
 			case 1:
 				hideWhiteboard();
 				break;
+            case 2:
+                clearWhiteboard();
+                break;
 		};
 	}
 
@@ -524,6 +557,10 @@
 
 		//$("#whiteBoard").slideDown('slow', function(){});
 	}
+
+    function clearWhiteboard() {
+        drawingTool.clearCommentBoard();
+    }
 
 	function hideWhiteboard() {
 
@@ -1565,29 +1602,3 @@
 	var curDuration = 0;
 
 </script>
-
-
-<script>
-    var myVideo = document.getElementById("myVideo");
-
-    function playPause() {
-        
-        if (myVideo.paused)
-            myVideo.play();
-        else
-            myVideo.pause();
-    }
-
-    function makeBig() {
-        console.log(myVideo.seekable);
-        myVideo.currentTime = 1.1;
-    }
-
-    function makeSmall() {
-        myVideo.width = 320;
-    }
-
-    function makeNormal() {
-        myVideo.width = 420;
-    } 
-</script> 
