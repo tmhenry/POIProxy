@@ -56,7 +56,7 @@ namespace POIProxy.Handlers
             {
                 foreach (POIUser user in POIGlobalVar.UserProfiles.Values)
                 {
-                    if (user != myUser || true)
+                    if (user != myUser)
                         user.SendData(comment.getPacket(), ConType.TCP_CONTROL);
                 }
             }
