@@ -10,10 +10,37 @@ using SignalR;
 using SignalR.Hubs;
 using POIProxy.SignalRFun;
 
+using System.Runtime.InteropServices;
+using Microsoft.Win32.SafeHandles;
+using System.Diagnostics;
+
 namespace POIProxy
 {
     public class POISession
     {
+        public const uint DUPLEX = (0x00000003);
+        public const uint FILE_FLAG_OVERLAPPED = (0x40000000);
+
+        public string PIPE_NAME = "\\\\.\\pipe\\";
+        public const uint BUFFER_SIZE = 4096;
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        public static extern int ConnectNamedPipe(
+           SafeFileHandle hNamedPipe,
+           IntPtr lpOverlapped);
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        public static extern SafeFileHandle CreateNamedPipe(
+            String pipeName,
+            uint dwOpenMode,
+            uint dwPipeMode,
+            uint nMaxInstances,
+            uint nOutBufferSize,
+            uint nInBufferSize,
+            uint nDefaultTimeOut,
+            IntPtr lpSecurityAttributes);
+
+        private SafeFileHandle streamingPipe;
         private List<POIUser> commanders;
         private List<POIUser> viewers;
         private int id;
@@ -21,6 +48,7 @@ namespace POIProxy
         private POISessionPresController presController;
         private POISessionScheduler myScheduler = new POISessionScheduler();
 
+        public SafeFileHandle StreamingPipe { get { return streamingPipe; } }
         public List<POIUser> Commanders { get { return commanders; } }
         public List<POIUser> Viewers { get { return viewers; } }
         public int Id { get { return id; } }
@@ -43,16 +71,67 @@ namespace POIProxy
             Info.contentId = contentId;
 
             id = sessionId;
+            PIPE_NAME += id;
 
             commanders = new List<POIUser>();
             viewers = new List<POIUser>();
             JoinAsCommander(commander);
 
-            
 
             Thread schedulerThread = new Thread(StartScheduler);
             schedulerThread.Name = @"SessionScheduler_" + id;
             schedulerThread.Start();
+
+            StartAudioStreamingService();
+        }
+
+        public void StartAudioStreamingService()
+        {
+            //Create a pipe and wait for the connection from ffmpeg
+            streamingPipe = CreateNamedPipe(
+                PIPE_NAME,
+                DUPLEX | FILE_FLAG_OVERLAPPED,
+                0,
+                255,
+                BUFFER_SIZE,
+                BUFFER_SIZE,
+                0,
+                IntPtr.Zero
+            );
+
+            if (streamingPipe.IsInvalid)
+                Console.WriteLine("Pipe creation failed!");
+
+            //Instruct the ffmpeg to connect to the pipe
+            Thread notifyStreamingServer = new Thread(NotifyAudioStreamingServer);
+            notifyStreamingServer.Start();
+
+            int success = ConnectNamedPipe(streamingPipe, IntPtr.Zero);
+            if (success == -1)
+            {
+                Console.WriteLine("Pipe connection failed!");
+            }
+        }
+
+        public void NotifyAudioStreamingServer()
+        {
+            //Sleep for 1ms to allow other threads work first
+            Thread.Sleep(1);
+
+            //Start a cmd process which trigger ffmpeg
+            Process process = new Process();
+
+            ProcessStartInfo startInfo = new ProcessStartInfo();
+            startInfo.WindowStyle = System.Diagnostics.ProcessWindowStyle.Hidden;
+            startInfo.FileName = "cmd.exe";
+
+            //Important: specify the options for ffmpeg
+            //The PIPE_NAME is already defined so can be used here as input file
+            //"/C" let the console close after operation completes
+            startInfo.Arguments = "/C ffmpeg.......";
+
+            process.StartInfo = startInfo;
+            process.Start();
         }
 
         public void StartScheduler()
