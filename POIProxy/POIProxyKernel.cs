@@ -58,6 +58,7 @@ namespace POIProxy
 
             user.SessionHandler = mySessionManager;
             user.PointerHandler = new POIProxyPtrCtrlHandler(user);
+            user.AudioContentHandler = new POIProxyAudioContentHandler(user);
         }
 
         public void HandleUserLeave(POIUser user) { }
