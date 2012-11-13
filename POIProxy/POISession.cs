@@ -13,6 +13,7 @@ using POIProxy.SignalRFun;
 using System.Runtime.InteropServices;
 using Microsoft.Win32.SafeHandles;
 using System.Diagnostics;
+using System.IO;
 
 namespace POIProxy
 {
@@ -102,10 +103,17 @@ namespace POIProxy
             if (streamingPipe.IsInvalid)
                 Console.WriteLine("Pipe creation failed!");
 
-            //Instruct the ffmpeg to connect to the pipe
-            Thread notifyStreamingServer = new Thread(NotifyAudioStreamingServer);
-            notifyStreamingServer.Start();
+            //Listen on the ffmpeg to connect to the pipe
+            Thread pipeListener = new Thread(ListenForStreamingServer);
+            pipeListener.Name = @"Pipe Listener";
+            pipeListener.Start();
 
+            //Notify ffmpeg to connect and read the pipe
+            NotifyAudioStreamingServer();
+        }
+
+        public void ListenForStreamingServer()
+        {
             int success = ConnectNamedPipe(streamingPipe, IntPtr.Zero);
             if (success == -1)
             {
@@ -115,9 +123,6 @@ namespace POIProxy
 
         public void NotifyAudioStreamingServer()
         {
-            //Sleep for 1ms to allow other threads work first
-            Thread.Sleep(1);
-
             //Start a cmd process which trigger ffmpeg
             Process process = new Process();
 
@@ -128,7 +133,7 @@ namespace POIProxy
             //Important: specify the options for ffmpeg
             //The PIPE_NAME is already defined so can be used here as input file
             //"/C" let the console close after operation completes
-            startInfo.Arguments = "/C ffmpeg.......";
+            startInfo.Arguments = "/C Test.exe";
 
             process.StartInfo = startInfo;
             process.Start();
