@@ -451,7 +451,7 @@
 				presentationPrev();
 				break;
             case 2: //Jump
-                jumpToSlide(msg['Slide']);
+                jumpToSlide(msg['SlideIndex']);
                 break;
 		};
 	}
@@ -1031,7 +1031,7 @@
 			var timeNow = new Date();
 			var timeNowMsRef = timeNow.getTime();
 			var bufferDelay = 0;
-
+			callback(event);
 			if (isFirstEvent) {
 				//If it is the first event
 				isFirstEvent = false;
@@ -1078,6 +1078,7 @@
 
 				
 				//Schedule the event with given buffering delay
+				//bufferDelay = 0;
 				setTimeout(callback(event), bufferDelay);
 			}
 		}

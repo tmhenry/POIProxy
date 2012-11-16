@@ -28,7 +28,7 @@ namespace POIProxy
 
         private int mainPort = 8091;
         private int signalRPort = 8080;
-        private string baseAddr = "http://192.168.1.109:";
+        private string baseAddr = "http://192.168.1.150:";
         //private string baseAddr = "http://localhost:";
 
         public bool Status { get; set; }
