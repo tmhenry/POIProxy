@@ -123,7 +123,7 @@ textarea {
 
 #whiteBoard
 {
-    position: absolute; top: -82%; left: 18%; height: 80%; width: 80%;
+    position: absolute; top: -100%; left: 18%; height: 80%; width: 80%;
 }
 
 #canvasStack
@@ -170,7 +170,7 @@ textarea {
 #MenuBar
 {
     position: absolute; 
-    width: 30%; 
+    width: 35%; 
     left: 25%; 
     top: 5%; 
     height: 7%;
@@ -181,10 +181,12 @@ textarea {
     -moz-box-shadow: 0 8px 6px -6px black;
         box-shadow: 0 8px 6px -6px black;
 }
+
+
     
 #MenuBar > div
 {
-    width: 25%;
+    width: 20%;
     height: 100%;
         
     position: absolute;
@@ -192,6 +194,8 @@ textarea {
     cursor: hand;
         
 }
+
+
     
 #MenuBar > div > img
 {
@@ -214,17 +218,28 @@ textarea {
     
 #PointerItem
 {
-    left: 25%;
+    left: 20%;
 }
     
 #CommentItem
 {
-    left: 50%;
+    left: 40%;
+}
+
+#RecordItem
+{
+    left: 60%;
 }
     
 #MailItem
 {
-    left: 75%;
+    left: 80%;
+}
+
+#FullscreenButton
+{
+    left: 120%;
+    border-left: none;
 }
 
 

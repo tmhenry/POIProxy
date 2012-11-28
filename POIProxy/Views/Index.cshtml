@@ -43,7 +43,7 @@
 			poiProxy.joinSession(0);
 		});
 
-		$("#whiteboard").hide();
+		
 
 		$("#PresBoard").css({
 			"background-image": "url(@(Model.ImageUrl)background_mini.png)",
@@ -66,16 +66,8 @@
 		initDrawing();
 		initLaserPointerLayer();
 
-		var comment = new POITextComment();
-		comment.createComment({
-			"X" : 10,
-			"Y" : 20,
-			"Depth" : 0,
-			"Msg": "How are you"
-		});
+        //$("#whiteBoard").hide();
 
-		var testCmntObject = new POICommentMsg();
-		console.log(JSON.stringify(testCmntObject));
 	});
 
     function initVideoTesting() {
@@ -205,7 +197,11 @@
 		$("#PointerItem > img").attr("src", "@(Model.ImageUrl)laser_icon.jpg");
 		$("#CommentItem > img").attr("src", "@(Model.ImageUrl)speech_bubble.png");
 		$("#MailItem > img").attr("src", "@(Model.ImageUrl)mail.png");
+        $("#RecordItem > img").attr("src", "@(Model.ImageUrl)record-icon.png");
+        $("#FullscreenButton > img").attr("src", "@(Model.ImageUrl)fullscreen-button.png");
 		$("#Logo > img").attr("src", "@(Model.ImageUrl)logo.png");
+
+        $("#FullscreenButton").css("border", "none");
 
 		$("#DrawingItem > img").click(function(){
 			if(!whiteboardEnabled) {
@@ -538,6 +534,8 @@
 	function showWhiteboard() {
 		whiteboardEnabled = true;
 
+        $("#whiteBoard").show();
+
 		$("#whiteBoard").animate({
 			top : "15%"
 		},  200, 'linear', function () {
@@ -570,11 +568,14 @@
 			top : "19%"
 		},  50, 'linear', function () {
 			$("#whiteBoard").animate({
-				top : "-82%"
+				top : "-100%"
 			},  400, 'linear', function () {
-				
+                //Hide the whiteboard after animation
+				//$("#whiteBoard").hide();
 			});
 		});
+
+        
 	}
 
 	function handleCommentMsg(msgString) {
