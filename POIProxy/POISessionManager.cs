@@ -19,6 +19,11 @@ namespace POIProxy
             POISession session = new POISession(user, GenerateSessionId(), contentId);
 
             registery.AddSession(user, session);
+
+            //Send back the session created message to the user
+            POISessionMsg msg = new POISessionMsg();
+            msg.initSessionCreatedMsg(session.Id);
+            user.SendData(msg.getPacket(), ConType.TCP_CONTROL);
         }
 
         public void EndSession(POIUser user)
