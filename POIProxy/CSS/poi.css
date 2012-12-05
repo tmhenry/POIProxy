@@ -251,7 +251,7 @@ textarea {
     height: 7%;
 }
 
-#AudioStreamingPlayer > video
+#AudioStreamingPlayer > audio
 {
     position: absolute;
     width: 100%;
