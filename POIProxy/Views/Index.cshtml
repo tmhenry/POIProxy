@@ -55,6 +55,7 @@
 		initSideBarSliding();
 		initMainContentSliding();
         //initVideoTesting();
+        initAudioStreamingPlayer();
 		
 
 		//$("#PresBoardSideBarSlideRegion").slider("disable");
@@ -69,6 +70,13 @@
         //$("#whiteBoard").hide();
 
 	});
+
+    function initAudioStreamingPlayer() {
+        var audioSource =  $('<source>');
+        audioSource.attr('src', "@(Model.AudioStreamingUrl)0/POIAudio.m3u8");
+
+        $("#AudioStreamingPlayer > video").append(audioSource);
+    }
 
     function initVideoTesting() {
 

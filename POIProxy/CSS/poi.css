@@ -238,10 +238,25 @@ textarea {
 
 #FullscreenButton
 {
-    left: 120%;
+    left: 100%;
     border-left: none;
 }
 
+#AudioStreamingPlayer
+{
+    position: absolute; 
+    width: 16%; 
+    left: 60%; 
+    top: 5%; 
+    height: 7%;
+}
+
+#AudioStreamingPlayer > video
+{
+    position: absolute;
+    width: 100%;
+    height: 100%;   
+}
 
 #laserPointerLayer
 {

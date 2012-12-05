@@ -25,6 +25,7 @@ namespace POIProxy.Controllers
                 ImageUrl = POIProxyGlobalVar.MainUrl + "content/Images/",
                 VideoUrl = POIProxyGlobalVar.MainUrl + "content/Videos/",
                 AudioUrl = POIProxyGlobalVar.MainUrl + "content/Audios/",
+                AudioStreamingUrl = POIProxyGlobalVar.AudioStreamingUrl,
                 StreamingUrl = POIProxyGlobalVar.MainUrl + "content/Streaming/",
                 CSSUrl = POIProxyGlobalVar.MainUrl + "content/CSS/",
                 SessionUrl = POIProxyGlobalVar.MainUrl + "api/Sessions"
