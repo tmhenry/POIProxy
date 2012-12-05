@@ -81,7 +81,7 @@ namespace POIProxy
 
             Thread schedulerThread = new Thread(StartScheduler);
             schedulerThread.Name = @"SessionScheduler_" + id;
-            //schedulerThread.Start();
+            schedulerThread.Start();
 
             //StartAudioStreamingService();
         }
