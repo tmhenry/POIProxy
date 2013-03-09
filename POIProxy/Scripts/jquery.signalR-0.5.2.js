@@ -164,8 +164,11 @@
             else {
                 connection.protocol = parser.protocol;
                 connection.host = parser.host;
-                connection.baseUrl = parser.protocol + "//" + parser.host;
+                connection.baseUrl = parser.protocol + "//" + parser.host;                
             }
+            //Android debugging
+            console.log("Connection Host is " + connection.host.toString());
+            console.log("Connection base URL is " + connection.baseUrl.toString());
 
             // Set the websocket protocol
             connection.wsProtocol = connection.protocol === "https:" ? "wss://" : "ws://";

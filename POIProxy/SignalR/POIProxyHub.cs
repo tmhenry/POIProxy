@@ -16,7 +16,7 @@ namespace POIProxy.SignalRFun
 
         public void EchoOnServer()
         {
-            Clients.echoOnClient();
+            //Clients.echoOnClient();
         }
 
         public void Log(string msg)

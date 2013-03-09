@@ -7,7 +7,7 @@
 <link type="text/css" href="@(Model.CSSUrl)poi.css" rel="Stylesheet" />
 
 <script src = "@(Model.ScriptUrl)jquery-1.6.4.js" type = "text/javascript"></script>
-<script src = "@(Model.ScriptUrl)jquery.signalR-0.5.2.min.js" type ="text/javascript"></script>
+<script src = "@(Model.ScriptUrl)jquery.signalR-0.5.2.js" type ="text/javascript"></script>
 <script src = "@(Model.SignalrUrl)hubs" type="text/javascript"></script>
 <script src = "@(Model.ScriptUrl)jquery-ui-1.8.22.custom.min.js" type="text/javascript"></script>
 <script src = "@(Model.ScriptUrl)jquery.corner.js" type="text/javascript"></script>
@@ -70,6 +70,71 @@
         //$("#whiteBoard").hide();
 
 	});
+
+    //-----------------------------------------------------------------------------------------------------------------------
+    //Start of Steve's code
+    function initWebview() {
+        //$("#PresBoard").css({ position: "absolute", left: "-24%", top: "-20.5%", height: "128%", width: "128%" });
+        $("#FootBarContainer").css({ top: "80%", left: "90%" });
+        $(".MainSlideView").css("border-radius", 0);
+    }
+
+    function showSideBar() {        
+
+        $("#PresBoardSideBarContainer").css("width", "90%");
+        $("#laserPointerLayer").css("left", "39%");
+        $("#whiteBoard").css("left", "39%");
+        $("#PresBoardSideBar").css("height", "45%");
+        $("#PresBoardSideBarSlideRegion").css("height", "80%");
+        $("#PresBoardSideBarSlideRegion").css("top", "15%");
+
+        $("#PresBoardSideBarSlideRegion").css("left", "13%");
+        $("#MainContentSlideRegion").css("left", "39%");        
+    }
+
+    function hideSideBar() {        
+
+        $("#MainContentSlideRegion").css("left", "18%");
+        $("#PresBoardSideBarSlideRegion").css("left", "-4%");        
+
+        $("#PresBoardSideBarContainer").css("width", "60%");
+        $("#laserPointerLayer").css("left", "18%");
+        $("#whiteBoard").css("left", "18%");
+    }
+
+    function clickDrawingItem() {
+        if (!whiteboardEnabled) {
+            showWhiteboard();
+            drawingTool.switchToDrawingMode();
+        }
+        else {
+            hideWhiteboard();
+        }
+    }
+    
+    function clickPointerItem() {
+        showWhiteboard();
+        drawingTool.switchToPointerMode();
+    }
+    
+    function clickCommentItem() {
+        console.log("clickCommentItem Called");
+        showWhiteboard();
+        drawingTool.switchToTextMode();
+    }
+    
+    function clickMailItem() {
+        drawingTool.saveComment();
+        updateNumCommentsLabel();
+        alert("Comment has been sent!");
+        hideWhiteboard();
+    }
+
+    function joinSession(sessionId) {
+        poiProxy.joinSession(sessionId);
+    }
+    // End of Steve's code
+    //-----------------------------------------------------------------------------------------------------------------------
 
     function initAudioStreamingPlayer() {
         
@@ -150,14 +215,21 @@
 		Apple.UA = navigator.userAgent;
 		Apple.Device = false;
 		Apple.Types = ["iPhone", "iPod", "iPad"];
+
+		var ua = navigator.userAgent.toLowerCase();
+		var isAndroid = ua.indexOf("android") > -1;
+
 		for (var d = 0; d < Apple.Types.length; d++) {
 			var t = Apple.Types[d];
 			Apple[t] = !!Apple.UA.match(new RegExp(t, "i"));
 			Apple.Device = Apple.Device || Apple[t];
 		}
-
+				
 		if (Apple.iPad) {
 			initIpadLayout();
+		}
+		if (isAndroid) {
+		    //do something
 		}
 		else {
 			initCommonLayout();
@@ -569,7 +641,12 @@
 	function hideWhiteboard() {
 
 		whiteboardEnabled = false;
-
+		//$("#whiteBoard").animate({
+		//    top: "-100%"
+		//}, 400, 'linear', function () {
+		//    //Hide the whiteboard after animation
+		//    //$("#whiteBoard").hide();
+		//});
 		$("#whiteBoard").animate({
 			top : "19%"
 		},  50, 'linear', function () {
@@ -611,15 +688,18 @@
 	// The general-purpose event handler. This function just determines the mouse 
 	// position relative to the canvas element.
 	function ev_canvas(ev) {
-		switch (ev.type) {
-			case "touchstart":
-			case "touchmove":
-			case "touchend":
-				ev.preventDefault();
-				break;
-		}
 
-		/*
+	    poiProxy.log("ev_canvas start");
+	    switch (ev.type) {
+	        case "touchstart":
+	        case "touchmove":
+	        case "touchend":
+	            console.log("Prevent default()");
+	            ev.preventDefault();
+	            break;
+	    }
+
+	    /*
 		if (ev.layerX || ev.layerX == 0) { // Firefox
 			ev._x = ev.layerX;
 			ev._y = ev.layerY;
@@ -628,13 +708,41 @@
 			ev._y = ev.offsetY;
 		}
 		*/
+	    poiProxy.log("event type is " + ev.type);
+//	    poiProxy.log("event canvas coor: "+ev.pageX + " " + ev.pageY);
 
-        poiProxy.log(ev.pageX + " " + ev.pageY);
+	    //poiProxy.log("Target touches X is " + ev.targetTouches[0].pageX);
 
-		ev._x = ev.pageX - $(drawingTool.Context).offset().left;
-		ev._y = ev.pageY - $(drawingTool.Context).offset().top;
+	    switch (ev.type) {            
+            case "touchstart":
+            case "touchmove":
+	        case "touchend":
+	            console.log("within switch touch");
+	            poiProxy.log("within switch touch");
+	            try{
+	                ev._x = ev.originalEvent.touches[0].pageX - $(drawingTool.Context).offset().left;
+	                ev._y = ev.originalEvent.touches[0].pageY - $(drawingTool.Context).offset().top;
+	            }catch(err){
+                    poiProxy.log("Error!");
+                    poiProxy.log("error "+err.message);
+                }  
+	            //ev._x = ev.pageX;
+	            //ev._y = ev.pageY;
+                break;
+	        default:
+	            console.log("within switch default");
+	            poiProxy.log("within switch default");
+	            ev._x = ev.originalEvent.pageX - $(drawingTool.Context).offset().left;
+	            ev._y = ev.originalEvent.pageY - $(drawingTool.Context).offset().top;
+	    }
 
-        
+		//ev._x = ev.pageX - $(drawingTool.Context).offset().left;
+		//ev._y = ev.pageY - $(drawingTool.Context).offset().top;
+
+		poiProxy.log("event canvas coor: "+ev._x + " " + ev._y);
+
+		poiProxy.log("offset left is " + $(drawingTool.Context).offset().left);
+		poiProxy.log("offset top is" + $(drawingTool.Context).offset().top);
 
 		// Call the event handler of the tool.
 		var func = drawingTool[ev.type];
@@ -667,25 +775,34 @@
 		var context = myContext;
 		this.Context = context;
 
+		this.switchToDrawingMode = function () {
+		    poiProxy.log("switchToDrawingMode called");
+		    console.log("switchToDrawingMode called");
 
-		this.switchToDrawingMode = function() {
 			tool.mousedown = startDrawing;
 			tool.mousemove = moveDrawing;
-			tool.mouseup = mouseendDrawing;
+			tool.mouseup = mouseendDrawing;            			
 
+			if (tool.touchstart == null) {
+			    poiProxy.log("tool touchstart is null.");
+			    console.log("tool touchstart is null.")
+			}
 			tool.touchstart = startDrawing;
 			tool.touchmove = moveDrawing;
 			tool.touchend = touchendDrawing;
+
 		}
 
 		this.switchToTextMode = function() {
-			tool.mousedown = createTextbox;
-			tool.mousemove = dummyHandler;
-			tool.mouseup = dummyHandler;
 
-			tool.touchstart = createTextbox;
-			tool.touchmove = dummyHandler;
-			tool.touchend = dummyHandler;
+		    tool.mousedown = createTextbox;
+		    tool.mousemove = dummyHandler;
+		    tool.mouseup = dummyHandler;
+
+		    tool.touchstart = createTextbox;
+		    tool.touchmove = dummyHandler;
+		    tool.touchend = dummyHandler;
+			
 		}
 
 		this.switchToPointerMode = function () {
@@ -729,7 +846,7 @@
 			if(drawings[stackSize.toString()] == null) {
 				setupDrawingCanvas(stackSize);
 			}
-			else{
+			else{f
 				curve = drawings[stackSize.toString()];
 			}
 		}
@@ -865,7 +982,9 @@
 		// This is called when you start holding down the mouse button.
 		// This starts the pencil drawing.
 		function startDrawing(ev) {
-			initDrawingContext();
+		    console.log("Start Drawing");
+		    poiProxy.log("Start Drawing called");
+		    initDrawingContext();
 
 			var point = new point2D();
 			point.construct(ev._x, ev._y);
@@ -885,7 +1004,9 @@
 		function moveDrawing(ev) {
 			if (tool.started) {
 				//context.lineTo(ev._x, ev._y);
-				//context.stroke();
+			    //context.stroke();
+			    poiProxy.log("moveDrawing called");
+			    console.log("Start drawing");
 				var point = new point2D();
 				point.construct(ev._x, ev._y);
 				curve.addPointToCurve(point);
@@ -930,17 +1051,16 @@
 
 			comment.createComment({
 				"X": ev._x / $(context).width(),
-				"Y": ev._y / $(context).height(),
-				"Depth": textStackSize,
-				"Msg": ev._x + " " + ev._y 
+				"Y": ev._y / $(context).height(),			    
+			    "Depth": textStackSize,
+				"Msg": "Comment coor is " + ev._x + " " + ev._y 
 			});
 
             poiProxy.log(ev._x + " " + ev._y);
 			updateTextbox(comment);
 
 			tool.switchToIdleMode();
-		}
-
+		}        		
 
 		function collapseAllTextboxes() {
 			for(var i=0; i<textStackSize; i++)
@@ -951,9 +1071,6 @@
 
 
 	}
-
-
-
 	
 </script>
 
@@ -1143,8 +1260,8 @@
 
 		function createComment(valueArray) {
 			this.X = valueArray["X"];
-			this.Y = valueArray["Y"];
-			this.Msg = valueArray["Msg"];
+			this.Y = valueArray["Y"];		    
+		    this.Msg = valueArray["Msg"];
 			this.Depth = valueArray["Depth"];
 
 			this.OperationMode = 0;
