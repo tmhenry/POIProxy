@@ -56,11 +56,20 @@ namespace POIProxy
         public POISessionPresController PresController { get { return presController; } }
         public POISessionInfo Info { get; set; }
 
+        private POIPresentation LoadPresFromContentServer(int contentId)
+        {
+            POIPresentation pres = new POIPresentation();
+            int offset = 0;
+            pres.deserialize(POIContentServerHelper.getPresInfo(contentId), ref offset);
+
+            return pres;
+        }
+
         public POISession(POIUser commander, int sessionId, int contentId)
         {
             //Load the presentation content according to the contentId
-            POIPresentation presContent = new POIPresentation();
-            presContent.LoadPresentationFromStorage();
+            POIPresentation presContent = LoadPresFromContentServer(contentId);
+            //presContent.LoadPresentationFromStorage();
 
             presController = new POISessionPresController(this);
             presController.LoadPresentation(presContent);
