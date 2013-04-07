@@ -6,6 +6,7 @@ using System.Text;
 using SignalR.Hubs;
 using POILibCommunication;
 using POIProxy.Handlers;
+using System.Web.Script.Serialization;
 
 namespace POIProxy.SignalRFun
 {
@@ -39,6 +40,11 @@ namespace POIProxy.SignalRFun
 
             if (session != null)
             {
+                //Get the presentation file and send to the user
+                POIPresentation curPres = session.PresController.CurPres;
+                JavaScriptSerializer js = new JavaScriptSerializer();
+                Clients[Context.ConnectionId].handlePresInfo(js.Serialize(curPres));
+
                 List<POISlide> initialSlides = session.PresController.GetInitialSlides();
                 for (int i = 0; i < initialSlides.Count; i++)
                 {

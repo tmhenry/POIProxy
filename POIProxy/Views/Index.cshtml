@@ -28,6 +28,7 @@
 
 		//Register handlers
 		poiProxy.handlePresCtrlMsg = handlePresCtrlMsg;
+		poiProxy.handlePresInfo = handlePresInfo;
 		poiProxy.handleWhiteboardMsg = handleWhiteboardMsg;
 		poiProxy.handleCommentMsg = handleCommentMsg;
 		poiProxy.handlePtrCtrlMsg = handlePtrCtrlMsg;
@@ -456,6 +457,12 @@
                 jumpToSlide(msg['SlideIndex']);
                 break;
 		};
+	}
+
+	function handlePresInfo(msgString) {
+		var pres = jQuery.parseJSON(msgString);
+
+		
 	}
 
 	function startPresentation() {
