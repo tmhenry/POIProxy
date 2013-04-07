@@ -497,13 +497,17 @@
 		loadCommentIntoCache();
 	}
 
-	function getSlide(slideIndex) {
+	function getSlide(presId, fileType, slideIndex) {
 		console.log("Get slide: " + slideIndex);
 		if(slideIndex > preloadSlideIndex) {
 			preloadSlideIndex = slideIndex;
 		}
 		
 		url = "@(Model.SessionUrl)" + "?sessionId=0&slideIndex=" + slideIndex;
+		//url = "@(Model.SessionUrl)" + "?"
+		//       + "slideIndex=" + slideIndex + "&"
+		//	   + "presId=" + presId + "&"
+		//	   + "fileType=" + fileType;
 
 		var img = $('<img>', {
 			id: slideIndex,

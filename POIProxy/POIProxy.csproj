@@ -111,6 +111,7 @@
     <Compile Include="Handlers\POIProxyPresCtrlHandler.cs" />
     <Compile Include="Handlers\POIProxyPtrCtrlHandler.cs" />
     <Compile Include="Handlers\POIProxyWBCtrlHandler.cs" />
+    <Compile Include="POIContentServerHelper.cs" />
     <Compile Include="POISessionPresController.cs" />
     <Compile Include="POIProxyGlobalVar.cs" />
     <Compile Include="POISession.cs" />
