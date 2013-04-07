@@ -108,6 +108,13 @@ textarea {
     background-image: none;
 }
 
+.MainAnimationView
+{
+    border-radius: 8px ;
+    position: absolute; top: 1%; left: 1%; height: 98%; width: 98%; 
+    background-image: none;
+}
+
             
 .ui-slider .ui-slider-handle 
 { 

@@ -460,9 +460,10 @@
 	}
 
 	function handlePresInfo(msgString) {
-		var pres = jQuery.parseJSON(msgString);
+		curPresentation = jQuery.parseJSON(msgString);
 
-		
+		curPresInfo = pres['info'];
+		curSlideList = pres['slideList'];
 	}
 
 	function startPresentation() {
@@ -496,25 +497,56 @@
 	}
 
 	function showSlideInMainView(slideIndex) {
-		$(".MainSlideView").attr("src", $("#" + slideIndex).attr("src"));
-		mainSlideViewIndex = slideIndex;
+		var slide = curSlideList[slideIndex];
+		var presId = curPresentation['PresId'];
+
+		if(slide['Type'] == 0)
+		{
+			$(".MainSlideView").attr("src", $("#" + slideIndex).attr("src"));
+			mainSlideViewIndex = slideIndex;
+		}
+		else
+		{
+			var url = getContentServerReqUrl(presId, 1, slideIndex);
+			$(".MainAnimationView > source").attr("src", url);
+		}
 
 		clearCommentCache();
         updateNumCommentsLabel();
 		loadCommentIntoCache();
 	}
 
-	function getSlide(presId, fileType, slideIndex) {
+	function getContentServerReqUrl(presId, fileType, slideIndex)
+	{
+		return "@(Model.SessionUrl)" + "?"
+					   + "slideIndex=" + slideIndex + "&"
+					   + "presId=" + presId + "&"
+					   + "fileType=" + fileType;
+	}
+
+	function getSlide(slideIndex) {
 		console.log("Get slide: " + slideIndex);
 		if(slideIndex > preloadSlideIndex) {
 			preloadSlideIndex = slideIndex;
 		}
+
+		var curSlide = curSlideList[slideIndex];
+		var type = curSlide['Type'];
+		var presId = curPresentation['PresId'];
 		
-		url = "@(Model.SessionUrl)" + "?sessionId=0&slideIndex=" + slideIndex;
-		//url = "@(Model.SessionUrl)" + "?"
-		//       + "slideIndex=" + slideIndex + "&"
-		//	   + "presId=" + presId + "&"
-		//	   + "fileType=" + fileType;
+		var url;
+		if(type == 0)
+		{
+			//Static slide, insert a new img tag
+			url = getContentServerReqUrl(presId, 0, slideIndex);
+		}
+		else
+		{
+			//Animation slide, retrieve the animation cover
+			url = getContentServerReqUrl(presId, 2, slideIndex);
+		}
+		
+		//var url = "@(Model.SessionUrl)" + "?sessionId=0&slideIndex=" + slideIndex;
 
 		var img = $('<img>', {
 			id: slideIndex,
@@ -1606,6 +1638,10 @@
 	var startingTransformValueMainContent = 0;
 
 	//For showing presentation
+	var curPresentation;
+	var curSlideList;
+	var curPresInfo;
+
 	var curSlideIndex = 0;
 	var preloadSlideIndex = 0;
 	var mainSlideViewIndex = 2;
@@ -1619,5 +1655,7 @@
 
 	//For video control
 	var curDuration = 0;
+
+
 
 </script>
