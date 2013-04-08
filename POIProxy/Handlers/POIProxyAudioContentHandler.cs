@@ -26,9 +26,7 @@ namespace POIProxy.Handlers
             var session = registery.GetSessionByUser(myUser);
 
             //Write the audio into a pipe
-            FileStream os = new FileStream(session.StreamingPipe, FileAccess.Write, 4096);
-            os.Write(msg.AudioBytes, 0, msg.AudioBytes.Length);
-            os.Flush();
+            
         }
     }
 }
