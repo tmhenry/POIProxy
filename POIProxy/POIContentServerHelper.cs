@@ -49,13 +49,22 @@ namespace POIProxy
         static private byte[] getContent(int presId, FileType fileType, int slideIndex)
         {
             String reqUrl = ContentServerHome + "?"
-                            + "presId=" + presId
-                            + "fileType=" + (int)fileType
+                            + "presId=" + presId + "&"
+                            + "fileType=" + (int)fileType + "&"
                             + "slideIndex=" + slideIndex;
 
             if(webClient == null) webClient = new WebClient();
 
-            return webClient.DownloadData(reqUrl);
+            try
+            {
+                return webClient.DownloadData(reqUrl);
+            }
+            catch (WebException ex)
+            {
+                Console.WriteLine(ex);
+                return null;
+            }
+            
         }
         
     }

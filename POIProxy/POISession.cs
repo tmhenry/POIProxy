@@ -60,7 +60,18 @@ namespace POIProxy
         {
             POIPresentation pres = new POIPresentation();
             int offset = 0;
-            pres.deserialize(POIContentServerHelper.getPresInfo(contentId), ref offset);
+
+            byte[] content = POIContentServerHelper.getPresInfo(contentId);
+
+            if (content != null)
+            {
+                pres.deserialize(content, ref offset);
+            }
+            else
+            {
+                Console.WriteLine("Cannot get archive from content server!");
+            }
+            
 
             return pres;
         }
@@ -69,6 +80,8 @@ namespace POIProxy
         {
             //Load the presentation content according to the contentId
             POIPresentation presContent = LoadPresFromContentServer(contentId);
+            
+            //POIPresentation presContent = new POIPresentation();
             //presContent.LoadPresentationFromStorage();
 
             presController = new POISessionPresController(this);
@@ -178,16 +191,16 @@ namespace POIProxy
         {
             List<POISlide> myList = presController.GetInitialSlides();
 
+            POIPresentation pres = new POIPresentation();
             for (int i = 0; i < myList.Count; i++)
             {
-                POIPresentation pres = new POIPresentation();
                 pres.Insert(myList[i]);
+            }
 
-                myScheduler.ScheduleLowPriorityEvent
-                (
-                    new POISessionPresSendEvent(user, pres)
-                );
-            } 
+            myScheduler.ScheduleLowPriorityEvent
+            (
+                new POISessionPresSendEvent(user, pres)
+            );
         }
 
         public void BroadcastPreloadSlide()
