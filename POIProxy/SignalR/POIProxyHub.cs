@@ -43,8 +43,16 @@ namespace POIProxy.SignalRFun
                 //Get the presentation file and send to the user
                 POIPresentation curPres = session.PresController.CurPres;
                 JavaScriptSerializer js = new JavaScriptSerializer();
-                Clients[Context.ConnectionId].handlePresInfo(js.Serialize(curPres));
+                try
+                {
+                    Clients[Context.ConnectionId].handlePresInfo(js.Serialize(curPres));
+                }
+                catch(Exception e)
+                {
+                    Console.WriteLine(e);
+                }
 
+                
                 List<POISlide> initialSlides = session.PresController.GetInitialSlides();
                 for (int i = 0; i < initialSlides.Count; i++)
                 {

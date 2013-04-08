@@ -63,7 +63,7 @@ namespace POIProxy
             
             for (int i = 0; i <= curPreloadIndex && i < curPresentation.Count; i++)
             {
-                myList.Add(curPresentation.slideList[i]);
+                myList.Add(curPresentation.SlideAtIndex(i));
                 //myList.Add(new POISlide(null));
             }
 

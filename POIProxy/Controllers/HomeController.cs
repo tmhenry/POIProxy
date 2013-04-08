@@ -8,6 +8,8 @@ using System.Net.Http;
 using RazorEngine;
 using RazorEngine.Templating;
 
+using POILibCommunication;
+
 namespace POIProxy.Controllers
 {
     public class HomeController : ApiController
@@ -28,7 +30,8 @@ namespace POIProxy.Controllers
                 AudioStreamingUrl = POIProxyGlobalVar.AudioStreamingUrl,
                 StreamingUrl = POIProxyGlobalVar.MainUrl + "content/Streaming/",
                 CSSUrl = POIProxyGlobalVar.MainUrl + "content/CSS/",
-                SessionUrl = POIProxyGlobalVar.MainUrl + "api/Sessions"
+                SessionUrl = POIProxyGlobalVar.MainUrl + "api/Sessions",
+                ContentServerUrl = POIGlobalVar.ContentServerHome
             };
 
             string result;

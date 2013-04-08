@@ -23,7 +23,7 @@
 
 		//Initialize the callback function for the hub
 		poiProxy.echoOnClient = function () {
-			//alert("LZ SB!!!");
+			alert("LZ SB!!!");
 		}
 
 		//Register handlers
@@ -246,8 +246,8 @@
 		$("#Logo").css("cursor", "hand");
 
 		$("#Logo > img").click(function(){
-			//window.location.href = "http://www.pipeofinsight.com";
-            seekToPosition();
+			window.location.href = "http://www.pipeofinsight.com";
+            //seekToPosition();
 		});
 	}
 
@@ -462,8 +462,8 @@
 	function handlePresInfo(msgString) {
 		curPresentation = jQuery.parseJSON(msgString);
 
-		curPresInfo = pres['info'];
-		curSlideList = pres['slideList'];
+		curPresInfo = curPresentation['info'];
+		curSlideList = curPresentation['slideList'];
 	}
 
 	function startPresentation() {
@@ -518,7 +518,7 @@
 
 	function getContentServerReqUrl(presId, fileType, slideIndex)
 	{
-		return "@(Model.SessionUrl)" + "?"
+		return "@(Model.ContentServerUrl)" + "?"
 					   + "slideIndex=" + slideIndex + "&"
 					   + "presId=" + presId + "&"
 					   + "fileType=" + fileType;
@@ -532,7 +532,7 @@
 
 		var curSlide = curSlideList[slideIndex];
 		var type = curSlide['Type'];
-		var presId = curPresentation['PresId'];
+		var presId = curPresentation['PresID'];
 		
 		var url;
 		if(type == 0)

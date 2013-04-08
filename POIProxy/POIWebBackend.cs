@@ -27,7 +27,7 @@ namespace POIProxy
         private Server signalRServer;
 
         private int mainPort = 8091;
-        private int signalRPort = 8080;
+        private int signalRPort = 8081;
         private string baseAddr = "http://192.168.1.150:";
         //private string baseAddr = "http://localhost:";
 
