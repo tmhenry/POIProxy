@@ -44,9 +44,6 @@
     <Reference Include="Newtonsoft.Json">
       <HintPath>..\packages\Newtonsoft.Json.4.5.7\lib\net40\Newtonsoft.Json.dll</HintPath>
     </Reference>
-    <Reference Include="POILibCommunication">
-      <HintPath>..\..\POILibCommunication\POILibCommunication\bin\Debug\POILibCommunication.dll</HintPath>
-    </Reference>
     <Reference Include="RazorEngine">
       <HintPath>..\packages\RazorEngine.3.0.8\lib\net40\RazorEngine.dll</HintPath>
     </Reference>
@@ -197,6 +194,12 @@
     <Content Include="Scripts\jquery.signalR-0.5.2.min.js">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\POILibCommunication\POILibCommunication\POILibCommunication.csproj">
+      <Project>{1BDA5A77-6127-44C2-9534-64B7EF070B26}</Project>
+      <Name>POILibCommunication</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

@@ -13,7 +13,6 @@ namespace POIProxy
     {
         POIWebBackend webBackend = new POIWebBackend();
         POIComServer myDataHandler;
-        POIWebService myService;
 
         public POISessionManager mySessionManager = new POISessionManager();
 
@@ -28,16 +27,15 @@ namespace POIProxy
             webBackend.Run();
 
             //Publish the server address to the dns server
-            myService = new POIWebService
+            POIWebService.StartService
             (
                 @"Proxy testing",
                 @"Taught by Prof. Gary Chan",
                 @""
             );
-            myService.StartService();
 
             //Start the ComServer to handle the input data
-            myDataHandler = new POIComServer(myService.ServiceSocket);
+            myDataHandler = new POIComServer(POIWebService.ServiceSocket);
             POIGlobalVar.SystemDataHandler = myDataHandler;
             POIGlobalVar.UserProfiles = userCollection;
         }
