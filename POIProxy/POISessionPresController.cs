@@ -30,6 +30,11 @@ namespace POIProxy
             mySession = session;
         }
 
+        public POIPresentation getPresMsgTemplate()
+        {
+            return new POIPresentation(CurPres.PresID);
+        }
+
         public void LoadPresentation(POIPresentation presentation)
         {
             curPresentation = presentation;

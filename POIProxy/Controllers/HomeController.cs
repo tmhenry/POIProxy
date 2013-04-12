@@ -31,7 +31,7 @@ namespace POIProxy.Controllers
                 StreamingUrl = POIProxyGlobalVar.MainUrl + "content/Streaming/",
                 CSSUrl = POIProxyGlobalVar.MainUrl + "content/CSS/",
                 SessionUrl = POIProxyGlobalVar.MainUrl + "api/Sessions",
-                ContentServerUrl = POIGlobalVar.ContentServerHome
+                ContentServerUrl = POIGlobalVar.ContentServerHome + "content.php",
             };
 
             string result;

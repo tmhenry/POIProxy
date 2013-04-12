@@ -108,7 +108,7 @@ namespace POIProxy
         {
             List<POISlide> myList = presController.GetInitialSlides();
 
-            POIPresentation pres = new POIPresentation();
+            POIPresentation pres = presController.getPresMsgTemplate();
             for (int i = 0; i < myList.Count; i++)
             {
                 pres.Insert(myList[i]);
@@ -122,7 +122,7 @@ namespace POIProxy
 
         public void BroadcastPreloadSlide()
         {
-            POIPresentation pres = new POIPresentation();
+            POIPresentation pres = presController.getPresMsgTemplate();
             POISlide slide = presController.GetPreloadSlide();
 
             if (slide != null)
