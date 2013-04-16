@@ -23,7 +23,7 @@
 
 		//Initialize the callback function for the hub
 		poiProxy.echoOnClient = function () {
-			alert("LZ SB!!!");
+			//alert("LZ SB!!!");
 		}
 
 		//Register handlers
@@ -101,7 +101,7 @@
 
         $("#PresBoardMainDisplay").append(myVideo);
 
-        
+        /*
         $(".MainAnimationView").bind('timeupdate', function() {
             var curVideo = $('.MainAnimationView')[0];
             if( curVideo.currentTime >= curDuration + 0.5 - 0.25) {
@@ -118,7 +118,7 @@
             var curVideo = $('.MainAnimationView')[0];
             //console.log('start:' + curVideo.currentTime)
             curVideo.play();
-        });
+        });*/
         
     }
     
@@ -474,6 +474,8 @@
     function jumpToSlide(slideIndex) {
         if(slideIndex < preloadSlideIndex) {
             curSlideIndex = slideIndex;
+            curDurationIndex = 0;
+            curPlayedTime = 0;
             console.log("Current slide: " + curSlideIndex);
 			showSlideInMainView(curSlideIndex);
         }
@@ -482,23 +484,111 @@
 	function presentationNext() {
 		if(curSlideIndex < preloadSlideIndex)
 		{
-			curSlideIndex++;
-			console.log("Current slide: " + curSlideIndex);
-			showSlideInMainView(curSlideIndex);
+            var curDuration = getCurDuration();
+            if(curDuration != -1)
+            {
+                animationViewSchedule();
+            }
+            else
+            {
+                curSlideIndex++;
+                curDurationIndex = 0;
+                curPlayedTime = 0;
+			    console.log("Current slide: " + curSlideIndex);
+			    showSlideInMainView(curSlideIndex);
+            }
 		}
 	}
 
 	function presentationPrev() {
 		if(curSlideIndex > 0) {
-			curSlideIndex--;
-			console.log("Current slide: " + curSlideIndex);
-			showSlideInMainView(curSlideIndex);
+            var prevDuration = getPrevDuration();
+            if(prevDuration != -1)
+            {
+                //Seek to the particular time
+                curPlayedTime -= prevDuration;
+                curDurationIndex--;
+                animationViewSeekTo(curPlayedTime);
+            }
+            else
+            {
+                curSlideIndex--;
+                curDurationIndex = 0;
+                curPlayedTime = 0;
+			    console.log("Current slide: " + curSlideIndex);
+			    showSlideInMainView(curSlideIndex);
+            }
+			
 		}
 	}
 
+    function getCurDuration() {
+        var slide = curSlideList[curSlideIndex];
+        
+        var curDuration = -1;
+        if(slide['Type'] != 0)
+        {
+            var durationList = slide['DurationList'];
+            if(curDurationIndex < durationList.length)
+            {
+                curDuration = durationList[curDurationIndex];
+            } 
+        }
+
+        return curDuration;
+    }
+
+    function getPrevDuration() {
+        var slide = curSlideList[curSlideIndex];
+
+        var prevDuration = -1;
+        if(slide['Type'] != 0)
+        {
+            var durationList = slide['DurationList'];
+            if(curDurationIndex > 0)
+            {
+                prevDuration = durationList[curDurationIndex-1];
+            }
+        }
+
+        return prevDuration;
+    }
+
+    function animationViewSeekTo(myTime)
+    {
+        var curVideo = $('.MainAnimationView')[0];
+        curVideo.currentTime = myTime;
+    }
+
+    function animationViewSchedule()
+    {
+        $(".MainAnimationView").bind('timeupdate', function() {
+            var curVideo = $('.MainAnimationView')[0];
+            var nextDuration = getCurDuration();
+
+            if( curVideo.currentTime >= curPlayedTime + nextDuration) {
+                curVideo.pause();
+                curPlayedTime += nextDuration;
+                curDurationIndex ++;
+
+                console.log('End:' + curVideo.currentTime);
+                //console.log(curVideo.seekable);
+                curVideo.currentTime = curPlayedTime;
+            }
+        });
+
+        var curVideo = $('.MainAnimationView')[0];
+        curVideo.play();
+    }
+
 	function showSlideInMainView(slideIndex) {
+        
 		var slide = curSlideList[slideIndex];
 		var presId = curPresentation['PresID'];
+
+        $('#PresBoardMainDisplay').click(function(){
+            presentationNext();
+        });
 
 		if(slide['Type'] == 0)
 		{
@@ -1656,7 +1746,9 @@
 	var curSlideList;
 	var curPresInfo;
 
+	var curPlayedTime = 0;
 	var curSlideIndex = 0;
+	var curDurationIndex = -1;
 	var preloadSlideIndex = 0;
 	var mainSlideViewIndex = 2;
 
@@ -1668,7 +1760,7 @@
 	var whiteboardEnabled = false;
 
 	//For video control
-	var curDuration = 0;
+	//var curDuration = 0;
 
 
 
