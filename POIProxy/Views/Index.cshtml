@@ -77,33 +77,33 @@
         $("#AudioStreamingPlayer > audio").attr('src', "@(Model.AudioStreamingUrl)0/POIAudio.m3u8")
     }
 
-    function initVideoTesting() {
+    function initVideoTesting(url) {
 
-        
+        $(".MainAnimationView").remove();
+
         var myVideo = $('<video></video>',{
-            id: 'myVideo',
-           
+            class : 'MainAnimationView',
         });
 
         var videoSrc = $('<source>');
-        videoSrc.attr('src', "@(Model.VideoUrl)test.mp4");
-        //videoSrc.attr('src', "http://www.w3schools.com/html/mov_bbb.mp4");
+        videoSrc.attr('src', url);
         videoSrc.attr('type', 'video/mp4');
 
         myVideo.append(videoSrc);
 
         myVideo.css({
-            width: "100%",
-            height: "100%",
+            width: "98%",
+            height: "98%",
+            top: "1%",
+            left: "1%",
             position: "absolute"
         });
 
-        $("#MainContentContainer").append(myVideo);
+        $("#PresBoardMainDisplay").append(myVideo);
 
         
-
-        $("#myVideo").bind('timeupdate', function() {
-            var curVideo = $('#myVideo')[0];
+        $(".MainAnimationView").bind('timeupdate', function() {
+            var curVideo = $('.MainAnimationView')[0];
             if( curVideo.currentTime >= curDuration + 0.5 - 0.25) {
                 curVideo.pause();
                 curDuration = curDuration + 0.5;
@@ -114,8 +114,8 @@
             }
         });
 
-        $("#myVideo").click(function() {
-            var curVideo = $('#myVideo')[0];
+        $(".MainAnimationView").click(function() {
+            var curVideo = $('.MainAnimationView')[0];
             //console.log('start:' + curVideo.currentTime)
             curVideo.play();
         });
@@ -498,23 +498,37 @@
 
 	function showSlideInMainView(slideIndex) {
 		var slide = curSlideList[slideIndex];
-		var presId = curPresentation['PresId'];
+		var presId = curPresentation['PresID'];
 
 		if(slide['Type'] == 0)
 		{
 			$(".MainSlideView").attr("src", $("#" + slideIndex).attr("src"));
 			mainSlideViewIndex = slideIndex;
+            switchToStaticSlideView();
 		}
 		else
 		{
+            switchToAnimationSlideView();
 			var url = getContentServerReqUrl(presId, 1, slideIndex);
-			$(".MainAnimationView > source").attr("src", url);
+            initVideoTesting(url);
 		}
 
 		clearCommentCache();
         updateNumCommentsLabel();
 		loadCommentIntoCache();
 	}
+
+    function switchToStaticSlideView()
+    {
+        $(".MainAnimationView").hide();
+        $(".MainSlideView").show();
+    }
+
+    function switchToAnimationSlideView()
+    {
+        $(".MainSlideView").hide();
+        $(".MainAnimationView").show();
+    }
 
 	function getContentServerReqUrl(presId, fileType, slideIndex)
 	{
