@@ -566,7 +566,8 @@
             var curVideo = $('.MainAnimationView')[0];
             var nextDuration = getCurDuration();
 
-            if( curVideo.currentTime >= curPlayedTime + nextDuration) {
+            if( curVideo.currentTime >= curPlayedTime + nextDuration || curVideo.ended ) {
+                if(!(curVideo.paused || curVideo.ended))
                 curVideo.pause();
                 curPlayedTime += nextDuration;
                 curDurationIndex ++;
