@@ -566,13 +566,18 @@
             var curVideo = $('.MainAnimationView')[0];
             var nextDuration = getCurDuration();
 
-            if( curVideo.currentTime >= curPlayedTime + nextDuration || curVideo.ended ) {
-                if(!(curVideo.paused || curVideo.ended))
+            console.log('Hey hey');
+
+            //If no next duration available (reach the end of the duration list)
+            //or if the current time has passed the time point
+            //or if the video is ended
+            if( nextDuration != -1 && curVideo.currentTime >= curPlayedTime + nextDuration && !curVideo.ended ) {
+
                 curVideo.pause();
                 curPlayedTime += nextDuration;
                 curDurationIndex ++;
 
-                console.log('End:' + curVideo.currentTime);
+                console.log('End:' + curVideo.currentTime + ',' + curPlayedTime + ',' + nextDuration);
                 //console.log(curVideo.seekable);
                 curVideo.currentTime = curPlayedTime;
             }
