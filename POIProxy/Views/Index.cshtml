@@ -57,7 +57,7 @@
 		initMainContentSliding();
         //initVideoTesting();
         initAudioStreamingPlayer();
-		
+		initMainSlideViewClicking();
 
 		//$("#PresBoardSideBarSlideRegion").slider("disable");
 
@@ -100,25 +100,6 @@
         });
 
         $("#PresBoardMainDisplay").append(myVideo);
-
-        /*
-        $(".MainAnimationView").bind('timeupdate', function() {
-            var curVideo = $('.MainAnimationView')[0];
-            if( curVideo.currentTime >= curDuration + 0.5 - 0.25) {
-                curVideo.pause();
-                curDuration = curDuration + 0.5;
-
-                //console.log('End:' + curVideo.currentTime);
-                //console.log(curVideo.seekable);
-                curVideo.currentTime = curDuration;
-            }
-        });
-
-        $(".MainAnimationView").click(function() {
-            var curVideo = $('.MainAnimationView')[0];
-            //console.log('start:' + curVideo.currentTime)
-            curVideo.play();
-        });*/
         
     }
     
@@ -144,6 +125,13 @@
 
 		$(".ui-slider-handle").hide();
 	}
+
+    function initMainSlideViewClicking(){
+        $('#PresBoardMainDisplay').click(function(){
+            presentationNext();
+        });
+    }
+
 
 	function updateUI() {
 		// Apple detection object  
@@ -584,6 +572,7 @@
         });
 
         var curVideo = $('.MainAnimationView')[0];
+        console.log('Start:' + curVideo.currentTime);
         curVideo.play();
     }
 
@@ -591,10 +580,6 @@
         
 		var slide = curSlideList[slideIndex];
 		var presId = curPresentation['PresID'];
-
-        $('#PresBoardMainDisplay').click(function(){
-            presentationNext();
-        });
 
 		if(slide['Type'] == 0)
 		{
@@ -665,7 +650,8 @@
 		});
 
 		img.click(function () {
-			showSlideInMainView(slideIndex);
+			//showSlideInMainView(slideIndex);
+            jumpToSlide(slideIndex);
 		});
 
 		var topPercent = slideIndex*110 + 5;
