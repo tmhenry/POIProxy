@@ -78,7 +78,7 @@
     }
 
     function initVideoTesting(url) {
-
+        
         $(".MainAnimationView").remove();
 
         var myVideo = $('<video></video>',{
@@ -501,10 +501,33 @@
             else
             {
                 curSlideIndex--;
-                curDurationIndex = 0;
-                curPlayedTime = 0;
+                showSlideInMainView(curSlideIndex);
+                /*
+                //Get the total duration and sets duration index to the last one
+                var slide = curSlideList[curSlideIndex];
+                if(slide['Type'] != 0)
+                {
+                    var durationList = slide['DurationList'];
+                    curDurationIndex = durationList.length - 1;
+
+                    //Add up the durations
+                    curPlayedTime = 0;
+                    for(var i=0; i<durationList.length; i++)
+                    {
+                        curPlayedTime += durationList[i];
+                    }
+                }
+                else
+                {
+                    curDurationIndex = 0;
+                    curPlayedTime = 0;
+                }
+
+                console.log("CurPlayedTime: " + curPlayedTime);
+
+                animationViewSeekTo(curPlayedTime);*/
 			    console.log("Current slide: " + curSlideIndex);
-			    showSlideInMainView(curSlideIndex);
+			    
             }
 			
 		}
@@ -519,7 +542,7 @@
             var durationList = slide['DurationList'];
             if(curDurationIndex < durationList.length)
             {
-                curDuration = durationList[curDurationIndex];
+                curDuration = durationList[curDurationIndex] / 1000;
             } 
         }
 
@@ -535,7 +558,7 @@
             var durationList = slide['DurationList'];
             if(curDurationIndex > 0)
             {
-                prevDuration = durationList[curDurationIndex-1];
+                prevDuration = durationList[curDurationIndex-1] / 1000;
             }
         }
 
@@ -553,21 +576,37 @@
         $(".MainAnimationView").bind('timeupdate', function() {
             var curVideo = $('.MainAnimationView')[0];
             var nextDuration = getCurDuration();
-
+            
             console.log('Hey hey');
 
-            //If no next duration available (reach the end of the duration list)
-            //or if the current time has passed the time point
-            //or if the video is ended
-            if( nextDuration != -1 && curVideo.currentTime >= curPlayedTime + nextDuration && !curVideo.ended ) {
-
-                curVideo.pause();
+            if(curVideo.ended) 
+            {
                 curPlayedTime += nextDuration;
                 curDurationIndex ++;
+            }
+            else if(!curVideo.paused)
+            {
+                var playOffset = nextDuration;
 
-                console.log('End:' + curVideo.currentTime + ',' + curPlayedTime + ',' + nextDuration);
-                //console.log(curVideo.seekable);
-                curVideo.currentTime = curPlayedTime;
+                if(nextDuration < 0.25)
+                {
+                    playOffset = 0.25;
+                }
+
+                console.log('Now:' + curVideo.currentTime + ',' + curPlayedTime + ',' + nextDuration);
+                //If no next duration available (reach the end of the duration list)
+                //or if the current time has passed the time point
+                //or if the video is ended
+                if( nextDuration != -1 && curVideo.currentTime >= curPlayedTime + playOffset) {
+
+                    curVideo.pause();
+                    curPlayedTime += nextDuration;
+                    curDurationIndex ++;
+
+                    console.log('End:' + curVideo.currentTime + ',' + curPlayedTime + ',' + nextDuration);
+                    //console.log(curVideo.seekable);
+                    //curVideo.currentTime = curPlayedTime;
+                }
             }
         });
 
@@ -685,20 +724,7 @@
 			top : "15%"
 		},  200, 'linear', function () {
 		
-		/*
-			//Start another round 
-			$("#whiteBoard").animate({
-				top : "13%"
-			},  50, 'linear', function () {
-				$("#whiteBoard").animate({
-					top : "15%"
-				},  50, 'linear', function () {
-				
-				});
-			});*/
 		});
-
-		//$("#whiteBoard").slideDown('slow', function(){});
 	}
 
     function clearWhiteboard() {
@@ -726,8 +752,6 @@
 	function handleCommentMsg(msgString) {
 		var comment = jQuery.parseJSON(msgString);
 		drawingTool.loadComment(comment);
-		
-		//alert('Handle comment!');
 	}
 
 	function handlePtrCtrlMsg(msgString) {
@@ -1750,10 +1774,5 @@
 
 	//For whiteboard control
 	var whiteboardEnabled = false;
-
-	//For video control
-	//var curDuration = 0;
-
-
 
 </script>

@@ -161,7 +161,6 @@ namespace POIProxy
         {
             curSlidePlayOffset = 0;
             curDurationIndex = 0;
-
         }
     }
 }
