@@ -52,6 +52,7 @@ namespace POIProxy.Handlers
         private void HandlePresCtrlMsgByProxy(POISession session, POIPresCtrlMsg msg)
         {
             var presController = session.PresController;
+            session.MdArchive.LogEvent(msg);
 
             switch((PresCtrlType)msg.CtrlType)
             {

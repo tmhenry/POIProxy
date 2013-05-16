@@ -59,7 +59,10 @@ namespace POIProxy
             user.AudioContentHandler = new POIProxyAudioContentHandler(user);
         }
 
-        public void HandleUserLeave(POIUser user) { }
+        public void HandleUserLeave(POIUser user) 
+        { 
+            
+        }
 
         #endregion
 

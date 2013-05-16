@@ -24,35 +24,23 @@ namespace POIProxy
         private POISessionPresController presController;
         private POISessionScheduler myScheduler = new POISessionScheduler();
 
+        private POIMetadataArchive mdArchive;
+
         public List<POIUser> Commanders { get { return commanders; } }
         public List<POIUser> Viewers { get { return viewers; } }
         public int Id { get { return id; } }
         public POISessionPresController PresController { get { return presController; } }
         public POISessionInfo Info { get; set; }
 
-        private POIPresentation LoadPresFromContentServer(int contentId)
-        {
-            POIPresentation pres = new POIPresentation();
-            int offset = 0;
-
-            byte[] content = POIContentServerHelper.getPresInfo(contentId);
-
-            if (content != null)
-            {
-                pres.deserialize(content, ref offset);
-            }
-            else
-            {
-                Console.WriteLine("Cannot get archive from content server!");
-            }
-            
-            return pres;
-        }
+        public POIMetadataArchive MdArchive { get { return mdArchive; } }
 
         public POISession(POIUser commander, int sessionId, int contentId)
         {
             //Load the presentation content according to the contentId
-            POIPresentation presContent = LoadPresFromContentServer(contentId);
+            POIPresentation presContent = POIPresentation.LoadPresFromContentServer(contentId);
+
+            //Create the archive for metadata
+            mdArchive = new POIMetadataArchive(contentId, sessionId);
             
             //POIPresentation presContent = new POIPresentation();
             //presContent.LoadPresentationFromStorage();
@@ -171,7 +159,8 @@ namespace POIProxy
 
         public void SessionEnd()
         {
-
+            mdArchive.WriteArchive();
+            mdArchive.ReadArchive();
         }
     }
 

@@ -43,6 +43,7 @@ namespace POIProxy.SignalRFun
                 //Get the presentation file and send to the user
                 POIPresentation curPres = session.PresController.CurPres;
                 JavaScriptSerializer js = new JavaScriptSerializer();
+                
                 try
                 {
                     Clients[Context.ConnectionId].handlePresInfo(js.Serialize(curPres));
@@ -63,6 +64,17 @@ namespace POIProxy.SignalRFun
 
                 Clients[Context.ConnectionId].startPresentation();
             }
+        }
+
+        public void StartOfflineSession(int presId, int sessionId)
+        {
+            POIPresentation presInfo = POIPresentation.LoadPresFromContentServer(presId);
+
+            //Read the metadata archive from the content server
+            POIMetadataArchive archiveInfo = new POIMetadataArchive(presId, sessionId);
+            archiveInfo.ReadArchive();
+
+            
         }
 
         public void LeaveSession(int sessionId)

@@ -29,6 +29,8 @@ namespace POIProxy.Handlers
             var registery = POIProxyGlobalVar.Kernel.mySessionManager.Registery;
             var session = registery.GetSessionByUser(myUser);
 
+            session.MdArchive.LogEvent(msg);
+
             //Forward the message to every other native clients
             try
             {
@@ -54,6 +56,11 @@ namespace POIProxy.Handlers
             //Forward the message to every other native clients
             try
             {
+                var registery = POIProxyGlobalVar.Kernel.mySessionManager.Registery;
+                var session = registery.GetSessionByUser(myUser);
+
+                session.MdArchive.LogEvent(comment);
+
                 foreach (POIUser user in POIGlobalVar.UserProfiles.Values)
                 {
                     if (user != myUser)
@@ -86,6 +93,8 @@ namespace POIProxy.Handlers
                 //TO-DO: do not use the hard coded session id in the future
                 var registery = POIProxyGlobalVar.Kernel.mySessionManager.Registery;
                 var session = registery.GetSessionById(0);
+
+                session.MdArchive.LogEvent(comment);
 
                 foreach (POIUser user in session.Commanders)
                 {
