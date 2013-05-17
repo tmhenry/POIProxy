@@ -15,8 +15,15 @@ namespace POIProxy
 
         public void StartSession(POIUser user, int contentId)
         {
+            //Get a new session ID from the DNS server
+            Dictionary<string, string> reqDict = new Dictionary<string, string>();
+            reqDict["creator"] = "0";
+            reqDict["presId"] = contentId.ToString();
+            reqDict["type"] = "public";
+            int sessionId = POIWebService.CreateSession(reqDict);
+
             //Create a new session and add to registery
-            POISession session = new POISession(user, GenerateSessionId(), contentId);
+            POISession session = new POISession(user, sessionId, contentId);
 
             registery.AddSession(user, session);
 
