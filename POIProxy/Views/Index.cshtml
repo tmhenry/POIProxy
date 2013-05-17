@@ -29,6 +29,7 @@
 		//Register handlers
 		poiProxy.handlePresCtrlMsg = handlePresCtrlMsg;
 		poiProxy.handlePresInfo = handlePresInfo;
+		poiProxy.handleMetadataArchive = handleMetadataArchive;
 		poiProxy.handleWhiteboardMsg = handleWhiteboardMsg;
 		poiProxy.handleCommentMsg = handleCommentMsg;
 		poiProxy.handlePtrCtrlMsg = handlePtrCtrlMsg;
@@ -41,7 +42,7 @@
 		$.connection.hub.start().done(function () {
 			//alert("Start done!");
 			poiProxy.echoOnServer();
-			poiProxy.joinSession(0);
+			poiProxy.joinSession(218, 0);
 		});
 
 		
@@ -452,6 +453,14 @@
 
 		curPresInfo = curPresentation['info'];
 		curSlideList = curPresentation['slideList'];
+
+        //Preload the initial slides
+		preLoadSlides(initialPreloadSlideCount - 1);
+	}
+
+	function handleMetadataArchive(msgString) {
+	    var metadataArchive = jQuery.parseJSON(msgString);
+	    console.log(metadataArchive);
 	}
 
 	function startPresentation() {
@@ -635,7 +644,28 @@
 
 		clearCommentCache();
         updateNumCommentsLabel();
-		loadCommentIntoCache();
+        loadCommentIntoCache();
+
+	    //Preload the slide if necessary
+        if (slideIndex + 2 >= preloadSlideIndex)
+        {
+            preLoadSlides(slideIndex + 2);
+        }
+	}
+
+	function preLoadSlides(slideIndex) {
+	    var numSlides = curSlideList.Count;
+
+	    for (var index = preloadSlideIndex; index <= slideIndex; index++) {
+	        //Check if the end of slide list is reached
+	        if (index >= numSlides) {
+	            break;
+	        }
+
+	        getSlide(index);
+	    }
+
+	    preloadSlideIndex = index;
 	}
 
     function switchToStaticSlideView()
@@ -660,9 +690,6 @@
 
 	function getSlide(slideIndex) {
 		console.log("Get slide: " + slideIndex);
-		if(slideIndex > preloadSlideIndex) {
-			preloadSlideIndex = slideIndex;
-		}
 
 		var curSlide = curSlideList[slideIndex];
 		var type = curSlide['Type'];
@@ -1765,8 +1792,9 @@
 	var curPlayedTime = 0;
 	var curSlideIndex = 0;
 	var curDurationIndex = -1;
-	var preloadSlideIndex = 0;
+	var preloadSlideIndex = 0; //The next slide to be preloaded
 	var mainSlideViewIndex = 2;
+	var initialPreloadSlideCount = 5;
 
 	//For comments storage
 	var myStorage = new storageTool();

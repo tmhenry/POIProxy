@@ -126,8 +126,8 @@ namespace POIProxy
                 }
 
                 //Broadcast the slide to all the web clients
-                var context = GlobalHost.ConnectionManager.GetHubContext<POIProxyHub>();
-                context.Clients[id.ToString()].getSlide(slide.Index);
+                //var context = GlobalHost.ConnectionManager.GetHubContext<POIProxyHub>();
+                //context.Clients[id.ToString()].getSlide(slide.Index);
             }
             else
             {
