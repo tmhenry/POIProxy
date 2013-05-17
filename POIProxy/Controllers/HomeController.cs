@@ -14,7 +14,7 @@ namespace POIProxy.Controllers
 {
     public class HomeController : ApiController
     {
-        public HttpResponseMessage Get()
+        public HttpResponseMessage Get(int contentId, int sessionId)
         {
             bool userLogin = true;
 
@@ -32,6 +32,8 @@ namespace POIProxy.Controllers
                 CSSUrl = POIProxyGlobalVar.MainUrl + "content/CSS/",
                 SessionUrl = POIProxyGlobalVar.MainUrl + "api/Sessions",
                 ContentServerUrl = POIGlobalVar.ContentServerHome + "content.php",
+                ContentId = contentId,
+                SessionId = sessionId,
             };
 
             string result;

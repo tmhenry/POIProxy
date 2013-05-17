@@ -42,7 +42,7 @@
 		$.connection.hub.start().done(function () {
 			//alert("Start done!");
 			poiProxy.echoOnServer();
-			poiProxy.joinSession(18, 0);
+			poiProxy.joinSession(@(Model.ContentId), @(Model.SessionId));
 		});
 
 		
