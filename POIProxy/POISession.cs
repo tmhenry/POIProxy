@@ -160,7 +160,9 @@ namespace POIProxy
         public void SessionEnd()
         {
             mdArchive.WriteArchive();
-            mdArchive.ReadArchive();
+            Dictionary<string, string> reqDict = new Dictionary<string, string>();
+            reqDict["sessionId"] = id.ToString();
+            POIWebService.EndSession(reqDict);
         }
     }
 
