@@ -22,6 +22,7 @@ namespace POIProxy
         {
             //Set the system kernel to connect with POI Communication lib
             POIGlobalVar.SystemKernel = this;
+            
 
             //Start the web backend to interact with browser users
             webBackend.Run();

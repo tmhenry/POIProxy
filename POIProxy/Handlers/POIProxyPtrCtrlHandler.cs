@@ -27,6 +27,7 @@ namespace POIProxy.Handlers
             var registery = POIProxyGlobalVar.Kernel.mySessionManager.Registery;
             var session = registery.GetSessionByUser(myUser);
 
+            session.MdArchive.LogEvent(msg);
             //Determine the color of pointer based on the user
             //To-do: !!!!!!!!!!!!!!!!!!
 
@@ -47,7 +48,7 @@ namespace POIProxy.Handlers
             //Forward the message to web clients
             var context = GlobalHost.ConnectionManager.GetHubContext<POIProxyHub>();
             JavaScriptSerializer jsHandler = new JavaScriptSerializer();
-            context.Clients[session.Id.ToString()].handlePtrCtrlMsg(jsHandler.Serialize(msg));
+            context.Clients[session.Id.ToString()].scheduleMsgHandling(jsHandler.Serialize(msg));
         }
     }
 }

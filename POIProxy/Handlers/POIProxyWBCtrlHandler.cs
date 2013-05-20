@@ -48,7 +48,7 @@ namespace POIProxy.Handlers
             //Forward the message to web clients
             var context = GlobalHost.ConnectionManager.GetHubContext<POIProxyHub>();
             JavaScriptSerializer jsHandler = new JavaScriptSerializer();
-            context.Clients[session.Id.ToString()].handleWhiteboardMsg(jsHandler.Serialize(msg));
+            context.Clients[session.Id.ToString()].scheduleMsgHandling(jsHandler.Serialize(msg));
         }
 
         public void handleComment(POIComment comment)
@@ -75,7 +75,7 @@ namespace POIProxy.Handlers
             //Forward the message to web clients
             var context = GlobalHost.ConnectionManager.GetHubContext<POIProxyHub>();
             JavaScriptSerializer jsHandler = new JavaScriptSerializer();
-            context.Clients.handleCommentMsg(jsHandler.Serialize(comment));
+            context.Clients.scheduleMsgHandling(jsHandler.Serialize(comment));
         }
 
         //Handle comment in the format of a json string

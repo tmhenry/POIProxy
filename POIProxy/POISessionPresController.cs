@@ -24,6 +24,7 @@ namespace POIProxy
         POISession mySession;
 
         public POIPresentation CurPres { get { return curPresentation; } }
+        public int CurSlideIndex { get { return curSlideIndex; } }
 
         public POISessionPresController(POISession session)
         {
@@ -145,6 +146,12 @@ namespace POIProxy
                     JumpToPosition(curSlidePlayOffset);
                 }
             }
+        }
+
+        public void JumpToSlide(int slideIndex)
+        {
+            curSlideIndex = slideIndex;
+            LoadSlide(curPresentation.SlideAtIndex(curSlideIndex));
         }
 
         private void playAnimation(int startMS, int durationMS)

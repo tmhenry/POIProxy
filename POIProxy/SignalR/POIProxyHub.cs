@@ -53,6 +53,8 @@ namespace POIProxy.SignalRFun
                     Console.WriteLine(e);
                 }
 
+                Clients[Context.ConnectionId].setAudioSyncReference(POIContentServerHelper.getAudioSyncReference(0, 0));
+
                 Clients[Context.ConnectionId].startPresentation();
             }
             else
@@ -75,7 +77,7 @@ namespace POIProxy.SignalRFun
             {
                 JavaScriptSerializer js = new JavaScriptSerializer();
                 Clients[Context.ConnectionId].handlePresInfo(js.Serialize(presInfo));
-                Clients[Context.ConnectionId].handleMetadataArchive(js.Serialize(archiveInfo.MetadataList));
+                Clients[Context.ConnectionId].handleMetadataArchive(js.Serialize(archiveInfo));
                 Clients[Context.ConnectionId].startPresentation();
             }
             catch (Exception e)

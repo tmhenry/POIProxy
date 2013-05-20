@@ -46,22 +46,45 @@ namespace POIProxy.Handlers
             //Forward the message to web clients
             var context = GlobalHost.ConnectionManager.GetHubContext<POIProxyHub>();
             JavaScriptSerializer jsHandler = new JavaScriptSerializer();
-            context.Clients[session.Id.ToString()].handlePresCtrlMsg(jsHandler.Serialize(msg));         
+            //context.Clients[session.Id.ToString()].handlePresCtrlMsg(jsHandler.Serialize(msg));         
+            context.Clients[session.Id.ToString()].scheduleMsgHandling(jsHandler.Serialize(msg)); 
         }
 
         private void HandlePresCtrlMsgByProxy(POISession session, POIPresCtrlMsg msg)
         {
             var presController = session.PresController;
-            session.MdArchive.LogEvent(msg);
+            
+            
 
             switch((PresCtrlType)msg.CtrlType)
             {
                 case PresCtrlType.Next:
+                    msg.SlideIndex = presController.CurSlideIndex;
                     presController.playNext();
+
+                    //Update the indexer only if next slide is loaded
+                    if (presController.CurSlideIndex > msg.SlideIndex)
+                    {
+                        session.MdArchive.LogEventAndUpdateEventIndexer(msg);
+                    }
+                    else
+                    {
+                        session.MdArchive.LogEvent(msg);
+                    }
+                    
                     break;
 
                 case PresCtrlType.Prev:
+                    msg.SlideIndex = presController.CurSlideIndex;
                     presController.playPrev();
+                    session.MdArchive.LogEvent(msg);
+                    
+                    break;
+
+                case PresCtrlType.Jump:
+                    session.MdArchive.LogEventAndUpdateEventIndexer(msg);
+                    presController.JumpToSlide(msg.SlideIndex);
+                    
                     break;
 
                 default:

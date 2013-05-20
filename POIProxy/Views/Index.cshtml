@@ -6,7 +6,7 @@
 <link type="text/css" href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.21/themes/ui-lightness/jquery-ui.css" rel="Stylesheet" />
 <link type="text/css" href="@(Model.CSSUrl)poi.css" rel="Stylesheet" />
 
-<script src = "@(Model.ScriptUrl)jquery-1.6.4.js" type = "text/javascript"></script>
+<script src = "@(Model.ScriptUrl)jquery-1.6.4.min.js" type = "text/javascript"></script>
 <script src = "@(Model.ScriptUrl)jquery.signalR-0.5.2.min.js" type ="text/javascript"></script>
 <script src = "@(Model.SignalrUrl)hubs" type="text/javascript"></script>
 <script src = "@(Model.ScriptUrl)jquery-ui-1.8.22.custom.min.js" type="text/javascript"></script>
@@ -27,12 +27,16 @@
 		}
 
 		//Register handlers
-		poiProxy.handlePresCtrlMsg = handlePresCtrlMsg;
 		poiProxy.handlePresInfo = handlePresInfo;
 		poiProxy.handleMetadataArchive = handleMetadataArchive;
+
+		poiProxy.handlePresCtrlMsg = handlePresCtrlMsg;
 		poiProxy.handleWhiteboardMsg = handleWhiteboardMsg;
 		poiProxy.handleCommentMsg = handleCommentMsg;
 		poiProxy.handlePtrCtrlMsg = handlePtrCtrlMsg;
+
+		poiProxy.scheduleMsgHandling = scheduleMsgHandling;
+		poiProxy.setAudioSyncReference = setAudioSyncReference;
 
 		poiProxy.getSlide = getSlide;
 		poiProxy.startPresentation = startPresentation;
@@ -73,9 +77,17 @@
 
 	});
 
+ 
+
     function initAudioStreamingPlayer() {
         
-        $("#AudioStreamingPlayer > audio").attr('src', "@(Model.AudioStreamingUrl)0/POIAudio.m3u8")
+        $("#AudioStreamingPlayer > audio").attr('src', "http://192.168.0.100/3/audio/1/POIAudio.m3u8");
+        //$("#AudioStreamingPlayer > audio").attr('src', "http://192.168.0.100:8090/test.webm");
+
+        $("#AudioStreamingPlayer > audio").bind('timeupdate', function(){
+            var audioPlayer = $("#AudioStreamingPlayer > audio")[0];
+            //poiProxy.log('audio current time: ' + audioPlayer.currentTime);
+        });
     }
 
     function initVideoTesting(url) {
@@ -238,6 +250,10 @@
 			window.location.href = "http://www.pipeofinsight.com";
             //seekToPosition();
 		});
+
+		$("#RecordItem > img").click(function(){
+		    contentPlayer.playFromSlideIndex(curSlideIndex);
+		});
 	}
 
     function initFootBar() {
@@ -254,6 +270,176 @@
         updateNumCommentsLabel();
     }
 
+</script>
+    
+
+<script>
+    //Set the audio sync reference time
+    function setAudioSyncReference(msgString)
+    {
+        var refTime = jQuery.parseJSON(msgString);
+        audioStartingTime = parseFloat(refTime['starttime']);
+    }
+
+    //Realtime sync the msg with current live audio
+    function scheduleMsgHandling(msgString)
+    {
+        var message = jQuery.parseJSON(msgString);
+        var msgTime = parseFloat(message.Timestamp);
+        var syncDelay = 0.0;
+
+        //If the audio reference has been obtained
+        if(audioStartingTime != 0.0 && audioSyncMode == 0)
+        {
+            var audioPlayer = $("#AudioStreamingPlayer > audio")[0];
+            var currentTimeInSec = new Date().getTime() / 1000;
+            var timePassed = currentTimeInSec - lastSyncTime;
+
+            if(audioPlayer.currentTime != 0)
+            {
+                //Synchronize the audio with the metadata every 20 seconds
+                if(timePassed > 100)
+                {
+                    synchronizationDelay = msgTime - audioStartingTime - audioPlayer.currentTime;
+                    lastSyncTime = currentTimeInSec;
+                }
+                
+                syncDelay = synchronizationDelay;
+                syncDelay = 1000*syncDelay - 2000;
+            }
+
+            poiProxy.log("Msg time is " + msgTime + " audioStartingTime is " + audioStartingTime + " currentTime is " + audioPlayer.currentTime);
+            poiProxy.log("current syncdelay is: " + syncDelay);
+        }
+
+        
+        schedulePOIEventWithSyncDelay(message, syncDelay);
+        
+    }
+
+    function schedulePOIEventWithSyncDelay(message, syncDelay)
+    {
+        switch(message.MessageType)
+        {
+            //Presentation control
+            case 30:
+                if(syncDelay == 0) 
+                    handlePresCtrlMsg(message);
+                else
+                    setTimeout(
+                        function(msg, seqNum){
+                            if(seqNum == contentPlaySeqNum)
+                                handlePresCtrlMsg(msg);
+                        }, 
+                        syncDelay, 
+                        message,
+                        contentPlaySeqNum
+                    );
+                break;
+
+                //Comment message
+            case 50:
+                if(syncDelay == 0)
+                    handleCommentMsg(message);
+                else
+                    setTimeout(
+                        function(msg, seqNum){
+                            if(seqNum == contentPlaySeqNum)
+                                handleCommentMsg(msg);
+                        }, 
+                        syncDelay, 
+                        message,
+                        contentPlaySeqNum
+                    );
+                break;
+
+                //Whiteboard control
+            case 92:
+                if(syncDelay == 0)
+                    handleWhiteboardMsg(message);
+                else
+                    setTimeout(
+                        function(msg, seqNum){
+                            if(seqNum == contentPlaySeqNum)
+                                handleWhiteboardMsg(msg);
+                        }, 
+                        syncDelay, 
+                        message,
+                        contentPlaySeqNum
+                    );
+                break;
+
+                //Pointer control
+            case 110:
+                if(syncDelay == 0)
+                    handlePtrCtrlMsg(message);
+                else
+                    setTimeout(
+                        function(msg, seqNum){
+                            if(seqNum == contentPlaySeqNum)
+                                handlePtrCtrlMsg(msg);
+                        }, 
+                        syncDelay, 
+                        message,
+                        contentPlaySeqNum
+                    );
+                break;
+
+        }
+    }
+
+
+    //Player class for playing the content from a certain slide index point
+    function POIContentPlayer(archiveData) {
+        var cplayer = this;
+        var sessionTimeReference = archiveData['SessionTimeReference'];
+        var audioTimeReference = archiveData['AudioTimeReference'];
+        var msgQueue = archiveData['MetadataList'];
+        var indexer = archiveData['MetadataIndexer'];
+
+        cplayer.playFromSlideIndex = playFromSlideIndex;
+
+        function playFromSlideIndex(slideIndex)
+        {
+            //Clear the current whiteboard and cache info
+            clearWhiteboard();
+            hideWhiteboard();
+
+            timeRef = 0.0;
+            startingEventIndex = 0;
+            contentPlaySeqNum++;
+
+            if(slideIndex == 0)
+            {
+                timeRef = sessionTimeReference;
+            }
+            else
+            {
+                //Search for the index of the event for the given slide
+                if(indexer[slideIndex.toString()] != undefined)
+                {
+                    var startingEventIndex = parseInt(indexer[slideIndex.toString()]);
+                    var event = msgQueue[startingEventIndex];
+                    timeRef = parseFloat(event['Timestamp']);
+                    startingEventIndex++;
+                }
+                else
+                {
+                    timeRef = sessionTimeReference;
+                }
+            }
+
+            for(var index = startingEventIndex; index < msgQueue.length; index++)
+            {
+                var message = msgQueue[index];
+                var syncDelay = parseFloat(message['Timestamp']) - timeRef;
+                syncDelay = syncDelay*1000;
+
+                schedulePOIEventWithSyncDelay(message, syncDelay);
+            }
+        }
+       
+    }
 </script>
 
 <!--Handler functions -->
@@ -432,8 +618,8 @@
 		}
 	}
 
-	function handlePresCtrlMsg(msgString) {
-		var msg = jQuery.parseJSON(msgString);
+	function handlePresCtrlMsg(msg) {
+		//var msg = jQuery.parseJSON(msgString);
 
 		switch (msg['CtrlType']) {
 			case 0: //Next
@@ -461,6 +647,8 @@
 	function handleMetadataArchive(msgString) {
 	    var metadataArchive = jQuery.parseJSON(msgString);
 	    console.log(metadataArchive);
+
+	    contentPlayer = new POIContentPlayer(metadataArchive);
 	}
 
 	function startPresentation() {
@@ -478,7 +666,10 @@
         }
     }
 
-	function presentationNext() {
+    function presentationNext() {
+        var audioPlayer = $("#AudioStreamingPlayer > audio")[0];
+        poiProxy.log('audio current time: ' + audioPlayer.currentTime);
+
 		if(curSlideIndex < preloadSlideIndex)
 		{
             var curDuration = getCurDuration();
@@ -726,8 +917,8 @@
 		$("#PresBoardSideBar").append(img);
 	}
 
-	function handleWhiteboardMsg(msgString) {
-		var msg = jQuery.parseJSON(msgString);
+	function handleWhiteboardMsg(msg) {
+		//var msg = jQuery.parseJSON(msgString);
 
 		switch(msg['CtrlType']) {
 			case 0:
@@ -776,14 +967,14 @@
         
 	}
 
-	function handleCommentMsg(msgString) {
-		var comment = jQuery.parseJSON(msgString);
+	function handleCommentMsg(comment) {
+		//var comment = jQuery.parseJSON(msgString);
 		drawingTool.loadComment(comment);
 	}
 
-	function handlePtrCtrlMsg(msgString) {
+	function handlePtrCtrlMsg(msg) {
 		//Pass it to the controller
-		ptrController.ProcessMsg(msgString);
+		ptrController.ProcessMsg(msg);
 	}
 
 </script>
@@ -1201,8 +1392,8 @@
 		}
 
 
-		function ProcessMsg(msgString) {
-			var msg = jQuery.parseJSON(msgString);
+		function ProcessMsg(msg) {
+			//var msg = jQuery.parseJSON(msgString);
 
 			dataManager.scheduleEvent(msg, eventExecution);
 		}
@@ -1803,4 +1994,12 @@
 	//For whiteboard control
 	var whiteboardEnabled = false;
 
+    //For audio and metadata synchronization
+	var audioStartingTime = 0.0;
+	var audioSyncMode = 0;
+	var lastSyncTime = 0.0;
+
+    //For content replay
+	var contentPlayer;
+	var contentPlaySeqNum = 0;
 </script>

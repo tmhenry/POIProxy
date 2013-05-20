@@ -10,7 +10,7 @@ namespace POIProxy
     {
         public static string MainUrl { get; set; }
         public static string SignalRUrl { get; set; }
-        public static string AudioStreamingUrl { get { return @"http://192.168.1.130/"; } }
+        public static string AudioStreamingUrl { get { return @"http://192.168.1.143/"; } }
         public static POIProxyKernel Kernel { get; set; }
     }
 }
