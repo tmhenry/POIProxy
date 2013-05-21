@@ -81,7 +81,8 @@
 
     function initAudioStreamingPlayer() {
         
-        $("#AudioStreamingPlayer > audio").attr('src', "http://192.168.0.100/3/audio/1/POIAudio.m3u8");
+        //$("#AudioStreamingPlayer > audio").attr('src', "http://192.168.0.100/3/audio/1/POIAudio.m3u8");
+        $("#AudioStreamingPlayer > audio").attr('src', "http://192.168.0.100/3/audio/1/Final.wav");
         //$("#AudioStreamingPlayer > audio").attr('src', "http://192.168.0.100:8090/test.webm");
 
         $("#AudioStreamingPlayer > audio").bind('timeupdate', function(){
@@ -397,7 +398,10 @@
         var msgQueue = archiveData['MetadataList'];
         var indexer = archiveData['MetadataIndexer'];
 
+        var audioSyncOffset = 1;
+
         cplayer.playFromSlideIndex = playFromSlideIndex;
+        cplayer.handleNoReplay = function() { };
 
         function playFromSlideIndex(slideIndex)
         {
@@ -415,17 +419,18 @@
             }
             else
             {
-                //Search for the index of the event for the given slide
-                if(indexer[slideIndex.toString()] != undefined)
+                var replayStartingSlide = searchReplayStartingIndex(slideIndex);
+                if(replayStartingSlide != -1)
                 {
-                    var startingEventIndex = parseInt(indexer[slideIndex.toString()]);
+                    startingEventIndex = parseInt(indexer[replayStartingSlide.toString()]);
                     var event = msgQueue[startingEventIndex];
                     timeRef = parseFloat(event['Timestamp']);
                     startingEventIndex++;
                 }
                 else
                 {
-                    timeRef = sessionTimeReference;
+                    cplayer.handleNoReplay();
+                    return;
                 }
             }
 
@@ -436,6 +441,52 @@
                 syncDelay = syncDelay*1000;
 
                 schedulePOIEventWithSyncDelay(message, syncDelay);
+            }
+
+            startAudioPlayback(timeRef);
+        }
+
+        function startAudioPlayback(timeRef)
+        {
+            //Get the audio starting time in seconds
+            var audioStartingTime = timeRef - audioTimeReference + audioSyncOffset;
+            var audioPlayer = $("#AudioStreamingPlayer > audio")[0];
+				
+            audioPlayer.currentTime = audioStartingTime;
+            audioPlayer.play();
+        }
+
+        //Search the nearest larger starting index
+        function searchReplayStartingIndex(slideIndex)
+        {
+            var maxBound = 10000;
+            var minNextIndex = maxBound;
+
+            if(indexer[slideIndex.toString()] != undefined)
+            {
+                minNextIndex = slideIndex;
+            }
+            else
+            {
+                //Iterate through the indexer and find the next available event index
+                for (var key in indexer) {
+                    if (indexer.hasOwnProperty(key)) {
+                        if( slideIndex <= parseInt(key) && minNextIndex > parseInt(key))
+                        {
+                            minNextIndex = parseInt(key);
+                        }
+                    }
+                }
+            }
+
+            
+            if(minNextIndex == maxBound)
+            {
+                return -1;
+            }
+            else
+            {
+                return minNextIndex;
             }
         }
        

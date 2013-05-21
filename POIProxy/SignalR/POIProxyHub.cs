@@ -73,9 +73,20 @@ namespace POIProxy.SignalRFun
             POIMetadataArchive archiveInfo = new POIMetadataArchive(contentId, sessionId);
             archiveInfo.ReadArchive();
 
+            
+
             try
             {
                 JavaScriptSerializer js = new JavaScriptSerializer();
+
+                //Get the audio reference for the archive
+                Dictionary<string, string> jsonResponse = js.Deserialize(
+                    POIContentServerHelper.getAudioSyncReference(0, 0), 
+                    typeof(Dictionary<string, string>)
+                ) as Dictionary<string, string>;
+
+                archiveInfo.AudioTimeReference = Double.Parse(jsonResponse["starttime"]);
+
                 Clients[Context.ConnectionId].handlePresInfo(js.Serialize(presInfo));
                 Clients[Context.ConnectionId].handleMetadataArchive(js.Serialize(archiveInfo));
                 Clients[Context.ConnectionId].startPresentation();
