@@ -10,8 +10,10 @@ namespace POIProxy
     public class POISessionManager : POISessionCtrlMsgCB
     {
         POISessionRegistery registery = new POISessionRegistery();
+        POIOfflineSessionCache cache = new POIOfflineSessionCache();
 
         public POISessionRegistery Registery { get { return registery; } }
+        public POIOfflineSessionCache Cache { get { return cache; } }
 
         public void StartSession(POIUser user, int contentId)
         {

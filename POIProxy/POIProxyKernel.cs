@@ -20,6 +20,8 @@ namespace POIProxy
 
         public void Start()
         {
+            
+
             //Set the system kernel to connect with POI Communication lib
             POIGlobalVar.SystemKernel = this;
             

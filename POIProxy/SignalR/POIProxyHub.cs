@@ -14,6 +14,7 @@ namespace POIProxy.SignalRFun
     public class POIProxyHub : Hub
     {
         POIProxyWBCtrlHandler webWBHandler = new POIProxyWBCtrlHandler(new POIUser());
+        
 
         public void EchoOnServer()
         {
@@ -65,14 +66,30 @@ namespace POIProxy.SignalRFun
 
         public void StartOfflineSession(int contentId, int sessionId)
         {
-            //Read the presentation info
-            POIPresentation presInfo = POIPresentation.LoadPresFromContentServer(contentId);
+            POIPresentation presInfo;
+            POIMetadataArchive archiveInfo;
 
 
-            //Read the metadata archive from the content server
-            POIMetadataArchive archiveInfo = new POIMetadataArchive(contentId, sessionId);
-            archiveInfo.ReadArchive();
+            POIOfflineSessionCache cache = POIProxyGlobalVar.Kernel.mySessionManager.Cache;
+            Tuple<POIPresentation, POIMetadataArchive> cacheResult = cache.SearchSessionInfoInCache(contentId, sessionId);
 
+            if (cacheResult == null)
+            {
+                //Read the presentation info
+                presInfo = POIPresentation.LoadPresFromContentServer(contentId);
+
+                //Read the metadata archive from the content server
+                archiveInfo = new POIMetadataArchive(contentId, sessionId);
+                archiveInfo.ReadArchive();
+
+                cache.AddRecordToSessionCache(contentId, sessionId, presInfo, archiveInfo);
+            }
+            else
+            {
+                presInfo = cacheResult.Item1;
+                archiveInfo = cacheResult.Item2;
+            }
+            
             
 
             try
@@ -85,7 +102,16 @@ namespace POIProxy.SignalRFun
                     typeof(Dictionary<string, string>)
                 ) as Dictionary<string, string>;
 
-                archiveInfo.AudioTimeReference = Double.Parse(jsonResponse["starttime"]);
+                if (jsonResponse["starttime"] == "")
+                {
+                    archiveInfo.AudioTimeReference = archiveInfo.SessionTimeReference;
+                }
+                else
+                {
+                    archiveInfo.AudioTimeReference = Double.Parse(jsonResponse["starttime"]);
+                }
+
+                
 
                 Clients[Context.ConnectionId].handlePresInfo(js.Serialize(presInfo));
                 Clients[Context.ConnectionId].handleMetadataArchive(js.Serialize(archiveInfo));

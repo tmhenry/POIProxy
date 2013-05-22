@@ -35,6 +35,9 @@ namespace POIProxy
 
         public void Run()
         {
+            //Set the proxy setting to be null to speed up web request
+            WebRequest.DefaultWebProxy = null;
+
             InitServerBaseAddr();
             RunSignalRServer();
             RunMainServer();
