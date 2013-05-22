@@ -90,6 +90,22 @@ namespace POIProxy
             }
         }
 
+        public void SessionAudioStart(POIUser user, double timeRef)
+        {
+            POISession session = registery.GetSessionByUser(user);
+            if (session != null)
+            {
+                if (session.IsCommander(user))
+                {
+                    session.MdArchive.AudioTimeReference = timeRef;
+                }
+                else
+                {
+                    Console.WriteLine("Non-commander user cannot modify session info");
+                }
+            }
+        }
+
         //A simple session id generator
         static int counter = 0;
         public int GenerateSessionId()
@@ -129,6 +145,9 @@ namespace POIProxy
                     break;
                 case SessionCtrlType.Leave: //Leave session
                     LeaveSession(user);
+                    break;
+                case SessionCtrlType.AudioStart: //Session audio start
+                    SessionAudioStart(user, msg.Timestamp);
                     break;
             }
         }

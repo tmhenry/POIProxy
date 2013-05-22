@@ -54,7 +54,7 @@ namespace POIProxy.SignalRFun
                     Console.WriteLine(e);
                 }
 
-                Clients[Context.ConnectionId].setAudioSyncReference(POIContentServerHelper.getAudioSyncReference(0, 0));
+                Clients[Context.ConnectionId].setAudioSyncReference(session.MdArchive.AudioTimeReference);
 
                 Clients[Context.ConnectionId].startPresentation();
             }
@@ -94,8 +94,9 @@ namespace POIProxy.SignalRFun
 
             try
             {
+                
                 JavaScriptSerializer js = new JavaScriptSerializer();
-
+                /*
                 //Get the audio reference for the archive
                 Dictionary<string, string> jsonResponse = js.Deserialize(
                     POIContentServerHelper.getAudioSyncReference(0, 0), 
@@ -109,7 +110,7 @@ namespace POIProxy.SignalRFun
                 else
                 {
                     archiveInfo.AudioTimeReference = Double.Parse(jsonResponse["starttime"]);
-                }
+                }*/
 
                 
 
