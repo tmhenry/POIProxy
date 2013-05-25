@@ -53,12 +53,12 @@ namespace POIProxy.Handlers
 
         public void handleComment(POIComment comment)
         {
+            var registery = POIProxyGlobalVar.Kernel.mySessionManager.Registery;
+            var session = registery.GetSessionByUser(myUser);
+
             //Forward the message to every other native clients
             try
             {
-                var registery = POIProxyGlobalVar.Kernel.mySessionManager.Registery;
-                var session = registery.GetSessionByUser(myUser);
-
                 session.MdArchive.LogEvent(comment);
 
                 foreach (POIUser user in POIGlobalVar.UserProfiles.Values)
@@ -75,7 +75,7 @@ namespace POIProxy.Handlers
             //Forward the message to web clients
             var context = GlobalHost.ConnectionManager.GetHubContext<POIProxyHub>();
             JavaScriptSerializer jsHandler = new JavaScriptSerializer();
-            context.Clients.scheduleMsgHandling(jsHandler.Serialize(comment));
+            context.Clients[session.Id.ToString()].scheduleMsgHandling(jsHandler.Serialize(comment));
         }
 
         //Handle comment in the format of a json string
