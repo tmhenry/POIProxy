@@ -35,3 +35,34 @@ c:\users\henryxia\documents\visual studio 2012\Projects\POIProxy\POIProxy\bin\Sy
 c:\users\henryxia\documents\visual studio 2012\Projects\POIProxy\POIProxy\bin\System.Web.WebPages.Razor.xml
 c:\users\henryxia\documents\visual studio 2012\Projects\POIProxy\POIProxy\obj\Debug\POIProxy.dll
 c:\users\henryxia\documents\visual studio 2012\Projects\POIProxy\POIProxy\obj\Debug\POIProxy.pdb
+C:\Users\HenryXia\Documents\GitHub\POIProxy\bin\POIProxy.dll
+C:\Users\HenryXia\Documents\GitHub\POIProxy\bin\POIProxy.pdb
+C:\Users\HenryXia\Documents\GitHub\POIProxy\bin\Microsoft.Web.Infrastructure.dll
+C:\Users\HenryXia\Documents\GitHub\POIProxy\bin\System.Net.Http.Formatting.dll
+C:\Users\HenryXia\Documents\GitHub\POIProxy\bin\System.Web.Helpers.dll
+C:\Users\HenryXia\Documents\GitHub\POIProxy\bin\System.Web.Http.dll
+C:\Users\HenryXia\Documents\GitHub\POIProxy\bin\System.Web.Http.WebHost.dll
+C:\Users\HenryXia\Documents\GitHub\POIProxy\bin\System.Web.Mvc.dll
+C:\Users\HenryXia\Documents\GitHub\POIProxy\bin\System.Web.Razor.dll
+C:\Users\HenryXia\Documents\GitHub\POIProxy\bin\System.Web.WebPages.Deployment.dll
+C:\Users\HenryXia\Documents\GitHub\POIProxy\bin\System.Web.WebPages.dll
+C:\Users\HenryXia\Documents\GitHub\POIProxy\bin\System.Web.WebPages.Razor.dll
+C:\Users\HenryXia\Documents\GitHub\POIProxy\bin\Microsoft.AspNet.SignalR.Core.xml
+C:\Users\HenryXia\Documents\GitHub\POIProxy\bin\Microsoft.AspNet.SignalR.Owin.xml
+C:\Users\HenryXia\Documents\GitHub\POIProxy\bin\Microsoft.AspNet.SignalR.SystemWeb.xml
+C:\Users\HenryXia\Documents\GitHub\POIProxy\bin\Microsoft.Owin.Host.SystemWeb.xml
+C:\Users\HenryXia\Documents\GitHub\POIProxy\bin\Newtonsoft.Json.xml
+C:\Users\HenryXia\Documents\GitHub\POIProxy\bin\POILibCommunication.pdb
+C:\Users\HenryXia\Documents\GitHub\POIProxy\bin\Microsoft.Web.Infrastructure.xml
+C:\Users\HenryXia\Documents\GitHub\POIProxy\bin\System.Net.Http.Formatting.xml
+C:\Users\HenryXia\Documents\GitHub\POIProxy\bin\System.Web.Helpers.xml
+C:\Users\HenryXia\Documents\GitHub\POIProxy\bin\System.Web.Http.xml
+C:\Users\HenryXia\Documents\GitHub\POIProxy\bin\System.Web.Http.WebHost.xml
+C:\Users\HenryXia\Documents\GitHub\POIProxy\bin\System.Web.Mvc.xml
+C:\Users\HenryXia\Documents\GitHub\POIProxy\bin\System.Web.Razor.xml
+C:\Users\HenryXia\Documents\GitHub\POIProxy\bin\System.Web.WebPages.xml
+C:\Users\HenryXia\Documents\GitHub\POIProxy\bin\System.Web.WebPages.Deployment.xml
+C:\Users\HenryXia\Documents\GitHub\POIProxy\bin\System.Web.WebPages.Razor.xml
+C:\Users\HenryXia\Documents\GitHub\POIProxy\obj\Debug\POIProxy.csprojResolveAssemblyReference.cache
+C:\Users\HenryXia\Documents\GitHub\POIProxy\obj\Debug\POIProxy.dll
+C:\Users\HenryXia\Documents\GitHub\POIProxy\obj\Debug\POIProxy.pdb

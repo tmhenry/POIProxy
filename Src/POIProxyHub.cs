@@ -18,12 +18,7 @@ namespace POIProxy
     public class POIProxyHub : Hub
     {
         POIProxyWBCtrlHandler webWBHandler = new POIProxyWBCtrlHandler(new POIUser());
-
-        public void EchoOnServer()
-        {
-            Clients.All.echoOnClient();
-        }
-
+        Dictionary<string, POIUser> conUserMap = new Dictionary<string, POIUser>();
         
         public void Log(string msg)
         {
@@ -32,19 +27,38 @@ namespace POIProxy
 
         public void HandleCommentMsgOnServer(string msg)
         {
-            webWBHandler.handleStringComment(msg);
+            //Get the current user
+            POIUser curUser = conUserMap[Context.ConnectionId];
+            if (curUser != null)
+            {
+                webWBHandler.handleStringComment(msg, curUser);
+            }
+            else
+            {
+                POIGlobalVar.POIDebugLog("Cannot find the user associated with the connection");
+            }
         }
 
         public void JoinSession(int contentId, int sessionId)
         {
-            Groups.Add(Context.ConnectionId, sessionId.ToString());
-
-            //Get the initial slides
+            //Get the session
             var registery = POIProxyGlobalVar.Kernel.mySessionManager.Registery;
             var session = registery.GetSessionById(sessionId);
 
             if (session != null)
             {
+                //Use the current user to enter the session registery
+                POIUser curUser = conUserMap[Context.ConnectionId];
+                if (curUser == null)
+                {
+                    POIGlobalVar.POIDebugLog("Cannot find the web user associated with connection");
+                    return;
+                }
+
+                //Join the session
+                session.JoinAsViewer(curUser);
+                Groups.Add(Context.ConnectionId, sessionId.ToString());
+
                 //Get the presentation file and send to the user
                 POIPresentation curPres = session.PresController.CurPres;
                 JavaScriptSerializer js = new JavaScriptSerializer();
@@ -97,16 +111,17 @@ namespace POIProxy
             }
             
             
-
             try
             {
                 
                 JavaScriptSerializer js = new JavaScriptSerializer();
                 
-
                 Clients.Caller.handlePresInfo(js.Serialize(presInfo));
                 Clients.Caller.handleMetadataArchive(js.Serialize(archiveInfo));
                 Clients.Caller.startPresentation();
+
+                //Disconnect the client for better performance
+                Clients.Caller.disconnectFromProxy();
             }
             catch (Exception e)
             {
@@ -117,8 +132,80 @@ namespace POIProxy
         public void LeaveSession(int sessionId)
         {
             Clients.Group(sessionId.ToString()).leave(Context.ConnectionId);
-        }
-        
+            
+            //Get the session
+            var registery = POIProxyGlobalVar.Kernel.mySessionManager.Registery;
+            var session = registery.GetSessionById(sessionId);
+            POIUser curUser = conUserMap[Context.ConnectionId];
 
+            if (session != null && curUser != null)
+            {
+                session.LeaveAsViewer(curUser);
+            }
+        }
+
+
+        #region Handle connection status change
+        //When the client is joining the system for the first time
+        public override System.Threading.Tasks.Task OnConnected()
+        {
+            //Retrieve the user information from the query string
+            var info = Context.QueryString;
+            POIGlobalVar.POIDebugLog(info["userid"]);
+            POIGlobalVar.POIDebugLog(info["email"]);
+
+            String userId = info["userid"];
+            POIUser user = null;
+
+            //Check if the user exists
+            if (POIGlobalVar.WebUserProfiles.ContainsKey(userId))
+            {
+                //Set the connectionId to user mapping
+                user = POIGlobalVar.WebUserProfiles[userId];
+            }
+            else
+            {
+                //Create the user and set the mapping
+                user = new POIUser(UserType.WEB);
+                user.UserID = userId;
+
+                POIGlobalVar.WebUserProfiles[userId] = user;
+            }
+
+            //Set the connection to user mapping
+            conUserMap[Context.ConnectionId] = user;
+            
+            return base.OnConnected();
+        }
+
+        public override System.Threading.Tasks.Task OnDisconnected()
+        {
+            POIGlobalVar.POIDebugLog("Ooops, disconnected!");
+
+            //Remove the user from the profile
+            POIUser user = conUserMap[Context.ConnectionId];
+            if (user != null)
+            {
+                try
+                {
+                    //Remove the user from the profiles
+                    POIGlobalVar.WebUserProfiles.Remove(user.UserID);
+                    conUserMap.Remove(Context.ConnectionId);
+                }
+                catch (Exception e)
+                {
+                    POIGlobalVar.POIDebugLog(e);
+                }
+            }
+
+            return base.OnDisconnected();
+        }
+
+        public override System.Threading.Tasks.Task OnReconnected()
+        {
+            return base.OnReconnected();
+        }
+
+        #endregion
     }
 }

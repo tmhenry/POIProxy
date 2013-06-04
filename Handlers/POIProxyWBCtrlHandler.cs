@@ -35,7 +35,7 @@ namespace POIProxy.Handlers
             {
                 foreach (POIUser user in session.Viewers)
                 {
-                    if (user != myUser)
+                    if (user != myUser && user.Type != UserType.WEB)
                         user.SendData(msg.getPacket(), ConType.TCP_CONTROL);
                 }
             }
@@ -62,7 +62,7 @@ namespace POIProxy.Handlers
 
                 foreach (POIUser user in POIGlobalVar.UserProfiles.Values)
                 {
-                    if (user != myUser)
+                    if (user != myUser && user.Type != UserType.WEB)
                         user.SendData(comment.getPacket(), ConType.TCP_CONTROL);
                 }
             }
@@ -78,7 +78,7 @@ namespace POIProxy.Handlers
         }
 
         //Handle comment in the format of a json string
-        public void handleStringComment(string cmntString)
+        public void handleStringComment(string cmntString, POIUser webUser)
         {
             JavaScriptSerializer jsHandler = new JavaScriptSerializer();
             POIComment comment = jsHandler.Deserialize(cmntString, typeof(POIComment)) as POIComment;
@@ -91,9 +91,9 @@ namespace POIProxy.Handlers
             {
                 //TO-DO: do not use the hard coded session id in the future
                 var registery = POIProxyGlobalVar.Kernel.mySessionManager.Registery;
-                var session = registery.GetSessionById(0);
+                var session = registery.GetSessionByUser(webUser);
 
-                session.MdArchive.LogEvent(comment);
+                //session.MdArchive.LogEvent(comment);
 
                 foreach (POIUser user in session.Commanders)
                 {

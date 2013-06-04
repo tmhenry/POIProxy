@@ -33,7 +33,7 @@ namespace POIProxy.Handlers
             {
                 foreach (POIUser user in session.Viewers)
                 {
-                    if(user != myUser)
+                    if(user != myUser && user.Type != UserType.WEB)
                         user.SendData(msg.getPacket(), ConType.TCP_CONTROL);
                 }
             }
