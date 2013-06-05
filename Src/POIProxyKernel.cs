@@ -37,6 +37,7 @@ namespace POIProxy
 
             //Intialize the web user profiles
             POIGlobalVar.WebUserProfiles = new Dictionary<string, POIUser>();
+            POIGlobalVar.WebConUserMap = new Dictionary<string, POIUser>();
         }
 
         #region Functions for the Kernel protocol

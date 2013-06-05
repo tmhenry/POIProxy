@@ -73,7 +73,7 @@ namespace POIProxy
             {
                 viewers.Add(user);
 
-                SendInitialSlides(user);
+                if(user.Type == UserType.MOBILE) SendInitialSlides(user);
             }
         }
 
@@ -84,7 +84,7 @@ namespace POIProxy
                 commanders.Add(user);
                 viewers.Add(user);
 
-                SendInitialSlides(user);
+                if (user.Type == UserType.MOBILE) SendInitialSlides(user);
             }
         }
 
@@ -115,6 +115,9 @@ namespace POIProxy
 
                 for (int i = 0; i < viewers.Count; i++)
                 {
+                    //Do not handle the web user
+                    if (viewers[i].Type == UserType.WEB) continue;
+
                     myScheduler.ScheduleHighPriorityEvent
                     (
                         new POISessionPresSendEvent(viewers[i], pres)

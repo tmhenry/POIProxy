@@ -59,8 +59,9 @@
     <Reference Include="Owin">
       <HintPath>..\packages\Owin.1.0\lib\net40\Owin.dll</HintPath>
     </Reference>
-    <Reference Include="POILibCommunication">
-      <HintPath>..\..\POILibCommunication\POILibCommunication\bin\Debug\POILibCommunication.dll</HintPath>
+    <Reference Include="POILibCommunication, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\POILibCommunication\POILibCommunication\bin\Debug\POILibCommunication.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />

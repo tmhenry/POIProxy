@@ -66,3 +66,4 @@ C:\Users\HenryXia\Documents\GitHub\POIProxy\bin\System.Web.WebPages.Razor.xml
 C:\Users\HenryXia\Documents\GitHub\POIProxy\obj\Debug\POIProxy.csprojResolveAssemblyReference.cache
 C:\Users\HenryXia\Documents\GitHub\POIProxy\obj\Debug\POIProxy.dll
 C:\Users\HenryXia\Documents\GitHub\POIProxy\obj\Debug\POIProxy.pdb
+C:\Users\HenryXia\Documents\GitHub\POIProxy\bin\POILibCommunication.dll
