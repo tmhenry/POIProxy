@@ -17,7 +17,14 @@ namespace POIProxy.Controllers
         public override void OnActionExecuted(HttpActionExecutedContext actionExecutedContext)
         {
             if (actionExecutedContext.Response != null)
-                actionExecutedContext.Response.Headers.Add("Access-Control-Allow-Origin", "*");
+            {
+                actionExecutedContext.Response.Headers.Add("Access-Control-Allow-Origin", "http://localhost:8081");
+                actionExecutedContext.Response.Headers.Add("Access-Control-Allow-Methods", "POST");
+                actionExecutedContext.Response.Headers.Add("Access-Control-Allow-Headers", "origin, content-type");
+                actionExecutedContext.Response.Headers.Add("Access-Control-Max-Age", "1728000");
+                //actionExecutedContext.Response.Headers.Add("Content-Encoding", "gzip");
+                actionExecutedContext.Response.Headers.Add("Connection", "Keep-Alive");
+            }
 
             base.OnActionExecuted(actionExecutedContext);
         }
@@ -41,6 +48,12 @@ namespace POIProxy.Controllers
         public HttpResponseMessage OptionsAudio()
         {
             HttpResponseMessage response = new HttpResponseMessage(HttpStatusCode.OK);
+            response.Headers.Add("Access-Control-Allow-Origin", "*");
+            response.Headers.Add("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+            response.Headers.Add("Access-Control-Allow-Headers", "origin, content-type");
+            response.Headers.Add("Access-Control-Max-Age", "1728000");
+            //response.Headers.Add("Content-Encoding", "gzip");
+            //response.Headers.Add("Connection", "Keep-Alive");
 
             return response;
         }
@@ -66,6 +79,8 @@ namespace POIProxy.Controllers
 
             //Return 200 OK to the client
             HttpResponseMessage response = new HttpResponseMessage(HttpStatusCode.OK);
+            response.Content.Headers.Add("Content-type", "audio/wav");
+            response.Content.Headers.Add("Content-length", Request.Content.Headers.ContentLength.ToString());
 
             return response;
         }
