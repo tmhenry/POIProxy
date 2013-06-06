@@ -58,13 +58,14 @@ namespace POIProxy.Controllers
             return response;
         }
 
-        public HttpResponseMessage PostAudio()
+        public HttpResponseMessage PostAudio(string userId, int sessionId)
         {
-            
+            //Get the session id and user information from the posted data
+            POIGlobalVar.POIDebugLog(userId);
+            POIGlobalVar.POIDebugLog(sessionId);
 
-            //POIGlobalVar.POIDebugLog(Request);
-            //POIGlobalVar.POIDebugLog(Request.Content);
-            //POIGlobalVar.POIDebugLog(Request.Content.Headers);
+            //send the audio to the commander
+            
 
             if (Request.Content.Headers.ContentType.MediaType == "audio/wav")
             {
@@ -89,10 +90,14 @@ namespace POIProxy.Controllers
         {
             try
             {
-                FileStream fs = new FileStream("test2.wav", FileMode.Create);
+                //Copy the audio bytes into memory
+                MemoryStream ms = new MemoryStream();
                 POIGlobalVar.POIDebugLog(Directory.GetCurrentDirectory());
-                await content.CopyToAsync(fs);
-                fs.Close();
+                await content.CopyToAsync(ms);
+                
+                //Construct the audio comment
+                POITextComment audioComment = new POITextComment(0, ms.GetBuffer());
+
             }
             catch (Exception e)
             {
