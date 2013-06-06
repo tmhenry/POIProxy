@@ -10,6 +10,8 @@ using System.Net.Http.Headers;
 using POILibCommunication;
 using System.IO;
 
+using System.Web.Script.Serialization;
+
 namespace POIProxy.Controllers
 {
     public class AllowCrossSiteJsonAttribute : ActionFilterAttribute
@@ -58,19 +60,17 @@ namespace POIProxy.Controllers
             return response;
         }
 
-        public HttpResponseMessage PostAudio(string userId, int sessionId)
+        public HttpResponseMessage PostAudio(string info)
         {
             //Get the session id and user information from the posted data
-            POIGlobalVar.POIDebugLog(userId);
-            POIGlobalVar.POIDebugLog(sessionId);
-
-            //send the audio to the commander
+            JavaScriptSerializer jsHandler = new JavaScriptSerializer();
+            Dictionary<string, string> audioInfo = jsHandler.Deserialize<Dictionary<string, string>>(info);
             
 
             if (Request.Content.Headers.ContentType.MediaType == "audio/wav")
             {
                 POIGlobalVar.POIDebugLog("Audio wav!");
-                ProcessAudio(Request.Content as StreamContent);
+                ProcessAudio(Request.Content as StreamContent, audioInfo);
             }
             else
             {
@@ -86,18 +86,35 @@ namespace POIProxy.Controllers
             return response;
         }
 
-        private async void ProcessAudio(StreamContent content)
+        private async void ProcessAudio(StreamContent content, Dictionary<string, string> audioInfo)
         {
             try
             {
+                //Get the depth, sessionId, slideIndex from the audioInfo
+                int depth = Int32.Parse(audioInfo["depth"]);
+                int sessionId = Int32.Parse(audioInfo["sessionId"]);
+                int slideIndex = Int32.Parse(audioInfo["slideIndex"]);
+
                 //Copy the audio bytes into memory
                 MemoryStream ms = new MemoryStream();
                 POIGlobalVar.POIDebugLog(Directory.GetCurrentDirectory());
                 await content.CopyToAsync(ms);
                 
                 //Construct the audio comment
-                POITextComment audioComment = new POITextComment(0, ms.GetBuffer());
+                POITextComment audioComment = new POITextComment(depth, ms.GetBuffer());
+                POIComment comment = new POIComment();
+                comment.FrameNum = slideIndex;
+                comment.insert(audioComment);
 
+                //Send the comment to the session commander
+                var registery = POIProxyGlobalVar.Kernel.mySessionManager.Registery;
+                var session = registery.GetSessionById(sessionId);
+
+                foreach (POIUser user in session.Commanders)
+                {
+                    if (user.Type != UserType.WEB)
+                        user.SendData(comment.getPacket(), ConType.TCP_CONTROL);
+                }
             }
             catch (Exception e)
             {
