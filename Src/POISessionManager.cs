@@ -45,9 +45,12 @@ namespace POIProxy
                 if (session.IsCommander(user))
                 {
                     session.SessionEnd();
+                    registery.RemoveSession(user);
                 }
-
-                registery.RemoveSession(user);
+                else if (session.IsViewer(user))
+                {
+                    LeaveSession(user);
+                }
             }
             
         }
@@ -57,6 +60,10 @@ namespace POIProxy
             POISession session = registery.GetSessionById(sessionId);
             if (session != null)
             {
+                session.JoinAsViewer(user);
+                registery.RegisterSession(user, sessionId);
+
+                /*
                 if (user.UserPrivilege == POIUser.Privilege.Commander)
                 {
                     session.JoinAsCommander(user);
@@ -70,7 +77,7 @@ namespace POIProxy
                 else
                 {
                     POIGlobalVar.POIDebugLog("Not proper user privilege for user join operation");
-                }
+                }*/
             }
         }
 
@@ -160,8 +167,9 @@ namespace POIProxy
         {
             //Get the current session
             POISession session = registery.GetSessionByUser(commander);
+            POIGlobalVar.POIDebugLog("Commander id is: " + commander.UserID);
 
-            if (session != null)
+            if (session != null && session.IsCommander(commander))
             {
                 //Send to the mobile viewers
                 try
@@ -170,6 +178,7 @@ namespace POIProxy
                     {
                         if (viewer != commander && viewer.Type != UserType.WEB)
                         {
+                            POIGlobalVar.POIDebugLog("Sending to: " + viewer.UserID);
                             viewer.SendData(msg.getPacket(), ConType.TCP_CONTROL);
                         }
                     }
@@ -195,7 +204,7 @@ namespace POIProxy
             //Get the current session
             POISession session = registery.GetSessionByUser(viewer);
 
-            if (session != null)
+            if (session != null && session.IsViewer(viewer))
             {
                 //Send to the mobile commanders
                 try
