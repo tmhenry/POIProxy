@@ -22,12 +22,23 @@ namespace POIProxy.Handlers
 
         public void presCtrlMsgReceived(POIPresCtrlMsg msg)
         {
-            var registery = POIProxyGlobalVar.Kernel.mySessionManager.Registery;
-            var session = registery.GetSessionByUser(myUser);
+            //Broadcast the event
+            POISessionManager manager = POIProxyGlobalVar.Kernel.mySessionManager;
+            manager.broadcastMessageToViewers(myUser, msg);
 
             //Handle the msg locally
-            HandlePresCtrlMsgByProxy(session, msg);
+            try
+            {
+                var session = manager.Registery.GetSessionByUser(myUser);
+                HandlePresCtrlMsgByProxy(session, msg);
+            }
+            catch(Exception e)
+            {
 
+            }
+            
+
+            /*
             //Forward the message to every other native clients
             try
             {
@@ -46,15 +57,13 @@ namespace POIProxy.Handlers
             var context = GlobalHost.ConnectionManager.GetHubContext<POIProxyHub>();
             JavaScriptSerializer jsHandler = new JavaScriptSerializer();
             //context.Clients[session.Id.ToString()].handlePresCtrlMsg(jsHandler.Serialize(msg));         
-            context.Clients.Group(session.Id.ToString()).scheduleMsgHandling(jsHandler.Serialize(msg)); 
+            context.Clients.Group(session.Id.ToString()).scheduleMsgHandling(jsHandler.Serialize(msg)); */
         }
 
         private void HandlePresCtrlMsgByProxy(POISession session, POIPresCtrlMsg msg)
         {
             var presController = session.PresController;
             
-            
-
             switch((PresCtrlType)msg.CtrlType)
             {
                 case PresCtrlType.Next:

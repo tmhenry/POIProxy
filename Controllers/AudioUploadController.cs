@@ -106,6 +106,10 @@ namespace POIProxy.Controllers
                 comment.FrameNum = slideIndex;
                 comment.insert(audioComment);
 
+                POISessionManager manager = POIProxyGlobalVar.Kernel.mySessionManager;
+                manager.sendMessageToCommanders(sessionId, comment);
+
+                /*
                 //Send the comment to the session commander
                 var registery = POIProxyGlobalVar.Kernel.mySessionManager.Registery;
                 var session = registery.GetSessionById(sessionId);
@@ -114,7 +118,7 @@ namespace POIProxy.Controllers
                 {
                     if (user.Type != UserType.WEB)
                         user.SendData(comment.getPacket(), ConType.TCP_CONTROL);
-                }
+                }*/
             }
             catch (Exception e)
             {

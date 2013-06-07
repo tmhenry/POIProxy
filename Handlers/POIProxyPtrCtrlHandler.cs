@@ -24,6 +24,23 @@ namespace POIProxy.Handlers
         {
             POIGlobalVar.POIDebugLog("Time is: " + msg.Timestamp);
 
+            //Broadcast the event
+            POISessionManager manager = POIProxyGlobalVar.Kernel.mySessionManager;
+            manager.broadcastMessageToViewers(myUser, msg);
+
+            //Log the event
+            try
+            {
+                var session = manager.Registery.GetSessionByUser(myUser);
+                session.MdArchive.LogEvent(msg);
+            }
+            catch (Exception e)
+            {
+
+            }
+            
+
+            /*
             var registery = POIProxyGlobalVar.Kernel.mySessionManager.Registery;
             var session = registery.GetSessionByUser(myUser);
 
@@ -49,6 +66,7 @@ namespace POIProxy.Handlers
             var context = GlobalHost.ConnectionManager.GetHubContext<POIProxyHub>();
             JavaScriptSerializer jsHandler = new JavaScriptSerializer();
             context.Clients.Group(session.Id.ToString()).scheduleMsgHandling(jsHandler.Serialize(msg));
+             * */
         }
     }
 }

@@ -4,6 +4,8 @@ using System.Linq;
 using System.Text;
 
 using POILibCommunication;
+using Microsoft.AspNet.SignalR;
+using System.Web.Script.Serialization;
 
 namespace POIProxy
 {
@@ -151,6 +153,104 @@ namespace POIProxy
                     break;
             }
         }
+
+        #region Utility functions for session management
+
+        public void broadcastMessageToViewers(POIUser commander, POIMessage msg)
+        {
+            //Get the current session
+            POISession session = registery.GetSessionByUser(commander);
+
+            if (session != null)
+            {
+                //Send to the mobile viewers
+                try
+                {       
+                    foreach (POIUser viewer in session.Viewers)
+                    {
+                        if (viewer != commander && viewer.Type != UserType.WEB)
+                        {
+                            viewer.SendData(msg.getPacket(), ConType.TCP_CONTROL);
+                        }
+                    }
+                }
+                catch (Exception e)
+                {
+                    POIGlobalVar.POIDebugLog("Error in broadcasting messages to mobile viewers!");
+                }
+                
+                //Forward to the web viewers
+                var context = GlobalHost.ConnectionManager.GetHubContext<POIProxyHub>();
+                JavaScriptSerializer jsHandler = new JavaScriptSerializer();
+                context.Clients.Group(session.Id.ToString()).scheduleMsgHandling(jsHandler.Serialize(msg));
+            }
+            else
+            {
+                POIGlobalVar.POIDebugLog("Session is null when broadcasting msg to viewers!");
+            }
+        }
+
+        public void sendMessageToCommanders(POIUser viewer, POIMessage msg)
+        {
+            //Get the current session
+            POISession session = registery.GetSessionByUser(viewer);
+
+            if (session != null)
+            {
+                //Send to the mobile commanders
+                try
+                {
+                    foreach (POIUser commander in session.Commanders)
+                    {
+                        if (commander != viewer && commander.Type != UserType.WEB)
+                        {
+                            commander.SendData(msg.getPacket(), ConType.TCP_CONTROL);
+                        }
+                    }
+                }
+                catch (Exception e)
+                {
+                    POIGlobalVar.POIDebugLog("Error in sending messages to mobile commanders!");
+                }
+                
+            }
+            else
+            {
+                POIGlobalVar.POIDebugLog("Session is null when sending msg to commanders!");
+            }
+        }
+
+        public void sendMessageToCommanders(int sessionId, POIMessage msg)
+        {
+            //Get the current session
+            POISession session = registery.GetSessionById(sessionId);
+
+            if (session != null)
+            {
+                //Send to the mobile commanders
+                try
+                {
+                    foreach (POIUser commander in session.Commanders)
+                    {
+                        if (commander.Type != UserType.WEB)
+                        {
+                            commander.SendData(msg.getPacket(), ConType.TCP_CONTROL);
+                        }
+                    }
+                }
+                catch (Exception e)
+                {
+                    POIGlobalVar.POIDebugLog("Error in sending messages to mobile commanders!");
+                }
+
+            }
+            else
+            {
+                POIGlobalVar.POIDebugLog("Session is null when sending msg to commanders!");
+            }
+        }
+
+        #endregion
     }
 
 
