@@ -14,6 +14,9 @@ namespace POIProxy
         POIComServer myDataHandler;
 
         public POISessionManager mySessionManager = new POISessionManager();
+        public POIProxyPresCtrlHandler myPresCtrlHandler = new POIProxyPresCtrlHandler();
+        public POIProxyPtrCtrlHandler myPtrCtrlHandler = new POIProxyPtrCtrlHandler();
+        public POIProxyWBCtrlHandler myWBCtrlHandler = new POIProxyWBCtrlHandler();
 
         public Dictionary<string, POIUser> userCollection = new Dictionary<string, POIUser>();
 
@@ -21,6 +24,7 @@ namespace POIProxy
         {
             //Set the system kernel to connect with POI Communication lib
             POIGlobalVar.SystemKernel = this;
+            POIGlobalVar.MaxMobileClientCount = 2000;
             
             //Publish the server address to the dns server
             POIWebService.StartService
@@ -49,6 +53,7 @@ namespace POIProxy
 
         public void SetHandlersForUser(POIUser user) 
         {
+            /*
             user.PresCtrlHandler = new POIProxyPresCtrlHandler(user);
 
             POIProxyWBCtrlHandler handler = new POIProxyWBCtrlHandler(user);
@@ -57,6 +62,15 @@ namespace POIProxy
 
             user.SessionHandler = mySessionManager;
             user.PointerHandler = new POIProxyPtrCtrlHandler(user);
+            user.AudioContentHandler = new POIProxyAudioContentHandler(user);*/
+
+            //Use the shared handlers
+            user.PresCtrlHandler = myPresCtrlHandler;
+            user.WhiteboardCtrlHandler = myWBCtrlHandler;
+            user.CommentHandler = myWBCtrlHandler;
+
+            user.SessionHandler = mySessionManager;
+            user.PointerHandler = myPtrCtrlHandler;
             user.AudioContentHandler = new POIProxyAudioContentHandler(user);
         }
 
@@ -66,6 +80,10 @@ namespace POIProxy
         }
 
         #endregion
+
+        //Handler functions for proxy the different messages
+
+
 
     }
 }

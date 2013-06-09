@@ -13,17 +13,12 @@ namespace POIProxy.Handlers
 {
     public class POIProxyWBCtrlHandler : POIWhiteBoardMsgCB, POICommentCB
     {
-        POIUser myUser;
 
         public void showWhiteBoard() { }
         public void hideWhiteBoard() { }
 
-        public POIProxyWBCtrlHandler(POIUser user)
-        {
-            myUser = user;
-        }
 
-        public void whiteboardCtrlMsgReceived(POIWhiteboardMsg msg)
+        public void whiteboardCtrlMsgReceived(POIWhiteboardMsg msg, POIUser myUser)
         {
             //Broadcast the event
             POISessionManager manager = POIProxyGlobalVar.Kernel.mySessionManager;
@@ -40,29 +35,9 @@ namespace POIProxy.Handlers
 
             }
             
-
-            /*
-            //Forward the message to every other native clients
-            try
-            {
-                foreach (POIUser user in session.Viewers)
-                {
-                    if (user != myUser && user.Type != UserType.WEB)
-                        user.SendData(msg.getPacket(), ConType.TCP_CONTROL);
-                }
-            }
-            catch (Exception e)
-            {
-                POIGlobalVar.POIDebugLog("Error in forwarding whiteboard control message to native clients");
-            }
-
-            //Forward the message to web clients
-            var context = GlobalHost.ConnectionManager.GetHubContext<POIProxyHub>();
-            JavaScriptSerializer jsHandler = new JavaScriptSerializer();
-            context.Clients.Group(session.Id.ToString()).scheduleMsgHandling(jsHandler.Serialize(msg));*/
         }
 
-        public void handleComment(POIComment msg)
+        public void handleComment(POIComment msg, POIUser myUser)
         {
             //Broadcast the event
             POISessionManager manager = POIProxyGlobalVar.Kernel.mySessionManager;
@@ -79,30 +54,6 @@ namespace POIProxy.Handlers
 
             }
             
-            /*
-            var registery = POIProxyGlobalVar.Kernel.mySessionManager.Registery;
-            var session = registery.GetSessionByUser(myUser);
-
-            //Forward the message to every other native clients
-            try
-            {
-                session.MdArchive.LogEvent(comment);
-
-                foreach (POIUser user in POIGlobalVar.UserProfiles.Values)
-                {
-                    if (user != myUser && user.Type != UserType.WEB)
-                        user.SendData(comment.getPacket(), ConType.TCP_CONTROL);
-                }
-            }
-            catch (Exception e)
-            {
-                POIGlobalVar.POIDebugLog("Error in forwarding comment message to native clients");
-            }
-
-            //Forward the message to web clients
-            var context = GlobalHost.ConnectionManager.GetHubContext<POIProxyHub>();
-            JavaScriptSerializer jsHandler = new JavaScriptSerializer();
-            context.Clients.Group(session.Id.ToString()).scheduleMsgHandling(jsHandler.Serialize(comment));*/
         }
 
         //Handle comment in the format of a json string
@@ -115,28 +66,6 @@ namespace POIProxy.Handlers
 
             POISessionManager manager = POIProxyGlobalVar.Kernel.mySessionManager;
             manager.sendMessageToCommanders(webUser, comment);
-
-            /*
-            //Send the comment to the presenters
-            //Forward the message to every other commanders
-            try
-            {
-                //TO-DO: do not use the hard coded session id in the future
-                var registery = POIProxyGlobalVar.Kernel.mySessionManager.Registery;
-                var session = registery.GetSessionByUser(webUser);
-
-                //session.MdArchive.LogEvent(comment);
-
-                foreach (POIUser user in session.Commanders)
-                {
-                    if (user != myUser || true)
-                        user.SendData(comment.getPacket(), ConType.TCP_CONTROL);
-                }
-            }
-            catch (Exception e)
-            {
-                POIGlobalVar.POIDebugLog("Error in forwarding audience comment to presenter");
-            }*/
 
         }
     }

@@ -13,14 +13,8 @@ namespace POIProxy.Handlers
 {
     public class POIProxyPresCtrlHandler : POIPresentationControlMsgCB
     {
-        POIUser myUser;
 
-        public POIProxyPresCtrlHandler(POIUser user)
-        {
-            myUser = user;
-        }
-
-        public void presCtrlMsgReceived(POIPresCtrlMsg msg)
+        public void presCtrlMsgReceived(POIPresCtrlMsg msg, POIUser myUser)
         {
             //Broadcast the event
             POISessionManager manager = POIProxyGlobalVar.Kernel.mySessionManager;
@@ -37,27 +31,6 @@ namespace POIProxy.Handlers
 
             }
             
-
-            /*
-            //Forward the message to every other native clients
-            try
-            {
-                foreach (POIUser user in session.Viewers)
-                {
-                    if(user != myUser && user.Type != UserType.WEB)
-                        user.SendData(msg.getPacket(), ConType.TCP_CONTROL);
-                }
-            }
-            catch (Exception e)
-            {
-                POIGlobalVar.POIDebugLog("Error in forwarding presentation control message to native clients");
-            }
-
-            //Forward the message to web clients
-            var context = GlobalHost.ConnectionManager.GetHubContext<POIProxyHub>();
-            JavaScriptSerializer jsHandler = new JavaScriptSerializer();
-            //context.Clients[session.Id.ToString()].handlePresCtrlMsg(jsHandler.Serialize(msg));         
-            context.Clients.Group(session.Id.ToString()).scheduleMsgHandling(jsHandler.Serialize(msg)); */
         }
 
         private void HandlePresCtrlMsgByProxy(POISession session, POIPresCtrlMsg msg)

@@ -195,7 +195,7 @@ namespace POIProxy
             }
             else
             {
-                POIGlobalVar.POIDebugLog("Session is null when broadcasting msg to viewers!");
+                POIGlobalVar.POIDebugLog("Session is null or user is not commander when broadcasting msg to viewers!");
             }
         }
 
@@ -225,7 +225,7 @@ namespace POIProxy
             }
             else
             {
-                POIGlobalVar.POIDebugLog("Session is null when sending msg to commanders!");
+                POIGlobalVar.POIDebugLog("Session is null or user is not a viewer when sending msg to commanders!");
             }
         }
 

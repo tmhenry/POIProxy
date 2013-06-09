@@ -17,7 +17,7 @@ namespace POIProxy
     [HubName("poiProxy")]
     public class POIProxyHub : Hub
     {
-        POIProxyWBCtrlHandler webWBHandler = new POIProxyWBCtrlHandler(new POIUser());
+        POIProxyWBCtrlHandler webWBHandler = POIProxyGlobalVar.Kernel.myWBCtrlHandler;
         
         public void Log(string msg)
         {
