@@ -43,6 +43,11 @@ namespace POIProxy.Handlers
             POISessionManager manager = POIProxyGlobalVar.Kernel.mySessionManager;
             manager.broadcastMessageToViewers(myUser, msg);
 
+            //Check if the comment contains audio comment
+            //If so, upload the comment to the content server
+
+
+
             //Log the event
             try
             {

@@ -12,6 +12,8 @@ using POILibCommunication;
 using POIProxy.Handlers;
 using System.Web.Script.Serialization;
 
+using System.Threading.Tasks;
+
 namespace POIProxy
 {
     [HubName("poiProxy")]
@@ -38,7 +40,7 @@ namespace POIProxy
             }
         }
 
-        public void JoinSession(int contentId, int sessionId)
+        public async Task JoinSession(int contentId, int sessionId)
         {
             //Get the session
             var manager = POIProxyGlobalVar.Kernel.mySessionManager;
@@ -57,7 +59,7 @@ namespace POIProxy
 
                 //Join the session
                 manager.JoinSession(curUser, sessionId);
-                Groups.Add(Context.ConnectionId, sessionId.ToString());
+                await Groups.Add(Context.ConnectionId, sessionId.ToString());
 
                 //Get the presentation file and send to the user
                 POIPresentation curPres = session.PresController.CurPres;
@@ -78,11 +80,11 @@ namespace POIProxy
             }
             else
             {
-                StartOfflineSession(contentId, sessionId);
+                await StartOfflineSession(contentId, sessionId);
             }
         }
 
-        public void StartOfflineSession(int contentId, int sessionId)
+        public async Task StartOfflineSession(int contentId, int sessionId)
         {
             POIPresentation presInfo;
             POIMetadataArchive archiveInfo;
@@ -96,11 +98,11 @@ namespace POIProxy
             if (cacheResult == null)
             {
                 //Read the presentation info
-                presInfo = POIPresentation.LoadPresFromContentServer(contentId);
+                presInfo = await POIPresentation.LoadPresFromContentServer(contentId);
 
                 //Read the metadata archive from the content server
                 archiveInfo = new POIMetadataArchive(contentId, sessionId);
-                archiveInfo.ReadArchive();
+                await archiveInfo.ReadArchive();
 
                 cache.AddRecordToSessionCache(contentId, sessionId, presInfo, archiveInfo);
             }

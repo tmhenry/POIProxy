@@ -259,6 +259,13 @@ namespace POIProxy
             }
         }
 
+
+        //Notify all the web clients that the audio comment is ready
+        public void notifyClientsAudioReady()
+        {
+
+        }
+
         #endregion
     }
 

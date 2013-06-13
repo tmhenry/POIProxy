@@ -5,6 +5,7 @@ using System.Text;
 
 using POILibCommunication;
 using System.Threading;
+using System.Threading.Tasks;
 
 using System.IO;
 
@@ -12,7 +13,6 @@ namespace POIProxy
 {
     public class POISession
     {
-        
         private List<POIUser> commanders;
         private List<POIUser> viewers;
         private int id;
@@ -32,18 +32,11 @@ namespace POIProxy
 
         public POISession(POIUser commander, int sessionId, int contentId)
         {
-            //Load the presentation content according to the contentId
-            POIPresentation presContent = POIPresentation.LoadPresFromContentServer(contentId);
-
             //Create the archive for metadata
             mdArchive = new POIMetadataArchive(contentId, sessionId);
             
             //POIPresentation presContent = new POIPresentation();
             //presContent.LoadPresentationFromStorage();
-
-            presController = new POISessionPresController(this);
-            presController.LoadPresentation(presContent);
-
             Info = new POISessionInfo();
             Info.organization = @"Pipe of Insight";
             Info.presenterName = commander.UserID;
@@ -54,12 +47,22 @@ namespace POIProxy
 
             commanders = new List<POIUser>();
             viewers = new List<POIUser>();
-            JoinAsCommander(commander);
 
+            initSessionWithUser(commander, contentId);
 
             Thread schedulerThread = new Thread(StartScheduler);
             schedulerThread.Name = @"SessionScheduler_" + id;
             schedulerThread.Start();
+        }
+
+        private async void initSessionWithUser(POIUser commander, int contentId)
+        {
+            //Load the presentation content according to the contentId
+            POIPresentation presContent = await POIPresentation.LoadPresFromContentServer(contentId);
+            presController = new POISessionPresController(this);
+            presController.LoadPresentation(presContent);
+
+            JoinAsCommander(commander);
         }
 
         public void StartScheduler()

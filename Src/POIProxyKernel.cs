@@ -19,6 +19,7 @@ namespace POIProxy
         public POIProxyWBCtrlHandler myWBCtrlHandler = new POIProxyWBCtrlHandler();
 
         public Dictionary<string, POIUser> userCollection = new Dictionary<string, POIUser>();
+        private List<Timer> myActiveTimers = new List<Timer>();
 
         public void Start()
         {
@@ -76,7 +77,50 @@ namespace POIProxy
 
         public void HandleUserLeave(POIUser user) 
         { 
-            
+            //Set a timer to remove the user from the session registery
+            //Remove the proper session as well
+            //The timer is used for tolerating temporary networking failure
+            Timer myTimer = null;
+
+            TimerCallback tcb = new TimerCallback((userInfo) =>
+            {
+                //If the user is still disconnected, destroy the state
+                POIUser curUser = userInfo as POIUser;
+                if(curUser.Status == POIUser.ConnectionStatus.Disconnected)
+                    DestroyUserState(curUser);
+
+                //remove the reference to the timer
+                myActiveTimers.Remove(myTimer);
+
+                myTimer.Dispose();
+            });
+
+            myTimer = new Timer(
+                tcb,
+                user, 
+                100000, 
+                System.Threading.Timeout.Infinite
+            );
+
+            //Keep the reference to the timer to avoid garbage collection
+            myActiveTimers.Add(myTimer);
+        }
+
+        private void DestroyUserState(POIUser user)
+        {
+            //End the associated session if any
+            mySessionManager.EndSession(user);
+
+            //Remove the user from the user profile
+            try
+            {
+                
+                userCollection.Remove(user.UserID);
+            }
+            catch
+            {
+                POIGlobalVar.POIDebugLog("Cannot remove user from profiles!");
+            }
         }
 
         #endregion
