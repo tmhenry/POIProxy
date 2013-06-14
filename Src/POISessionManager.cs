@@ -7,6 +7,8 @@ using POILibCommunication;
 using Microsoft.AspNet.SignalR;
 using System.Web.Script.Serialization;
 
+using System.Threading;
+
 namespace POIProxy
 {
     public class POISessionManager : POISessionCtrlMsgCB
@@ -165,6 +167,8 @@ namespace POIProxy
 
         public void broadcastMessageToViewers(POIUser commander, POIMessage msg)
         {
+            POIGlobalVar.POIDebugLog("Thread id is: " + System.Threading.Thread.CurrentThread.ManagedThreadId);
+
             //Get the current session
             POISession session = registery.GetSessionByUser(commander);
             POIGlobalVar.POIDebugLog("Commander id is: " + commander.UserID);

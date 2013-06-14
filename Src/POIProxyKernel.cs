@@ -26,6 +26,9 @@ namespace POIProxy
             //Set the system kernel to connect with POI Communication lib
             POIGlobalVar.SystemKernel = this;
             POIGlobalVar.MaxMobileClientCount = 2000;
+
+            //Initialize the buffer pool
+            POITCPBufferPool.InitPool();
             
             //Publish the server address to the dns server
             POIWebService.StartService
