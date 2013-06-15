@@ -98,10 +98,16 @@ namespace POIProxy.Controllers
                 //Copy the audio bytes into memory
                 MemoryStream ms = new MemoryStream();
                 POIGlobalVar.POIDebugLog(Directory.GetCurrentDirectory());
+                POIGlobalVar.POIDebugLog(content.Headers.ContentLength);
                 await content.CopyToAsync(ms);
+
+                POIGlobalVar.POIDebugLog(ms.GetBuffer().Length);
+
+               
+                 
                 
                 //Construct the audio comment
-                POITextComment audioComment = new POITextComment(depth, ms.GetBuffer());
+                POITextComment audioComment = new POITextComment(depth, ms.GetBuffer(), (int) content.Headers.ContentLength);
                 POIComment comment = new POIComment();
                 comment.FrameNum = slideIndex;
                 comment.insert(audioComment);
