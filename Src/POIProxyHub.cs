@@ -58,7 +58,7 @@ namespace POIProxy
                 }
 
                 //Join the session
-                manager.JoinSession(curUser, sessionId);
+                manager.JoinSession(curUser, contentId, sessionId);
                 await Groups.Add(Context.ConnectionId, sessionId.ToString());
 
                 //Get the presentation file and send to the user

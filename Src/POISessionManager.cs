@@ -57,7 +57,7 @@ namespace POIProxy
             
         }
 
-        public void JoinSession(POIUser user, int sessionId)
+        public async void JoinSession(POIUser user, int contentId, int sessionId)
         {
             POISession session = registery.GetSessionById(sessionId);
             if (session != null)
@@ -80,6 +80,36 @@ namespace POIProxy
                 {
                     POIGlobalVar.POIDebugLog("Not proper user privilege for user join operation");
                 }*/
+            }
+            else
+            {
+                POIPresentation presInfo;
+                POIMetadataArchive archiveInfo;
+
+                //Join an offline session 
+                Tuple<POIPresentation, POIMetadataArchive> cacheResult = cache.SearchSessionInfoInCache(contentId, sessionId);
+                cacheResult = null;
+
+                if (cacheResult == null)
+                {
+                    //Read the presentation info
+                    presInfo = await POIPresentation.LoadPresFromContentServer(contentId);
+
+                    //Read the metadata archive from the content server
+                    archiveInfo = new POIMetadataArchive(contentId, sessionId);
+                    await archiveInfo.ReadArchive();
+
+                    cache.AddRecordToSessionCache(contentId, sessionId, presInfo, archiveInfo);
+                }
+                else
+                {
+                    presInfo = cacheResult.Item1;
+                    archiveInfo = cacheResult.Item2;
+                }
+
+                //Send the the presentation info and metadata archive to the user
+                user.SendData(presInfo.getPacket(), ConType.TCP_CONTROL);
+                user.SendData(archiveInfo.getPacket(), ConType.TCP_CONTROL);
             }
         }
 
@@ -152,7 +182,7 @@ namespace POIProxy
                     EndSession(user);
                     break;
                 case SessionCtrlType.Join: //Join session
-                    JoinSession(user, msg.SessionId);
+                    JoinSession(user, msg.ContentId, msg.SessionId);
                     break;
                 case SessionCtrlType.Leave: //Leave session
                     LeaveSession(user);
