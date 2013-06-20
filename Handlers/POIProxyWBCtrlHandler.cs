@@ -70,8 +70,23 @@ namespace POIProxy.Handlers
             comment.calculateSize();
 
             POISessionManager manager = POIProxyGlobalVar.Kernel.mySessionManager;
+            //Send comment to the commander
             manager.sendMessageToCommanders(webUser, comment);
 
+            //Send message to viewers
+            manager.broadcastMessageToViewersByProxy(webUser, comment);
+
+            //Log the event
+            try
+            {
+                var session = manager.Registery.GetSessionByUser(webUser);
+                session.MdArchive.LogEvent(comment);
+            }
+            catch (Exception e)
+            {
+                POIGlobalVar.POIDebugLog(e);
+                POIGlobalVar.POIDebugLog("Error in logging web comments!");
+            }
         }
     }
 }

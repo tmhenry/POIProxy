@@ -195,6 +195,41 @@ namespace POIProxy
 
         #region Utility functions for session management
 
+        public void broadcastMessageToViewersByProxy(POIUser user, POIMessage msg)
+        {
+            //Get the current session
+            POISession session = registery.GetSessionByUser(user);
+
+            if (session != null)
+            {
+                //Send to the mobile viewers
+                try
+                {
+                    foreach (POIUser viewer in session.Viewers)
+                    {
+                        if (viewer.Type != UserType.WEB)
+                        {
+                            POIGlobalVar.POIDebugLog("Sending to: " + viewer.UserID);
+                            viewer.SendData(msg.getPacket(), ConType.TCP_CONTROL);
+                        }
+                    }
+                }
+                catch (Exception e)
+                {
+                    POIGlobalVar.POIDebugLog("Error in broadcasting messages to mobile viewers!");
+                }
+
+                //Forward to the web viewers
+                var context = GlobalHost.ConnectionManager.GetHubContext<POIProxyHub>();
+                JavaScriptSerializer jsHandler = new JavaScriptSerializer();
+                context.Clients.Group(session.Id.ToString()).scheduleMsgHandling(jsHandler.Serialize(msg));
+            }
+            else
+            {
+                POIGlobalVar.POIDebugLog("Session is null when broadcasting msg to viewers by proxy!");
+            }
+        }
+
         public void broadcastMessageToViewers(POIUser commander, POIMessage msg)
         {
             POIGlobalVar.POIDebugLog("Thread id is: " + System.Threading.Thread.CurrentThread.ManagedThreadId);
