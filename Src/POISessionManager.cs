@@ -64,22 +64,6 @@ namespace POIProxy
             {
                 session.JoinAsViewer(user);
                 registery.RegisterSession(user, sessionId);
-
-                /*
-                if (user.UserPrivilege == POIUser.Privilege.Commander)
-                {
-                    session.JoinAsCommander(user);
-                    registery.RegisterSession(user, sessionId);
-                }
-                else if (user.UserPrivilege == POIUser.Privilege.Viewer)
-                {
-                    session.JoinAsViewer(user);
-                    registery.RegisterSession(user, sessionId);
-                }
-                else
-                {
-                    POIGlobalVar.POIDebugLog("Not proper user privilege for user join operation");
-                }*/
             }
             else
             {

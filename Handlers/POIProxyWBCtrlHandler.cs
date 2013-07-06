@@ -71,7 +71,7 @@ namespace POIProxy.Handlers
 
             POISessionManager manager = POIProxyGlobalVar.Kernel.mySessionManager;
             //Send comment to the commander
-            manager.sendMessageToCommanders(webUser, comment);
+            //manager.sendMessageToCommanders(webUser, comment);
 
             //Send message to viewers
             manager.broadcastMessageToViewersByProxy(webUser, comment);

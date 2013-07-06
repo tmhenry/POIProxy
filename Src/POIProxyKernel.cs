@@ -89,9 +89,13 @@ namespace POIProxy
             {
                 //If the user is still disconnected, destroy the state
                 POIUser curUser = userInfo as POIUser;
-                if(curUser.Status == POIUser.ConnectionStatus.Disconnected)
-                    DestroyUserState(curUser);
+                double timeSinceLastConnected = (DateTime.UtcNow - curUser.LastConnected).TotalSeconds;
 
+                if (curUser.Status == POIUser.ConnectionStatus.Disconnected && timeSinceLastConnected > 100)
+                {
+                    DestroyUserState(curUser);
+                }
+                    
                 //remove the reference to the timer
                 myActiveTimers.Remove(myTimer);
 
