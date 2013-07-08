@@ -46,7 +46,7 @@ namespace POIProxy
             {
                 if (session.IsCommander(user))
                 {
-                    session.SessionEnd();
+                    session.SessionEnd(user);
                     registery.RemoveSession(user);
                 }
                 else if (session.IsViewer(user))

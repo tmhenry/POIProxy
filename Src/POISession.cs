@@ -159,11 +159,12 @@ namespace POIProxy
             return viewers.Contains(user);
         }
 
-        public void SessionEnd()
+        public void SessionEnd(POIUser user)
         {
             mdArchive.WriteArchive();
             Dictionary<string, string> reqDict = new Dictionary<string, string>();
             reqDict["sessionId"] = id.ToString();
+            reqDict["userId"] = user.UserID;
             POIWebService.EndSession(reqDict);
         }
     }
