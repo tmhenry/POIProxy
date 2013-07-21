@@ -189,7 +189,12 @@ namespace POIProxy
             POIGlobalVar.POIDebugLog("Ooops, disconnected!");
 
             //Remove the user from the profile
-            POIUser user = POIGlobalVar.WebConUserMap[Context.ConnectionId];
+            POIUser user = null;
+            if (POIGlobalVar.WebConUserMap.ContainsKey(Context.ConnectionId))
+            {
+                user = POIGlobalVar.WebConUserMap[Context.ConnectionId];
+            }
+      
             if (user != null)
             {
                 try
