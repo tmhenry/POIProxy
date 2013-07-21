@@ -1,0 +1,10 @@
+﻿@{
+    Layout = "IndexLayout.cshtml";
+    ViewBag.Title = "Index";
+}
+
+<h2>Name: @(Model.Name)</h2>
+<h2>DNS: @(Model.DNSServer)</h2>
+<h2>Content: @(Model.ContentServer)</h2>
+<h2>Web Clients: @(Model.NumWebClients)</h2>
+<h2>Mobile Clients: @(Model.NumMobileClients)</h2>

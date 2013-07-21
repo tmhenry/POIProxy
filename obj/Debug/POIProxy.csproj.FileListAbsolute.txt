@@ -131,3 +131,5 @@ C:\Users\HenryXia\Desktop\POIProxy\bin\System.Web.WebPages.xml
 C:\Users\HenryXia\Desktop\POIProxy\bin\System.Web.WebPages.Deployment.xml
 C:\Users\HenryXia\Desktop\POIProxy\bin\System.Web.WebPages.Razor.xml
 C:\Users\HenryXia\Desktop\POIProxy\obj\Debug\POIProxy.pdb
+C:\Users\HenryXia\Desktop\POIProxy\bin\css\reset.css
+C:\Users\HenryXia\Desktop\POIProxy\bin\css\screen.css

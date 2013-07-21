@@ -125,6 +125,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Controllers\AudioUploadController.cs" />
+    <Compile Include="Controllers\HomeController.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
@@ -132,6 +133,7 @@
     <Compile Include="Handlers\POIProxyPresCtrlHandler.cs" />
     <Compile Include="Handlers\POIProxyPtrCtrlHandler.cs" />
     <Compile Include="Handlers\POIProxyWBCtrlHandler.cs" />
+    <Compile Include="Models\HomeViewModel.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Src\POIOfflineSessionCache.cs" />
     <Compile Include="Src\POIProxyGlobalVar.cs" />
@@ -147,9 +149,16 @@
     <Compile Include="App_Start\FilterConfig.cs" />
     <Compile Include="App_Start\RouteConfig.cs" />
     <Compile Include="App_Start\WebApiConfig.cs" />
+    <Content Include="css\reset.css">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="css\screen.css">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <Content Include="Global.asax" />
     <None Include="Properties\PublishProfiles\ProxyPublish.pubxml" />
     <None Include="Properties\PublishProfiles\Publish100.pubxml" />
+    <None Include="Properties\PublishProfiles\Publish100ftp.pubxml" />
     <None Include="Properties\PublishProfiles\Publish143.pubxml" />
     <None Include="Scripts\jquery-1.6.4-vsdoc.js" />
     <Content Include="Scripts\jquery-1.6.4.js" />
@@ -164,10 +173,11 @@
       <DependentUpon>Web.config</DependentUpon>
     </Content>
     <Content Include="Views\Web.config" />
+    <Content Include="Views\Home\Index.cshtml" />
+    <Content Include="Views\Home\IndexLayout.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
-    <Folder Include="Models\" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="packages.config" />
