@@ -1,0 +1,24 @@
+﻿@charset "utf-8";
+@import "reset.css";
+
+#StatusForm { width: 560px; padding: 20px; color: #333333; font-family: Verdana, Geneva, sans-serif; font-size: 12px; margin: 0 auto }
+#LogForm { width: 800px; padding: 20px; color: #333333; font-family: Verdana, Geneva, sans-serif; font-size: 12px; margin: 0 auto }
+fieldset { position: relative; padding: 10px; padding-top: 0; padding-top: 25px\9; margin-bottom: 30px; background: #F6F6F6; -webkit-border-radius: 8px; -moz-border-radius: 8px; border-radius: 8px; background: -webkit-gradient(linear, left top, left bottom, from(#EFEFEF), to(#FFFFFF)); background: -moz-linear-gradient(center top, #EFEFEF, #FFFFFF 100%); box-shadow: 3px 3px 10px #ccc; -moz-box-shadow: 3px 3px 10px #ccc; -webkit-box-shadow: 3px 3px 10px #ccc }
+legend { padding: 6px 12px; position: absolute; left: 10px; top: -11px; background-color: #4F709F; color: white; -webkit-border-radius: 4px; -moz-border-radius: 4px; border-radius: 4px; box-shadow: 2px 2px 4px #888; -moz-box-shadow: 2px 2px 4px #888; -webkit-box-shadow: 2px 2px 4px #888; text-shadow: 1px 1px 1px #333 }
+label, span { float: left; clear: left; display: block; width: 180px; padding-right: 20px; text-align: right; height: 20px; line-height: 20px }
+label.error { text-align: left; margin-left: 200px; color: #CC0000; padding: 0; height: auto; width: 208px; font-size: 11px }
+input, textarea, select { padding: 3px; float: left; width: 300px; border: 1px solid #d9d9d9 }
+.submit { width: 120px; float: right; margin-right: 37px; border: 0; padding: 5px 10px; background: #4F709F; color: white; -webkit-border-radius: 4px; -moz-border-radius: 4px; border-radius: 4px; box-shadow: 2px 2px 4px #888; -moz-box-shadow: 2px 2px 4px #888; -webkit-box-shadow: 2px 2px 4px #888; margin-bottom: 4px; text-shadow: 1px 1px 1px #333 }
+textarea { background: -webkit-gradient(linear, left top, left bottom, from(#FFFFFF), color-stop(1%, #EEEEEE), to(#FFFFFF)) }
+
+#ServerLog {
+    width: 780px;
+    height: 500px;
+}
+select { width: 208px }
+input:focus, textarea:focus, select:focus { background: white; border-color: #666 }
+input.error { border: 1px solid #CC0000 }
+p { overflow: hidden; margin-bottom: 10px }
+p:first-of-type { padding-top: 25px }
+.contact-method label { clear: none; width: auto }
+.contact-method input { float: none; width: 20px }

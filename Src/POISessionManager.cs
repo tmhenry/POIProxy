@@ -216,11 +216,11 @@ namespace POIProxy
 
         public void broadcastMessageToViewers(POIUser commander, POIMessage msg)
         {
-            POIGlobalVar.POIDebugLog("Thread id is: " + System.Threading.Thread.CurrentThread.ManagedThreadId);
+            //POIGlobalVar.POIDebugLog("Thread id is: " + System.Threading.Thread.CurrentThread.ManagedThreadId);
 
             //Get the current session
             POISession session = registery.GetSessionByUser(commander);
-            POIGlobalVar.POIDebugLog("Commander id is: " + commander.UserID);
+            //POIGlobalVar.POIDebugLog("Commander id is: " + commander.UserID);
 
             if (session != null && session.IsCommander(commander))
             {
@@ -231,7 +231,7 @@ namespace POIProxy
                     {
                         if (viewer != commander && viewer.Type != UserType.WEB)
                         {
-                            POIGlobalVar.POIDebugLog("Sending to: " + viewer.UserID);
+                            //POIGlobalVar.POIDebugLog("Sending to: " + viewer.UserID);
                             viewer.SendData(msg.getPacket(), ConType.TCP_CONTROL);
                         }
                     }

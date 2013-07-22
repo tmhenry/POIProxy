@@ -26,6 +26,12 @@ namespace POIProxy
             POIGlobalVar.POIDebugLog(msg);
         }
 
+        public void loadConfigFile()
+        {
+            POIGlobalVar.LoadConfigFile();
+            POIGlobalVar.POIDebugLog(@"Reload config file!");
+        }
+
         public void HandleCommentMsgOnServer(string msg)
         {
             //Get the current user

@@ -30,3 +30,5 @@ C:\Users\HenryXia\Desktop\POIProxy\bin\System.Web.WebPages.Razor.xml
 C:\Users\HenryXia\Desktop\POIProxy\obj\Release\POIProxy.csprojResolveAssemblyReference.cache
 C:\Users\HenryXia\Desktop\POIProxy\obj\Release\POIProxy.dll
 C:\Users\HenryXia\Desktop\POIProxy\obj\Release\POIProxy.pdb
+C:\Users\HenryXia\Desktop\POIProxy\bin\css\reset.css
+C:\Users\HenryXia\Desktop\POIProxy\bin\css\screen.css

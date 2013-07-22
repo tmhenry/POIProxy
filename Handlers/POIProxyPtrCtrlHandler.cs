@@ -16,7 +16,7 @@ namespace POIProxy.Handlers
 
         public void pointerCtrlMsgReceived(POIPointerMsg msg, POIUser myUser)
         {
-            POIGlobalVar.POIDebugLog("Time is: " + msg.Timestamp);
+            //POIGlobalVar.POIDebugLog("Time is: " + msg.Timestamp);
 
             //Broadcast the event
             POISessionManager manager = POIProxyGlobalVar.Kernel.mySessionManager;

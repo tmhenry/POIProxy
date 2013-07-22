@@ -19,6 +19,7 @@
             // bind 'myForm' and provide a simple callback function 
             $('form').ajaxForm(function () {
                 alert("Thank you for your comment!");
+                poiProxy.server.loadConfigFile();
             });
 
             $.connection.hub.url = "http://@(Model.ProxyServerIP)/signalr/";
