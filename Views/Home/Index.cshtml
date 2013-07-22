@@ -3,7 +3,7 @@
     ViewBag.Title = "Index";
 }
 
-<form>
+<form id="StatusForm">
 		<fieldset>
 			<legend>POI Proxy Server Status</legend>
 			<p>
@@ -35,4 +35,14 @@
 
             <p><input class="submit" type="submit" id="submit" name="submit" value="Submit Change" /></p>
 		</fieldset>
+</form>
+
+<form id="LogForm">
+    <fieldset>
+        <legend>Server Log</legend>
+            <p>
+                <textarea id="ServerLog" name="ServerLog" disabled></textarea>
+            </p>
+    </fieldset>
+
 </form>

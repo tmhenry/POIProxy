@@ -40,6 +40,8 @@ namespace POIProxy
             }
         }
 
+        
+
         public async Task JoinSession(int contentId, int sessionId)
         {
             //Get the session
@@ -155,31 +157,36 @@ namespace POIProxy
             //Retrieve the user information from the query string
             var info = Context.QueryString;
             POIGlobalVar.POIDebugLog(info["userid"]);
-            POIGlobalVar.POIDebugLog(info["email"]);
-
             String userId = info["userid"];
             POIUser user = null;
 
-            //Check if the user exists
-            if (POIGlobalVar.WebUserProfiles.ContainsKey(userId))
+            if (userId == @"serverLog")
             {
-                //Set the connectionId to user mapping
-                user = POIGlobalVar.WebUserProfiles[userId];
+                Groups.Add(Context.ConnectionId, "serverLog");
             }
             else
             {
-                //Create the user and set the mapping
-                user = new POIUser(UserType.WEB);
-                user.UserID = userId;
+                //Check if the user exists
+                if (POIGlobalVar.WebUserProfiles.ContainsKey(userId))
+                {
+                    //Set the connectionId to user mapping
+                    user = POIGlobalVar.WebUserProfiles[userId];
+                }
+                else
+                {
+                    //Create the user and set the mapping
+                    user = new POIUser(UserType.WEB);
+                    user.UserID = userId;
 
-                POIGlobalVar.WebUserProfiles[userId] = user;
+                    POIGlobalVar.WebUserProfiles[userId] = user;
+                }
+
+                //Set the connection to user mapping
+                POIGlobalVar.WebConUserMap[Context.ConnectionId] = user;
+
+                //Let the user know the authentication is done
+                Clients.Caller.handleUserAuthenticated();
             }
-
-            //Set the connection to user mapping
-            POIGlobalVar.WebConUserMap[Context.ConnectionId] = user;
-            
-            //Let the user know the authentication is done
-            Clients.Caller.handleUserAuthenticated();
 
             return base.OnConnected();
         }

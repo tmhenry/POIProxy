@@ -26,6 +26,9 @@ namespace POIProxy
             //Load the config file into the global definition
             POIGlobalVar.LoadConfigFile();
 
+            //Register a log handler to enable web logging
+            POIGlobalVar.logDelegate = new POIProxyLogHandler();
+
             //Set the system kernel to connect with POI Communication lib
             POIGlobalVar.SystemKernel = this;
             POIGlobalVar.MaxMobileClientCount = 2000;

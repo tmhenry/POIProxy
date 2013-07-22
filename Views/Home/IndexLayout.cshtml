@@ -7,6 +7,8 @@
 
     <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7/jquery.js"></script> 
     <script src="http://malsup.github.com/jquery.form.js"></script> 
+    <script src="Scripts/jquery.signalR-1.1.1.min.js"></script>
+    <script src="http://@(Model.ProxyServerIP)/signalr/hubs"></script>
 
     <link rel="stylesheet" href="css/screen.css">
 	<link rel="stylesheet" href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.9/themes/base/jquery-ui.css">
@@ -17,6 +19,21 @@
             // bind 'myForm' and provide a simple callback function 
             $('form').ajaxForm(function () {
                 alert("Thank you for your comment!");
+            });
+
+            $.connection.hub.url = "http://@(Model.ProxyServerIP)/signalr/";
+            $.connection.hub.qs = {
+                'userid': "serverLog",
+            };
+
+            poiProxy = $.connection.poiProxy;
+            poiProxy.client.logMessage = function (message) {
+                var curLog = $('#ServerLog').val();
+                $('#ServerLog').val(message + "\\\n" + curLog);
+            };
+
+            $.connection.hub.start().done(function () {
+                alert("Start done!");
             });
         });
     </script> 
