@@ -44,6 +44,7 @@ Step 6: Configure site setting on IIS
 3. Name the new site POIProxy (or any other name, not tested though)
 4. Choose the folder inside wwwroot where you put the new published site
 5. Select the server IP as the IP Address in the binding options
+6. click Application Pools, select POIProxy and change .net framework version to v4.0..
 
 After all steps done, you should see "Server Error in / Application" message when you open the server IP in browser
 Furthermore, you should see a js when you open IP/signalr/hubs in browser
