@@ -2,10 +2,16 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.IO;
+using System.Web.Script.Serialization;
+
+using System.Configuration;
+using System.Web.Configuration;
 
 using POILibCommunication;
 using System.Threading;
 using POIProxy.Handlers;
+
 
 namespace POIProxy
 {
@@ -24,7 +30,7 @@ namespace POIProxy
         public void Start()
         {
             //Load the config file into the global definition
-            POIGlobalVar.LoadConfigFile();
+            loadConfigFile();
 
             //Register a log handler to enable web logging
             POIGlobalVar.logDelegate = new POIProxyLogHandler();
@@ -52,6 +58,60 @@ namespace POIProxy
             //Intialize the web user profiles
             POIGlobalVar.WebUserProfiles = new Dictionary<string, POIUser>();
             POIGlobalVar.WebConUserMap = new Dictionary<string, POIUser>();
+        }
+
+        public void loadConfigFile()
+        {
+            //string fn = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"poi_config");
+
+            try
+            {
+                POIGlobalVar.ContentServerHome = WebConfigurationManager.AppSettings["ContentServer"];
+                POIGlobalVar.DNSServerHome = WebConfigurationManager.AppSettings["DNSServer"];
+                POIGlobalVar.ProxyServerIP = WebConfigurationManager.AppSettings["ProxyServerIP"];
+                POIGlobalVar.ProxyServerPort = Int32.Parse(WebConfigurationManager.AppSettings["ProxyServerPort"]);
+
+                //POIGlobalVar.POIDebugLog(POIGlobalVar.ContentServerHome);
+
+            }
+            catch (Exception e)
+            {
+                POIGlobalVar.POIDebugLog(e);
+            }
+        }
+
+        public void updateConfig(Dictionary<string, string> configFields)
+        {
+            //Open the app config file
+            Configuration config = WebConfigurationManager.OpenWebConfiguration("~");
+
+            //Modify the config file as specified by the dictionary
+            var section = config.AppSettings;
+            if (section != null)
+            {
+                foreach (string key in configFields.Keys)
+                {
+                    try
+                    {
+                        POIGlobalVar.POIDebugLog(section.Settings[key].Value);
+                        section.Settings[key].Value = configFields[key];
+                    }
+                    catch (Exception e)
+                    {
+                        POIGlobalVar.POIDebugLog(e);
+                    }
+                }
+            }
+
+            try
+            {
+                config.Save();
+            }
+            catch (Exception e)
+            {
+                POIGlobalVar.POIDebugLog(e);
+            }
+            
         }
 
         #region Functions for the Kernel protocol

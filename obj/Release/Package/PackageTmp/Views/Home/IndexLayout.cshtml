@@ -19,7 +19,19 @@
             // bind 'myForm' and provide a simple callback function 
             $('form').ajaxForm(function () {
                 alert("Thank you for your comment!");
-                poiProxy.server.loadConfigFile();
+                poiProxy.server.updateConfigFile(
+                    JSON.stringify(
+                        {
+                            'ContentServer': $('#ContentServer').val(),
+                            'DNSServer': $('#DNSServer').val(),
+                            'ProxyServerIP': $('#ProxyServerIP').val(),
+                            'ProxyServerPort': $('#ProxyServerPort').val()
+                        }
+                    )
+                );
+
+                //Force reload of current page
+                window.location.reload(true);
             });
 
             $.connection.hub.url = "http://@(Model.ProxyServerIP)/signalr/";

@@ -1,1 +1,1 @@
-{"ContentServer" : "http://192.168.0.130/POIWebService/contentServer/", "DNSServer" : "http://192.168.0.130/POIWebService/dnsServer/interface.php", "ProxyServerIP" : "112.124.50.182"}
+{"ContentServer" : "http://192.168.0.130/POIWebService/contentServer/", "DNSServer" : "http://192.168.0.130/POIWebService/dnsServer/interface.php", "ProxyServerIP" : "192.168.0.150"}

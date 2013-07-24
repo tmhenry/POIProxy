@@ -26,10 +26,13 @@ namespace POIProxy
             POIGlobalVar.POIDebugLog(msg);
         }
 
-        public void loadConfigFile()
+        public void updateConfigFile(string configString)
         {
-            POIGlobalVar.LoadConfigFile();
-            POIGlobalVar.POIDebugLog(@"Reload config file!");
+            JavaScriptSerializer js = new JavaScriptSerializer();
+            Dictionary<string, string> configFields = js.Deserialize<Dictionary<string, string>>(configString);
+            POIProxyGlobalVar.Kernel.updateConfig(configFields);
+
+            POIGlobalVar.POIDebugLog(@"Update config file!");
         }
 
         public void HandleCommentMsgOnServer(string msg)
