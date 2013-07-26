@@ -60,6 +60,26 @@ namespace POIProxy
             POIGlobalVar.WebConUserMap = new Dictionary<string, POIUser>();
         }
 
+        public void Stop()
+        {
+            try
+            {
+                
+            }
+            catch (Exception e)
+            {
+
+            }
+
+        }
+
+        public void Restart()
+        {
+            Stop();
+
+            Start();
+        }
+
         public void loadConfigFile()
         {
             //string fn = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"poi_config");
@@ -106,6 +126,7 @@ namespace POIProxy
             try
             {
                 config.Save();
+                loadConfigFile();
             }
             catch (Exception e)
             {
