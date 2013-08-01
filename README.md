@@ -20,6 +20,10 @@ Step 2: open the IIS service on the server
 3. Expand Internet Information Service and then Web Management Tools, tick IIS Management service
 4. Expand World Wide Web Service and then Application Development Features, tick all except CGI
 
+Server 2008 version:
+1. Open server manager, choose Roles and add role
+2. Select web server and select all asp.net development features
+
 Step 3: Download IIS Manger (7.0) from the web
 
 Step 4: Register .net 4.5 for IIS
