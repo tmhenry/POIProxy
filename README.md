@@ -29,7 +29,7 @@ Step 3: Download IIS Manger (7.0) from the web
 Step 4: Register .net 4.5 for IIS
 
 1. Open cmd in admin mode
-2. CD to directory C:\Windows\Microsoft.NET\framework\v4.0...(some version number)\
+2. CD to directory C:\Windows\Microsoft.NET\framework(64)\v4.0...(some version number)\
 3. Run aspnet_regiis -i in the console until you see successful message
 
 PS: if you see managementPipeLine module missing, it's because incorrect setup in this step
@@ -40,6 +40,7 @@ Step 5: Copy the published site into IIS wwwroot
 2. Copy the published site into this folder
 
 PS: You may get access permission denied error if the site is not copied into this directory
+PS: Don't forget to add c://windows/temp all control auth.
 
 Step 6: Configure site setting on IIS
 
