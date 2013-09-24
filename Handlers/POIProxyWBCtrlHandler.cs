@@ -28,7 +28,8 @@ namespace POIProxy.Handlers
             try
             {
                 var session = manager.Registery.GetSessionByUser(myUser);
-                session.MdArchive.LogEvent(msg);
+                //session.MdArchive.LogEvent(msg);
+                session.MdArchive.LogEventAndUpdateSnapshotIndexer(msg);
             }
             catch (Exception e)
             {

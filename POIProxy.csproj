@@ -134,6 +134,7 @@
     <Compile Include="Handlers\POIProxyLogHandler.cs" />
     <Compile Include="Handlers\POIProxyPresCtrlHandler.cs" />
     <Compile Include="Handlers\POIProxyPtrCtrlHandler.cs" />
+    <Compile Include="Handlers\POIProxyDataHandler.cs" />
     <Compile Include="Handlers\POIProxyWBCtrlHandler.cs" />
     <Compile Include="Models\HomeViewModel.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

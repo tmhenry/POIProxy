@@ -23,6 +23,7 @@ namespace POIProxy
         public POIProxyPresCtrlHandler myPresCtrlHandler = new POIProxyPresCtrlHandler();
         public POIProxyPtrCtrlHandler myPtrCtrlHandler = new POIProxyPtrCtrlHandler();
         public POIProxyWBCtrlHandler myWBCtrlHandler = new POIProxyWBCtrlHandler();
+        public POIProxyDataHandler myDataMsgHandler = new POIProxyDataHandler();
 
         public Dictionary<string, POIUser> userCollection = new Dictionary<string, POIUser>();
         private List<Timer> myActiveTimers = new List<Timer>();
@@ -159,7 +160,8 @@ namespace POIProxy
             user.PresCtrlHandler = myPresCtrlHandler;
             user.WhiteboardCtrlHandler = myWBCtrlHandler;
             user.CommentHandler = myWBCtrlHandler;
-
+            user.DataChannelMsgDelegate = myDataMsgHandler;
+            
             user.SessionHandler = mySessionManager;
             user.PointerHandler = myPtrCtrlHandler;
             user.AudioContentHandler = new POIProxyAudioContentHandler(user);
