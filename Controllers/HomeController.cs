@@ -14,8 +14,8 @@ namespace POIProxy.Controllers
         // GET: /Home/
         public ActionResult Index()
         {
-            int numWebClients = POIGlobalVar.WebUserProfiles.Count;
-            int numMobileClients = POIGlobalVar.UserProfiles.Count - numWebClients;
+            int numWebClients = 0; // POIGlobalVar.WebUserProfiles.Count;
+            int numMobileClients = 0; // POIGlobalVar.UserProfiles.Count - numWebClients;
 
             HomeViewModel model = new HomeViewModel
             {

@@ -24,6 +24,8 @@ namespace POIProxy
         public POIProxyPtrCtrlHandler myPtrCtrlHandler = new POIProxyPtrCtrlHandler();
         public POIProxyWBCtrlHandler myWBCtrlHandler = new POIProxyWBCtrlHandler();
         public POIProxyDataHandler myDataMsgHandler = new POIProxyDataHandler();
+        public POIProxyInteractiveMsgHandler myInterMsgHandler = new POIProxyInteractiveMsgHandler();
+        
 
         public Dictionary<string, POIUser> userCollection = new Dictionary<string, POIUser>();
         private List<Timer> myActiveTimers = new List<Timer>();
@@ -39,7 +41,7 @@ namespace POIProxy
             //Set the system kernel to connect with POI Communication lib
             POIGlobalVar.SystemKernel = this;
             POIGlobalVar.MaxMobileClientCount = 2000;
-
+            /*
             //Initialize the buffer pool
             POITCPBufferPool.InitPool();
             
@@ -55,10 +57,12 @@ namespace POIProxy
             myDataHandler = new POIComServer(POIWebService.ServiceSocket);
             POIGlobalVar.SystemDataHandler = myDataHandler;
             POIGlobalVar.UserProfiles = userCollection;
+            */
 
             //Intialize the web user profiles
             POIGlobalVar.WebUserProfiles = new Dictionary<string, POIUser>();
             POIGlobalVar.WebConUserMap = new Dictionary<string, POIUser>();
+            POIGlobalVar.InteractiveMsgUserMatchMap = new Dictionary<string, string>();
         }
 
         public void Stop()

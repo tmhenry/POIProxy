@@ -133,3 +133,7 @@ C:\Users\HenryXia\Desktop\POIProxy\bin\System.Web.WebPages.Razor.xml
 C:\Users\HenryXia\Desktop\POIProxy\obj\Debug\POIProxy.pdb
 C:\Users\HenryXia\Desktop\POIProxy\bin\css\reset.css
 C:\Users\HenryXia\Desktop\POIProxy\bin\css\screen.css
+C:\Users\HenryXia\Desktop\POIProxy\bin\EntityFramework.dll
+C:\Users\HenryXia\Desktop\POIProxy\bin\EntityFramework.SqlServer.dll
+C:\Users\HenryXia\Desktop\POIProxy\bin\EntityFramework.xml
+C:\Users\HenryXia\Desktop\POIProxy\bin\EntityFramework.SqlServer.xml

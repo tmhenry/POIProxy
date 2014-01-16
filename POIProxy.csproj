@@ -39,6 +39,12 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="EntityFramework">
+      <HintPath>packages\EntityFramework.6.0.2\lib\net45\EntityFramework.dll</HintPath>
+    </Reference>
+    <Reference Include="EntityFramework.SqlServer">
+      <HintPath>packages\EntityFramework.6.0.2\lib\net45\EntityFramework.SqlServer.dll</HintPath>
+    </Reference>
     <Reference Include="Microsoft.AspNet.SignalR.Core">
       <HintPath>..\packages\Microsoft.AspNet.SignalR.Core.1.1.1\lib\net40\Microsoft.AspNet.SignalR.Core.dll</HintPath>
     </Reference>
@@ -51,6 +57,14 @@
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="Microsoft.Owin.Host.SystemWeb">
       <HintPath>..\packages\Microsoft.Owin.Host.SystemWeb.1.0.1\lib\net45\Microsoft.Owin.Host.SystemWeb.dll</HintPath>
+    </Reference>
+    <Reference Include="mysql.data, Version=6.7.4.0, Culture=neutral, PublicKeyToken=c5687fc88969c44d, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>bin\mysql.data.dll</HintPath>
+    </Reference>
+    <Reference Include="mysql.data.entity.EF6, Version=6.8.3.0, Culture=neutral, PublicKeyToken=c5687fc88969c44d, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>bin\mysql.data.entity.EF6.dll</HintPath>
     </Reference>
     <Reference Include="Newtonsoft.Json, Version=4.5.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -65,7 +79,11 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
+    <Reference Include="System.Data.Entity" />
+    <Reference Include="System.Data.Entity.Design" />
     <Reference Include="System.Drawing" />
+    <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="System.Security" />
     <Reference Include="System.Web.DynamicData" />
     <Reference Include="System.Web.Entity" />
     <Reference Include="System.Web.ApplicationServices" />
@@ -124,21 +142,84 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="activity.cs">
+      <DependentUpon>POIEntities.tt</DependentUpon>
+    </Compile>
+    <Compile Include="category.cs">
+      <DependentUpon>POIEntities.tt</DependentUpon>
+    </Compile>
+    <Compile Include="content.cs">
+      <DependentUpon>POIEntities.tt</DependentUpon>
+    </Compile>
     <Compile Include="Controllers\AudioUploadController.cs" />
     <Compile Include="Controllers\HomeController.cs" />
     <Compile Include="Controllers\ProxyStatusController.cs" />
+    <Compile Include="course.cs">
+      <DependentUpon>POIEntities.tt</DependentUpon>
+    </Compile>
+    <Compile Include="device.cs">
+      <DependentUpon>POIEntities.tt</DependentUpon>
+    </Compile>
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
+    <Compile Include="group.cs">
+      <DependentUpon>POIEntities.tt</DependentUpon>
+    </Compile>
     <Compile Include="Handlers\POIProxyAudioContentHandler.cs" />
+    <Compile Include="Handlers\POIProxyInteractiveMsgHandler.cs" />
     <Compile Include="Handlers\POIProxyLogHandler.cs" />
     <Compile Include="Handlers\POIProxyPresCtrlHandler.cs" />
     <Compile Include="Handlers\POIProxyPtrCtrlHandler.cs" />
     <Compile Include="Handlers\POIProxyDataHandler.cs" />
     <Compile Include="Handlers\POIProxyWBCtrlHandler.cs" />
+    <Compile Include="keyword.cs">
+      <DependentUpon>POIEntities.tt</DependentUpon>
+    </Compile>
+    <Compile Include="login_attempts.cs">
+      <DependentUpon>POIEntities.tt</DependentUpon>
+    </Compile>
     <Compile Include="Models\HomeViewModel.cs" />
+    <Compile Include="organization.cs">
+      <DependentUpon>POIEntities.tt</DependentUpon>
+    </Compile>
+    <Compile Include="POIEntities.Context.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>POIEntities.Context.tt</DependentUpon>
+    </Compile>
+    <Compile Include="POIEntities.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>POIEntities.tt</DependentUpon>
+    </Compile>
+    <Compile Include="POIEntities.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>POIEntities.edmx</DependentUpon>
+    </Compile>
+    <Compile Include="presentation.cs">
+      <DependentUpon>POIEntities.tt</DependentUpon>
+    </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="relationship.cs">
+      <DependentUpon>POIEntities.tt</DependentUpon>
+    </Compile>
+    <Compile Include="schedule.cs">
+      <DependentUpon>POIEntities.tt</DependentUpon>
+    </Compile>
+    <Compile Include="server.cs">
+      <DependentUpon>POIEntities.tt</DependentUpon>
+    </Compile>
+    <Compile Include="session.cs">
+      <DependentUpon>POIEntities.tt</DependentUpon>
+    </Compile>
+    <Compile Include="site.cs">
+      <DependentUpon>POIEntities.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Src\POIInteractiveSessionArchive.cs" />
     <Compile Include="Src\POIOfflineSessionCache.cs" />
+    <Compile Include="Src\POIProxyDbManager.cs" />
     <Compile Include="Src\POIProxyGlobalVar.cs" />
     <Compile Include="Src\POIProxyHub.cs" />
     <Compile Include="Src\POIProxyKernel.cs" />
@@ -147,6 +228,36 @@
     <Compile Include="Src\POISessionPresController.cs" />
     <Compile Include="Src\POISessionRegistery.cs" />
     <Compile Include="Src\POISessionScheduler.cs" />
+    <Compile Include="tag.cs">
+      <DependentUpon>POIEntities.tt</DependentUpon>
+    </Compile>
+    <Compile Include="tag_relationship.cs">
+      <DependentUpon>POIEntities.tt</DependentUpon>
+    </Compile>
+    <Compile Include="token.cs">
+      <DependentUpon>POIEntities.tt</DependentUpon>
+    </Compile>
+    <Compile Include="tutor_status.cs">
+      <DependentUpon>POIEntities.tt</DependentUpon>
+    </Compile>
+    <Compile Include="user.cs">
+      <DependentUpon>POIEntities.tt</DependentUpon>
+    </Compile>
+    <Compile Include="users_groups.cs">
+      <DependentUpon>POIEntities.tt</DependentUpon>
+    </Compile>
+    <Compile Include="user_device.cs">
+      <DependentUpon>POIEntities.tt</DependentUpon>
+    </Compile>
+    <Compile Include="user_match.cs">
+      <DependentUpon>POIEntities.tt</DependentUpon>
+    </Compile>
+    <Compile Include="user_profile.cs">
+      <DependentUpon>POIEntities.tt</DependentUpon>
+    </Compile>
+    <Compile Include="user_right.cs">
+      <DependentUpon>POIEntities.tt</DependentUpon>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="App_Start\FilterConfig.cs" />
@@ -159,6 +270,23 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="Global.asax" />
+    <EntityDeploy Include="POIEntities.edmx">
+      <Generator>EntityModelCodeGenerator</Generator>
+      <LastGenOutput>POIEntities.Designer.cs</LastGenOutput>
+    </EntityDeploy>
+    <Content Include="POIEntities.Context.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <DependentUpon>POIEntities.edmx</DependentUpon>
+      <LastGenOutput>POIEntities.Context.cs</LastGenOutput>
+    </Content>
+    <Content Include="POIEntities.edmx.diagram">
+      <DependentUpon>POIEntities.edmx</DependentUpon>
+    </Content>
+    <Content Include="POIEntities.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <DependentUpon>POIEntities.edmx</DependentUpon>
+      <LastGenOutput>POIEntities.cs</LastGenOutput>
+    </Content>
     <None Include="Properties\PublishProfiles\Alibaba14.229.pubxml" />
     <None Include="Properties\PublishProfiles\ProxyPublish.pubxml" />
     <None Include="Properties\PublishProfiles\Publish100.pubxml" />
@@ -187,6 +315,9 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Service Include="{508349B6-6B84-4DF5-91F0-309BEEBAD82D}" />
   </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>

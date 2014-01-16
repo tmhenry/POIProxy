@@ -13,6 +13,7 @@ using POIProxy.Handlers;
 using System.Web.Script.Serialization;
 
 using System.Threading.Tasks;
+using System.IO;
 
 namespace POIProxy
 {
@@ -20,6 +21,7 @@ namespace POIProxy
     public class POIProxyHub : Hub
     {
         POIProxyWBCtrlHandler webWBHandler = POIProxyGlobalVar.Kernel.myWBCtrlHandler;
+        POIProxyInteractiveMsgHandler interMsgHandler = POIProxyGlobalVar.Kernel.myInterMsgHandler;
         
         public void Log(string msg)
         {
@@ -50,7 +52,7 @@ namespace POIProxy
         }
 
         
-
+        //For live session or offline session
         public async Task JoinSession(int contentId, int sessionId)
         {
             //Get the session
@@ -122,13 +124,38 @@ namespace POIProxy
                 presInfo = cacheResult.Item1;
                 archiveInfo = cacheResult.Item2;
             }
-            
-            
+
+            JavaScriptSerializer js = new JavaScriptSerializer();
+
+            /*
+            //Upload the json data to the content server
             try
             {
-                
-                JavaScriptSerializer js = new JavaScriptSerializer();
-                
+                String poiFnJson = Path.Combine(POIArchive.ArchiveHome, contentId + ".POI.json");
+                String archiveFnJson = Path.Combine(POIArchive.ArchiveHome, contentId + "_" + sessionId + ".meta.json");
+
+                using (StreamWriter writer = new StreamWriter(archiveFnJson))
+                {
+                    writer.Write(js.Serialize(archiveInfo));
+                }
+
+                using (StreamWriter writer = new StreamWriter(poiFnJson))
+                {
+                    writer.Write(js.Serialize(presInfo));
+                }
+
+                //Upload the .json to the content server
+                await POIContentServerHelper.uploadContent(contentId, archiveFnJson);
+                await POIContentServerHelper.uploadContent(contentId, poiFnJson);
+            }
+            catch (Exception e)
+            {
+                POIGlobalVar.POIDebugLog("In writing json in signalr: " + e.Message);
+            }
+            */
+
+            try
+            {
                 Clients.Caller.handlePresInfo(js.Serialize(presInfo));
                 Clients.Caller.handleMetadataArchive(js.Serialize(archiveInfo));
                 Clients.Caller.startPresentation();
@@ -157,7 +184,78 @@ namespace POIProxy
             }
         }
 
+        //Functions for receiving interactive messages
+        public void textMsgReceived(string sessionId, string message)
+        {
+            interMsgHandler.textMsgReceived(Clients.Caller.userId, sessionId, message);
 
+            Clients.Group("session_" + sessionId, Context.ConnectionId).
+                textMsgReceived(Clients.Caller.userId, sessionId, message);
+        }
+
+        public void imageMsgReceived(string sessionId, string mediaId)
+        {
+            interMsgHandler.imageMsgReceived(Clients.Caller.userId, sessionId, mediaId);
+
+            Clients.Group("session_" + sessionId, Context.ConnectionId).
+                imageMsgReceived(Clients.Caller.userId, sessionId, mediaId);
+        }
+
+        public void voiceMsgReceived(string sessionId, string mediaId)
+        {
+            interMsgHandler.voiceMsgReceived(Clients.Caller.userId, sessionId, mediaId);
+
+            Clients.Group("session_" + sessionId, Context.ConnectionId).
+                voiceMsgReceived(Clients.Caller.userId, sessionId, mediaId);
+        }
+
+        public void illustrationMsgReceived(string sessionId, string mediaId)
+        {
+            interMsgHandler.illustrationMsgReceived(Clients.Caller.userId, sessionId, mediaId);
+
+            Clients.Group("session_" + sessionId, Context.ConnectionId).
+                illustrationMsgReceived(Clients.Caller.userId, sessionId, mediaId);
+        }
+
+        public void createInteractiveSession(string mediaId)
+        {
+            //Create the session
+            Tuple<string,string> result = interMsgHandler.createInteractiveSession(Clients.Caller.userId, mediaId);
+            string presId = result.Item1;
+            string sessionId = result.Item2;
+
+            Groups.Add(Context.ConnectionId, "session_" + sessionId);
+
+            //Notify the user the connection has been created
+            Clients.Caller.interactiveSessionCreated(presId, sessionId);
+        }
+
+        public void joinInteractiveSession(string sessionId)
+        {
+            if (interMsgHandler.checkSessionOpen(sessionId))
+            {
+                //Add the current connection into the session
+                interMsgHandler.joinInteractiveSession(Clients.Caller.userId, sessionId);
+
+                Groups.Add(Context.ConnectionId, "session_" + sessionId);
+
+                //Notify the user the join operation has been completed
+                Clients.Caller.interactiveSessionJoined(sessionId);
+
+                Clients.Group(sessionId, Context.ConnectionId).
+                    interactiveSessionNewUserJoined(Clients.Caller.userId, sessionId);
+            }
+            else
+            {
+                Clients.Caller.interactiveSessionJoinFailed(sessionId);
+            }
+        }
+
+        public void endInteractiveSession(string sessionId)
+        {
+            
+        }
+        
 
         #region Handle connection status change
         //When the client is joining the system for the first time
@@ -165,36 +263,59 @@ namespace POIProxy
         {
             //Retrieve the user information from the query string
             var info = Context.QueryString;
-            POIGlobalVar.POIDebugLog(info["userid"]);
-            String userId = info["userid"];
-            POIUser user = null;
 
-            if (userId == @"serverLog")
+            String service = info["service"];
+            if (service == null || service == "live")
             {
-                Groups.Add(Context.ConnectionId, "serverLog");
-            }
-            else
-            {
-                //Check if the user exists
-                if (POIGlobalVar.WebUserProfiles.ContainsKey(userId))
+                #region handling live service
+                POIGlobalVar.POIDebugLog(info["userid"]);
+                String userId = info["userid"];
+                POIUser user = null;
+
+                if (userId == @"serverLog")
                 {
-                    //Set the connectionId to user mapping
-                    user = POIGlobalVar.WebUserProfiles[userId];
+                    Groups.Add(Context.ConnectionId, "serverLog");
                 }
                 else
                 {
-                    //Create the user and set the mapping
-                    user = new POIUser(UserType.WEB);
-                    user.UserID = userId;
+                    //Check if the user exists
+                    if (POIGlobalVar.WebUserProfiles.ContainsKey(userId))
+                    {
+                        //Set the connectionId to user mapping
+                        user = POIGlobalVar.WebUserProfiles[userId];
+                    }
+                    else
+                    {
+                        //Create the user and set the mapping
+                        user = new POIUser(UserType.WEB);
+                        user.UserID = userId;
 
-                    POIGlobalVar.WebUserProfiles[userId] = user;
+                        POIGlobalVar.WebUserProfiles[userId] = user;
+                    }
+
+                    //Set the connection to user mapping
+                    POIGlobalVar.WebConUserMap[Context.ConnectionId] = user;
+
+                    //Let the user know the authentication is done
+                    Clients.Caller.handleUserAuthenticated();
                 }
+                #endregion
+            }
+            else if (service == "interactive")
+            {
+                //For receiving server error log
+                Groups.Add(Context.ConnectionId, "serverLog");
+                POIGlobalVar.POIDebugLog("Interactive service");
 
-                //Set the connection to user mapping
-                POIGlobalVar.WebConUserMap[Context.ConnectionId] = user;
+                //Add the connection id to the user group
+                Groups.Add(Context.ConnectionId, info["userId"]);
 
-                //Let the user know the authentication is done
-                Clients.Caller.handleUserAuthenticated();
+                //Add the connection id to the queried groups
+                POIGlobalVar.POIDebugLog(info["sessions"]);
+            }
+            else
+            {
+                POIGlobalVar.POIDebugLog("Service type not recognized");
             }
 
             return base.OnConnected();
@@ -230,9 +351,14 @@ namespace POIProxy
 
         public override System.Threading.Tasks.Task OnReconnected()
         {
+            //Handling user reconnecting
+            POIGlobalVar.POIDebugLog("Client reconnected");
+
             return base.OnReconnected();
         }
 
         #endregion
     }
+
+   
 }
