@@ -235,12 +235,13 @@ namespace POIProxy
             if (interMsgHandler.checkSessionOpen(sessionId))
             {
                 //Add the current connection into the session
-                interMsgHandler.joinInteractiveSession(Clients.Caller.userId, sessionId);
+                POIInteractiveSessionArchive archive = 
+                    interMsgHandler.joinInteractiveSession(Clients.Caller.userId, sessionId);
 
                 Groups.Add(Context.ConnectionId, "session_" + sessionId);
 
                 //Notify the user the join operation has been completed
-                Clients.Caller.interactiveSessionJoined(sessionId);
+                Clients.Caller.interactiveSessionJoined(sessionId, archive);
 
                 Clients.Group(sessionId, Context.ConnectionId).
                     interactiveSessionNewUserJoined(Clients.Caller.userId, sessionId);

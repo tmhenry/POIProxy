@@ -235,6 +235,28 @@ namespace POIProxy.Handlers
 
         #endregion
 
+        public bool checkUserInSession(string userId, string sessionId)
+        {
+            bool inSession = false;
+
+            Dictionary<string, object> conditions = new Dictionary<string, object>();
+            conditions["user_id"] = userId;
+            conditions["type"] = "session";
+            conditions["content_id"] = sessionId;
+            conditions["user_right"] = 4;
+
+            List<string> cols = new List<string>();
+            cols.Add("id");
+
+            DataTable result = dbManager.selectFromTable("user_right", cols, conditions);
+            if (result.Rows.Count > 0)
+            {
+                inSession = true;
+            }
+
+            return inSession;
+        }
+        
         public void addUserToSessionRecord(string userId, string sessionId)
         {
             Dictionary<string, object> values = new Dictionary<string, object>();
@@ -310,13 +332,22 @@ namespace POIProxy.Handlers
             return new Tuple<string,string>(presId, sessionId);
         }
 
-        public void joinInteractiveSession(string userId, string sessionId)
+        public POIInteractiveSessionArchive joinInteractiveSession(string userId, string sessionId)
         {
             //add the current user into the session table
             addUserToSessionRecord(userId, sessionId);
 
             //Turn the session to serving status
             updateSessionStatus(sessionId, "serving");
+
+            if (sessionArchives.ContainsKey(sessionId))
+            {
+                return sessionArchives[sessionId];
+            }
+            else
+            {
+                return null;
+            }
         }
 
         public void endInteractiveSession(string sessionId)
@@ -333,6 +364,8 @@ namespace POIProxy.Handlers
                 
             }
         }
+
+        
 
         //Functions for sending messages
         public void textMsgReceived(string userId, string sessionId, string message)
@@ -381,6 +414,13 @@ namespace POIProxy.Handlers
             {
                 POIGlobalVar.POIDebugLog("No archive related to session id " + sessionId);
             }
+        }
+
+
+        //For communicating with the push notifier
+        public void issuePushNotification(string userId, string sessionId)
+        {
+
         }
     }
 }

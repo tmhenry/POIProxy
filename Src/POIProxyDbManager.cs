@@ -116,7 +116,7 @@ namespace POIProxy
                 MySqlCommand cmd = new MySqlCommand(sql, connection);
                 rowId = Convert.ToString(cmd.ExecuteScalar());
 
-                POIGlobalVar.POIDebugLog(rowId);
+                //POIGlobalVar.POIDebugLog(rowId);
             }
             catch(Exception e)
             {

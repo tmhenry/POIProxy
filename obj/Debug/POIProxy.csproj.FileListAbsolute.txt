@@ -137,3 +137,4 @@ C:\Users\HenryXia\Desktop\POIProxy\bin\EntityFramework.dll
 C:\Users\HenryXia\Desktop\POIProxy\bin\EntityFramework.SqlServer.dll
 C:\Users\HenryXia\Desktop\POIProxy\bin\EntityFramework.xml
 C:\Users\HenryXia\Desktop\POIProxy\bin\EntityFramework.SqlServer.xml
+C:\Users\HenryXia\Desktop\POIProxy\bin\Newtonsoft.Json.dll
