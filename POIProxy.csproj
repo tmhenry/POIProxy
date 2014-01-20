@@ -154,7 +154,7 @@
     <Compile Include="Controllers\AudioUploadController.cs" />
     <Compile Include="Controllers\HomeController.cs" />
     <Compile Include="Controllers\ProxyStatusController.cs" />
-    <Compile Include="Controllers\WxToProxy.cs" />
+    <Compile Include="Controllers\WxToProxyController.cs" />
     <Compile Include="course.cs">
       <DependentUpon>POIEntities.tt</DependentUpon>
     </Compile>
@@ -224,6 +224,7 @@
     <Compile Include="Src\POIProxyGlobalVar.cs" />
     <Compile Include="Src\POIProxyHub.cs" />
     <Compile Include="Src\POIProxyKernel.cs" />
+    <Compile Include="Src\POIProxyToWxApi.cs" />
     <Compile Include="Src\POISession.cs" />
     <Compile Include="Src\POISessionManager.cs" />
     <Compile Include="Src\POISessionPresController.cs" />

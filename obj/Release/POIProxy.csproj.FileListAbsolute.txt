@@ -32,3 +32,8 @@ C:\Users\HenryXia\Desktop\POIProxy\obj\Release\POIProxy.dll
 C:\Users\HenryXia\Desktop\POIProxy\obj\Release\POIProxy.pdb
 C:\Users\HenryXia\Desktop\POIProxy\bin\css\reset.css
 C:\Users\HenryXia\Desktop\POIProxy\bin\css\screen.css
+C:\Users\HenryXia\Desktop\POIProxy\bin\EntityFramework.dll
+C:\Users\HenryXia\Desktop\POIProxy\bin\EntityFramework.SqlServer.dll
+C:\Users\HenryXia\Desktop\POIProxy\bin\Newtonsoft.Json.dll
+C:\Users\HenryXia\Desktop\POIProxy\bin\EntityFramework.xml
+C:\Users\HenryXia\Desktop\POIProxy\bin\EntityFramework.SqlServer.xml

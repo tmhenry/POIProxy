@@ -8,23 +8,30 @@ using System.Web.Http;
 using POIProxy.Handlers;
 using Microsoft.AspNet.SignalR;
 
+using POILibCommunication;
+using System.Web.Script.Serialization;
+
 namespace POIProxy.Controllers
 {
-    public class WxToProxy : ApiController
+
+    public class WxToProxyController : ApiController
     {
         POIProxyInteractiveMsgHandler interMsgHandler = POIProxyGlobalVar.Kernel.myInterMsgHandler;
         IHubContext hubContext = GlobalHost.ConnectionManager.GetHubContext<POIProxyHub>();
+        JavaScriptSerializer jsonHandler = new JavaScriptSerializer();
 
-        // POST api/<controller>
-        public void PostMessage([FromBody]string value)
+        [HttpPost]
+        public string Message(HttpRequestMessage request)
         {
             //Check if post is coming from the allowed IP address
+            string content = request.Content.ReadAsStringAsync().Result;
+            Dictionary<string, string> msgInfo = jsonHandler.Deserialize<Dictionary<string, string>>(content);
 
-            string userId = "huan";
-            string sessionId = "1975";
-            string msgType = "text";
-            string message = "hello world";
-            string mediaId = "dummy";
+            string userId = msgInfo["userId"];
+            string sessionId = msgInfo["sessionId"];
+            string msgType = msgInfo["msgType"];
+            string message = msgInfo["message"];
+            string mediaId = msgInfo["mediaId"];
 
             switch (msgType)
             {
@@ -52,11 +59,31 @@ namespace POIProxy.Controllers
                         illustrationMsgReceived(userId, sessionId, mediaId);
                     break;
             }
+
+            return "{Message:OK}";
         }
 
-        public void PostControl([FromBody]string value)
+        [HttpPost]
+        public void Session(HttpRequestMessage request)
         {
+            string content = request.Content.ReadAsStringAsync().Result;
+            Dictionary<string, string> msgInfo = jsonHandler.Deserialize<Dictionary<string, string>>(content);
 
+            string type = msgInfo["type"];
+            string userId = msgInfo["userId"];
+            string sessionId = msgInfo["sessionId"];
+
+            switch (type)
+            {
+                case "sessionCreated":
+                    //Initialize the session archive
+                    interMsgHandler.initSessionArchive(userId, sessionId);
+                    break;
+
+                case "sessionJoined":
+                    //Do not handle the session join event for now
+                    break;
+            }
         }
     }
 }

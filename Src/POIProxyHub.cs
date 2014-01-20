@@ -189,6 +189,9 @@ namespace POIProxy
         {
             interMsgHandler.textMsgReceived(Clients.Caller.userId, sessionId, message);
 
+            //Notify the weixin server
+            POIProxyToWxApi.textMsgReceived(Clients.Caller.userId, sessionId, message);
+
             Clients.Group("session_" + sessionId, Context.ConnectionId).
                 textMsgReceived(Clients.Caller.userId, sessionId, message);
         }
@@ -196,6 +199,8 @@ namespace POIProxy
         public void imageMsgReceived(string sessionId, string mediaId)
         {
             interMsgHandler.imageMsgReceived(Clients.Caller.userId, sessionId, mediaId);
+
+            POIProxyToWxApi.imageMsgReceived(Clients.Caller.userId, sessionId, mediaId);
 
             Clients.Group("session_" + sessionId, Context.ConnectionId).
                 imageMsgReceived(Clients.Caller.userId, sessionId, mediaId);
@@ -205,6 +210,8 @@ namespace POIProxy
         {
             interMsgHandler.voiceMsgReceived(Clients.Caller.userId, sessionId, mediaId);
 
+            POIProxyToWxApi.voiceMsgReceived(Clients.Caller.userId, sessionId, mediaId);
+
             Clients.Group("session_" + sessionId, Context.ConnectionId).
                 voiceMsgReceived(Clients.Caller.userId, sessionId, mediaId);
         }
@@ -212,6 +219,8 @@ namespace POIProxy
         public void illustrationMsgReceived(string sessionId, string mediaId)
         {
             interMsgHandler.illustrationMsgReceived(Clients.Caller.userId, sessionId, mediaId);
+
+            POIProxyToWxApi.illustrationMsgReceived(Clients.Caller.userId, sessionId, mediaId);
 
             Clients.Group("session_" + sessionId, Context.ConnectionId).
                 illustrationMsgReceived(Clients.Caller.userId, sessionId, mediaId);
@@ -243,8 +252,11 @@ namespace POIProxy
                 //Notify the user the join operation has been completed
                 Clients.Caller.interactiveSessionJoined(sessionId, archive);
 
-                Clients.Group(sessionId, Context.ConnectionId).
+                Clients.Group("session_" + sessionId, Context.ConnectionId).
                     interactiveSessionNewUserJoined(Clients.Caller.userId, sessionId);
+
+                //Notify the wexin server about the join operation
+                POIProxyToWxApi.interactiveSessionJoined(Clients.Caller.userId, sessionId);
             }
             else
             {

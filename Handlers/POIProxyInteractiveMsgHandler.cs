@@ -325,11 +325,17 @@ namespace POIProxy.Handlers
             addUserToSessionRecord(userId, sessionId);
 
             //Create session archive and add the currrent user to the user list
+            initSessionArchive(userId, sessionId);
+
+            return new Tuple<string,string>(presId, sessionId);
+        }
+
+        public void initSessionArchive(string userId, string sessionId)
+        {
+            //Create session archive and add the currrent user to the user list
             POIInteractiveSessionArchive archive = new POIInteractiveSessionArchive(sessionId);
             sessionArchives[sessionId.ToString()] = archive;
             archive.addUserToUserList(userId);
-
-            return new Tuple<string,string>(presId, sessionId);
         }
 
         public POIInteractiveSessionArchive joinInteractiveSession(string userId, string sessionId)

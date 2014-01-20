@@ -1,0 +1,320 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Schema Namespace="poiModel.Store" Alias="Self" Provider="MySql.Data.MySqlClient" ProviderManifestToken="5.5" xmlns:store="http://schemas.microsoft.com/ado/2007/12/edm/EntityStoreSchemaGenerator" xmlns="http://schemas.microsoft.com/ado/2009/11/edm/ssdl">
+  <EntityContainer Name="poiModelStoreContainer">
+    <EntitySet Name="activity" EntityType="poiModel.Store.activity" store:Type="Tables" Schema="poi" />
+    <EntitySet Name="category" EntityType="poiModel.Store.category" store:Type="Tables" Schema="poi" />
+    <EntitySet Name="content" EntityType="poiModel.Store.content" store:Type="Tables" Schema="poi" />
+    <EntitySet Name="course" EntityType="poiModel.Store.course" store:Type="Tables" Schema="poi" />
+    <EntitySet Name="device" EntityType="poiModel.Store.device" store:Type="Tables" Schema="poi" />
+    <EntitySet Name="groups" EntityType="poiModel.Store.groups" store:Type="Tables" Schema="poi" />
+    <EntitySet Name="keyword" EntityType="poiModel.Store.keyword" store:Type="Tables" Schema="poi" />
+    <EntitySet Name="login_attempts" EntityType="poiModel.Store.login_attempts" store:Type="Tables" Schema="poi" />
+    <EntitySet Name="organization" EntityType="poiModel.Store.organization" store:Type="Tables" Schema="poi" />
+    <EntitySet Name="presentation" EntityType="poiModel.Store.presentation" store:Type="Tables" Schema="poi" />
+    <EntitySet Name="relationships" EntityType="poiModel.Store.relationships" store:Type="Tables" Schema="poi" />
+    <EntitySet Name="schedule" EntityType="poiModel.Store.schedule" store:Type="Tables" Schema="poi" />
+    <EntitySet Name="server" EntityType="poiModel.Store.server" store:Type="Tables" Schema="poi" />
+    <EntitySet Name="session" EntityType="poiModel.Store.session" store:Type="Tables" Schema="poi" />
+    <EntitySet Name="sites" EntityType="poiModel.Store.sites" store:Type="Tables" Schema="poi" />
+    <EntitySet Name="tag" EntityType="poiModel.Store.tag" store:Type="Tables" Schema="poi" />
+    <EntitySet Name="tag_relationship" EntityType="poiModel.Store.tag_relationship" store:Type="Tables" Schema="poi" />
+    <EntitySet Name="token" EntityType="poiModel.Store.token" store:Type="Tables" Schema="poi" />
+    <EntitySet Name="tutor_status" EntityType="poiModel.Store.tutor_status" store:Type="Tables" Schema="poi" />
+    <EntitySet Name="user_device" EntityType="poiModel.Store.user_device" store:Type="Tables" Schema="poi" />
+    <EntitySet Name="user_match" EntityType="poiModel.Store.user_match" store:Type="Tables" Schema="poi" />
+    <EntitySet Name="user_profile" EntityType="poiModel.Store.user_profile" store:Type="Tables" Schema="poi" />
+    <EntitySet Name="user_right" EntityType="poiModel.Store.user_right" store:Type="Tables" Schema="poi" />
+    <EntitySet Name="users" EntityType="poiModel.Store.users" store:Type="Tables" Schema="poi" />
+    <EntitySet Name="users_groups" EntityType="poiModel.Store.users_groups" store:Type="Tables" Schema="poi" />
+  </EntityContainer>
+  <EntityType Name="activity">
+    <Key>
+      <PropertyRef Name="activity_id" />
+    </Key>
+    <Property Name="activity_id" Type="uint" Nullable="false" StoreGeneratedPattern="Identity" />
+    <Property Name="user_id" Type="varchar" MaxLength="32" />
+    <Property Name="type" Type="varchar" MaxLength="32" />
+    <Property Name="content_id" Type="int" />
+    <Property Name="data" Type="text" />
+    <Property Name="status" Type="char" MaxLength="1" />
+    <Property Name="create_at" Type="int" />
+    <Property Name="update_at" Type="int" />
+  </EntityType>
+  <EntityType Name="category">
+    <Key>
+      <PropertyRef Name="id" />
+    </Key>
+    <Property Name="id" Type="uint" Nullable="false" StoreGeneratedPattern="Identity" />
+    <Property Name="name" Type="varchar" MaxLength="100" />
+    <Property Name="pid" Type="int" />
+    <Property Name="amount" Type="int" />
+  </EntityType>
+  <EntityType Name="content">
+    <Key>
+      <PropertyRef Name="content_id" />
+    </Key>
+    <Property Name="content_id" Type="uint" Nullable="false" StoreGeneratedPattern="Identity" />
+    <Property Name="site_id" Type="int" />
+    <Property Name="parent_id" Type="int" />
+    <Property Name="category_id" Type="int" />
+    <Property Name="module" Type="varchar" MaxLength="32" />
+    <Property Name="type" Type="varchar" MaxLength="32" />
+    <Property Name="source" Type="char" MaxLength="16" />
+    <Property Name="order" Type="int" />
+    <Property Name="user_id" Type="varchar" MaxLength="32" />
+    <Property Name="title" Type="varchar" MaxLength="255" />
+    <Property Name="title_url" Type="varchar" MaxLength="255" />
+    <Property Name="content" Type="text" />
+    <Property Name="details" Type="varchar" MaxLength="512" />
+    <Property Name="canonical" Type="varchar" MaxLength="512" />
+    <Property Name="access" Type="char" MaxLength="1" />
+    <Property Name="comments_allow" Type="char" MaxLength="1" />
+    <Property Name="comments_count" Type="int" />
+    <Property Name="geo_lat" Type="varchar" MaxLength="16" />
+    <Property Name="geo_long" Type="varchar" MaxLength="16" />
+    <Property Name="viewed" Type="char" MaxLength="1" />
+    <Property Name="approval" Type="char" MaxLength="1" />
+    <Property Name="status" Type="char" MaxLength="1" />
+    <Property Name="created_at" Type="datetime" />
+    <Property Name="updated_at" Type="datetime" />
+  </EntityType>
+  <EntityType Name="course">
+    <Key>
+      <PropertyRef Name="id" />
+    </Key>
+    <Property Name="id" Type="uint" Nullable="false" StoreGeneratedPattern="Identity" />
+    <Property Name="title" Type="varchar" MaxLength="100" />
+    <Property Name="description" Type="text" />
+    <Property Name="user_id" Type="varchar" MaxLength="32" />
+    <Property Name="category_id" Type="int" />
+    <Property Name="instructor" Type="varchar" MaxLength="100" />
+    <Property Name="type" Type="varchar" MaxLength="10" />
+    <Property Name="create_at" Type="int" />
+    <Property Name="updated_at" Type="int" />
+  </EntityType>
+  <EntityType Name="device">
+    <Key>
+      <PropertyRef Name="id" />
+    </Key>
+    <Property Name="id" Type="bigint" Nullable="false" StoreGeneratedPattern="Identity" />
+    <Property Name="secret" Type="text" />
+    <Property Name="sessionId" Type="bigint" />
+    <Property Name="contentId" Type="bigint" />
+  </EntityType>
+  <EntityType Name="groups">
+    <Key>
+      <PropertyRef Name="id" />
+    </Key>
+    <Property Name="id" Type="umediumint" Nullable="false" StoreGeneratedPattern="Identity" />
+    <Property Name="name" Type="varchar" Nullable="false" MaxLength="20" />
+    <Property Name="description" Type="varchar" Nullable="false" MaxLength="100" />
+  </EntityType>
+  <EntityType Name="keyword">
+    <Key>
+      <PropertyRef Name="id" />
+    </Key>
+    <Property Name="id" Type="varchar" Nullable="false" MaxLength="65" />
+    <Property Name="keyword" Type="text" />
+  </EntityType>
+  <EntityType Name="login_attempts">
+    <Key>
+      <PropertyRef Name="id" />
+    </Key>
+    <Property Name="id" Type="varchar" Nullable="false" MaxLength="32" />
+    <Property Name="ip_address" Type="varbinary" Nullable="false" MaxLength="16" />
+    <Property Name="login" Type="varchar" Nullable="false" MaxLength="100" />
+    <Property Name="time" Type="uint" />
+  </EntityType>
+  <EntityType Name="organization">
+    <Key>
+      <PropertyRef Name="id" />
+    </Key>
+    <Property Name="id" Type="int" Nullable="false" StoreGeneratedPattern="Identity" />
+    <Property Name="name" Type="varchar" MaxLength="100" />
+    <Property Name="email" Type="varchar" MaxLength="100" />
+  </EntityType>
+  <EntityType Name="presentation">
+    <Key>
+      <PropertyRef Name="pid" />
+    </Key>
+    <Property Name="pid" Type="bigint" Nullable="false" StoreGeneratedPattern="Identity" />
+    <Property Name="course_id" Type="int" />
+    <Property Name="user_id" Type="varchar" MaxLength="32" />
+    <Property Name="type" Type="varchar" MaxLength="10" />
+    <Property Name="name" Type="varchar" MaxLength="50" />
+    <Property Name="description" Type="varchar" MaxLength="500" />
+    <Property Name="category" Type="int" />
+    <Property Name="creator" Type="varchar" MaxLength="100" />
+    <Property Name="reservation" Type="varchar" MaxLength="20" />
+    <Property Name="cover" Type="int" />
+    <Property Name="create_at" Type="int" />
+    <Property Name="update_at" Type="int" />
+    <Property Name="start_at" Type="int" />
+  </EntityType>
+  <EntityType Name="relationships">
+    <Key>
+      <PropertyRef Name="relationship_id" />
+    </Key>
+    <Property Name="relationship_id" Type="varchar" Nullable="false" MaxLength="32" />
+    <Property Name="site_id" Type="int" />
+    <Property Name="owner_id" Type="varchar" MaxLength="32" />
+    <Property Name="user_id" Type="varchar" MaxLength="32" />
+    <Property Name="module" Type="varchar" MaxLength="32" />
+    <Property Name="type" Type="varchar" MaxLength="32" />
+    <Property Name="status" Type="char" MaxLength="1" />
+    <Property Name="created_at" Type="int" />
+    <Property Name="updated_at" Type="int" />
+  </EntityType>
+  <EntityType Name="schedule">
+    <Key>
+      <PropertyRef Name="id" />
+    </Key>
+    <Property Name="id" Type="uint" Nullable="false" StoreGeneratedPattern="Identity" />
+    <Property Name="course_id" Type="int" />
+    <Property Name="date" Type="varchar" MaxLength="11" />
+    <Property Name="title" Type="varchar" MaxLength="50" />
+    <Property Name="detail" Type="text" />
+  </EntityType>
+  <EntityType Name="server">
+    <Key>
+      <PropertyRef Name="sid" />
+    </Key>
+    <Property Name="sid" Type="bigint" Nullable="false" StoreGeneratedPattern="Identity" />
+    <Property Name="type" Type="text" />
+    <Property Name="ip" Type="text" />
+    <Property Name="port" Type="int" />
+    <Property Name="name" Type="text" />
+    <Property Name="description" Type="text" />
+    <Property Name="image" Type="text" />
+    <Property Name="status" Type="text" />
+    <Property Name="audio_ip" Type="text" Nullable="false" />
+    <Property Name="audio_port" Type="int" Nullable="false" />
+  </EntityType>
+  <EntityType Name="session">
+    <Key>
+      <PropertyRef Name="id" />
+    </Key>
+    <Property Name="id" Type="bigint" Nullable="false" StoreGeneratedPattern="Identity" />
+    <Property Name="type" Type="text" />
+    <Property Name="presId" Type="bigint" />
+    <Property Name="creator" Type="varchar" MaxLength="32" />
+    <Property Name="status" Type="text" />
+    <Property Name="rating" Type="int" />
+    <Property Name="create_at" Type="int" />
+    <Property Name="end_at" Type="int" />
+  </EntityType>
+  <EntityType Name="sites">
+    <Key>
+      <PropertyRef Name="site_id" />
+    </Key>
+    <Property Name="site_id" Type="uint" Nullable="false" StoreGeneratedPattern="Identity" />
+    <Property Name="url" Type="varchar" MaxLength="255" />
+    <Property Name="module" Type="varchar" MaxLength="255" />
+    <Property Name="type" Type="varchar" MaxLength="255" />
+    <Property Name="title" Type="varchar" MaxLength="255" />
+    <Property Name="favicon" Type="varchar" MaxLength="255" />
+  </EntityType>
+  <EntityType Name="tag">
+    <Key>
+      <PropertyRef Name="id" />
+    </Key>
+    <Property Name="id" Type="int" Nullable="false" StoreGeneratedPattern="Identity" />
+    <Property Name="name" Type="varchar" MaxLength="100" />
+    <Property Name="type" Type="int" />
+    <Property Name="parent" Type="int" />
+  </EntityType>
+  <EntityType Name="tag_relationship">
+    <Key>
+      <PropertyRef Name="id" />
+    </Key>
+    <Property Name="id" Type="int" Nullable="false" StoreGeneratedPattern="Identity" />
+    <Property Name="tag_id" Type="int" />
+    <Property Name="type" Type="varchar" MaxLength="20" />
+    <Property Name="content_id" Type="int" />
+  </EntityType>
+  <EntityType Name="token">
+    <Key>
+      <PropertyRef Name="id" />
+    </Key>
+    <Property Name="id" Type="uint" Nullable="false" StoreGeneratedPattern="Identity" />
+    <Property Name="token" Type="varchar" MaxLength="50" />
+    <Property Name="type" Type="varchar" MaxLength="10" />
+    <Property Name="expiration" Type="int" />
+    <Property Name="update_at" Type="int" />
+  </EntityType>
+  <EntityType Name="tutor_status">
+    <Key>
+      <PropertyRef Name="id" />
+    </Key>
+    <Property Name="id" Type="bigint" Nullable="false" StoreGeneratedPattern="Identity" />
+    <Property Name="uid" Type="varchar" MaxLength="32" />
+    <Property Name="status" Type="varchar" MaxLength="32" />
+  </EntityType>
+  <EntityType Name="user_device">
+    <Key>
+      <PropertyRef Name="id" />
+    </Key>
+    <Property Name="id" Type="bigint" Nullable="false" StoreGeneratedPattern="Identity" />
+    <Property Name="uid" Type="varchar" MaxLength="32" />
+    <Property Name="tokens" Type="text" />
+  </EntityType>
+  <EntityType Name="user_match">
+    <Key>
+      <PropertyRef Name="id" />
+    </Key>
+    <Property Name="id" Type="bigint" Nullable="false" StoreGeneratedPattern="Identity" />
+    <Property Name="uid" Type="varchar" MaxLength="32" />
+    <Property Name="matched_uid" Type="varchar" MaxLength="32" />
+  </EntityType>
+  <EntityType Name="user_profile">
+    <Key>
+      <PropertyRef Name="id" />
+    </Key>
+    <Property Name="id" Type="uint" Nullable="false" StoreGeneratedPattern="Identity" />
+    <Property Name="user_id" Type="varchar" MaxLength="32" />
+    <Property Name="phone" Type="varchar" MaxLength="20" />
+    <Property Name="address" Type="varchar" MaxLength="100" />
+    <Property Name="biography" Type="varchar" MaxLength="140" />
+    <Property Name="optional" Type="varchar" MaxLength="200" />
+    <Property Name="type" Type="int" />
+  </EntityType>
+  <EntityType Name="user_right">
+    <Key>
+      <PropertyRef Name="id" />
+    </Key>
+    <Property Name="id" Type="int" Nullable="false" StoreGeneratedPattern="Identity" />
+    <Property Name="user_id" Type="varchar" MaxLength="32" />
+    <Property Name="type" Type="varchar" MaxLength="32" />
+    <Property Name="content_id" Type="int" />
+    <Property Name="user_right" Type="int" />
+    <Property Name="created_at" Type="int" />
+  </EntityType>
+  <EntityType Name="users">
+    <Key>
+      <PropertyRef Name="id" />
+    </Key>
+    <Property Name="id" Type="varchar" Nullable="false" MaxLength="32" />
+    <Property Name="ip_address" Type="varbinary" MaxLength="16" />
+    <Property Name="username" Type="varchar" MaxLength="100" />
+    <Property Name="password" Type="varchar" MaxLength="60" />
+    <Property Name="salt" Type="varchar" MaxLength="40" />
+    <Property Name="email" Type="varchar" MaxLength="100" />
+    <Property Name="activation_code" Type="varchar" MaxLength="40" />
+    <Property Name="forgotten_password_code" Type="varchar" MaxLength="40" />
+    <Property Name="forgotten_password_time" Type="uint" />
+    <Property Name="remember_code" Type="varchar" MaxLength="40" />
+    <Property Name="created_on" Type="uint" />
+    <Property Name="last_login" Type="uint" />
+    <Property Name="active" Type="bool" />
+    <Property Name="accessRight" Type="text" />
+    <Property Name="name" Type="text" />
+  </EntityType>
+  <EntityType Name="users_groups">
+    <Key>
+      <PropertyRef Name="id" />
+    </Key>
+    <Property Name="id" Type="umediumint" Nullable="false" StoreGeneratedPattern="Identity" />
+    <Property Name="user_id" Type="varchar" Nullable="false" MaxLength="32" />
+    <Property Name="group_id" Type="umediumint" Nullable="false" />
+  </EntityType>
+</Schema>
