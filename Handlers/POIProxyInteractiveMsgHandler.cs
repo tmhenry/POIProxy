@@ -235,6 +235,26 @@ namespace POIProxy.Handlers
 
         #endregion
 
+        public List<string> getUsersInSession(string sessionId)
+        {
+            Dictionary<string, object> conditions = new Dictionary<string, object>();
+            conditions["type"] = "session";
+            conditions["content_id"] = sessionId;
+            conditions["user_right"] = 4;
+
+            List<string> cols = new List<string>();
+            cols.Add("id");
+
+            DataTable result = dbManager.selectFromTable("user_right", cols, conditions);
+            List<string> userList = new List<string>();
+            foreach (DataRow row in result.Rows)
+            {
+                userList.Add(row["id"] as string);
+            }
+
+            return userList;
+        }
+
         public bool checkUserInSession(string userId, string sessionId)
         {
             bool inSession = false;
@@ -280,24 +300,59 @@ namespace POIProxy.Handlers
             dbManager.updateTable("session", values, conditions);
         }
 
-        public bool checkSessionOpen(string sessionId)
+        public void updateSessionStatusWithRating(string sessionId, int rating)
         {
-            bool isOpen = false;
+            Dictionary<string, object> values = new Dictionary<string, object>();
+            values["status"] = "closed";
+            values["rating"] = rating;
+            values["end_at"] = POITimestamp.ConvertToUnixTimestamp(DateTime.Now);
 
             Dictionary<string, object> conditions = new Dictionary<string, object>();
             conditions["id"] = sessionId;
-            conditions["status"] = "open";
+
+            dbManager.updateTable("session", values, conditions);
+        }
+
+        public void updateSessionStatusWithEnding(string sessionId)
+        {
+            Dictionary<string, object> values = new Dictionary<string, object>();
+            values["status"] = "session_end_waiting";
+            values["end_at"] = POITimestamp.ConvertToUnixTimestamp(DateTime.Now);
+
+            Dictionary<string, object> conditions = new Dictionary<string, object>();
+            conditions["id"] = sessionId;
+
+            dbManager.updateTable("session", values, conditions);
+        }
+
+        public bool checkSessionOpen(string sessionId)
+        {
+            return checkSessionState(sessionId, "open");
+        }
+
+        public bool checkSessionServing(string sessionId)
+        {
+            return checkSessionState(sessionId, "serving");
+        }
+
+        public bool checkSessionState(string sessionId, string state)
+        {
+            bool isInState = false;
+
+            Dictionary<string, object> conditions = new Dictionary<string, object>();
+            conditions["id"] = sessionId;
+            conditions["status"] = state;
 
             List<string> cols = new List<string>();
             cols.Add("id");
 
-            DataTable result = dbManager.selectFromTable("session", null, conditions);
+            DataTable result = dbManager.selectFromTable("session", cols, conditions);
             if (result.Rows.Count > 0)
             {
-                isOpen = true;
+                isInState = true;
             }
 
-            return isOpen;
+            return isInState;
         }
 
         public Tuple<string,string> createInteractiveSession(string userId, string mediaId)
@@ -338,6 +393,22 @@ namespace POIProxy.Handlers
             archive.addUserToUserList(userId);
         }
 
+        public void checkAndProcessArchiveDuringSessionEnd(string sessionId)
+        {
+            //Check if the session is in the right state (must be in serving state)
+            if (checkSessionServing(sessionId))
+            {
+                //Prepare the archive and upload to the cloud
+
+
+                //Remove the session archive in the memory
+                if (sessionArchives.ContainsKey(sessionId))
+                {
+
+                }
+            }
+        }
+
         public POIInteractiveSessionArchive joinInteractiveSession(string userId, string sessionId)
         {
             //add the current user into the session table
@@ -358,17 +429,20 @@ namespace POIProxy.Handlers
 
         public void endInteractiveSession(string sessionId)
         {
-            //Turn the session to closed status
-            updateSessionStatus(sessionId, "closed");
+            //Check if the archive needs to be processed
+            checkAndProcessArchiveDuringSessionEnd(sessionId);
 
-            //Prepare the archive and upload to the cloud
+            //Turn the session to waiting status for user rating
+            updateSessionStatusWithEnding(sessionId);
+        }
 
+        public void rateInteractiveSession(string sessionId, int rating)
+        {
+            //Check if the archive needs to be processed
+            checkAndProcessArchiveDuringSessionEnd(sessionId);
 
-            //Remove the session archive in the memory
-            if (sessionArchives.ContainsKey(sessionId))
-            {
-                
-            }
+            //Turn the session to closed status and update the rating
+            updateSessionStatusWithRating(sessionId, rating);
         }
 
         

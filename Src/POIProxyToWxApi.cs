@@ -34,6 +34,17 @@ namespace POIProxy
             }
         }
 
+        public static void interactiveSessionEnded(string userId, string sessionId)
+        {
+            NameValueCollection values = new NameValueCollection();
+            values["userId"] = userId;
+            values["sessionId"] = sessionId;
+
+            values["reqType"] = "interactiveSessionEnded";
+
+            sendReq(values);
+        }
+
         public static void interactiveSessionJoined(string userId, string sessionId)
         {
             NameValueCollection values = new NameValueCollection();

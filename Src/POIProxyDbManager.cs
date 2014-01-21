@@ -13,7 +13,7 @@ namespace POIProxy
 {
     public class POIProxyDbManager
     {
-        private MySqlConnection connection;
+        private string connectionString;
         private string server;
         private string database;
         private string uid;
@@ -47,20 +47,10 @@ namespace POIProxy
             database = "poi";
             uid = "root";
             password = "";
-            string connectionString;
+
             connectionString = "SERVER=" + server + ";" + "DATABASE=" +
             database + ";" + "UID=" + uid + ";" + "PASSWORD=" + password + ";";
-
-            connection = new MySqlConnection(connectionString);
-
-            try
-            {
-                connection.Open();
-            }
-            catch
-            {
-                POIGlobalVar.POIDebugLog("Something happened!");
-            }
+            
         }
 
         public void testDbFunction(string sql)
@@ -113,10 +103,16 @@ namespace POIProxy
 
             try
             {
+                //Create a connection and open it
+                MySqlConnection connection = new MySqlConnection(connectionString);
+                connection.Open();
+
                 MySqlCommand cmd = new MySqlCommand(sql, connection);
                 rowId = Convert.ToString(cmd.ExecuteScalar());
 
                 //POIGlobalVar.POIDebugLog(rowId);
+
+                connection.Close();
             }
             catch(Exception e)
             {
@@ -132,8 +128,14 @@ namespace POIProxy
 
             try
             {
+                //Create a connection and open it
+                MySqlConnection connection = new MySqlConnection(connectionString);
+                connection.Open();
+
                 MySqlCommand cmd = new MySqlCommand(sql, connection);
                 cmd.ExecuteNonQuery();
+
+                connection.Close();
             }
             catch(Exception e)
             {
@@ -148,8 +150,14 @@ namespace POIProxy
 
             try
             {
+                //Create a connection and open it
+                MySqlConnection connection = new MySqlConnection(connectionString);
+                connection.Open();
+
                 MySqlCommand cmd = new MySqlCommand(sql, connection);
                 cmd.ExecuteNonQuery();
+
+                connection.Close();
             }
             catch(Exception e)
             {
@@ -166,8 +174,14 @@ namespace POIProxy
 
             try
             {
+                //Create a connection and open it
+                MySqlConnection connection = new MySqlConnection(connectionString);
+                connection.Open();
+
                 MySqlDataAdapter da = new MySqlDataAdapter(sql, connection);
                 da.Fill(ds);
+
+                connection.Close();
             }
             catch(Exception e)
             {

@@ -241,7 +241,7 @@ namespace POIProxy
 
         public void joinInteractiveSession(string sessionId)
         {
-            if (interMsgHandler.checkSessionOpen(sessionId))
+            if (true || interMsgHandler.checkSessionOpen(sessionId))
             {
                 //Add the current connection into the session
                 POIInteractiveSessionArchive archive = 
@@ -266,9 +266,33 @@ namespace POIProxy
 
         public void endInteractiveSession(string sessionId)
         {
-            
+            //Update the database
+            interMsgHandler.endInteractiveSession(sessionId);
+
+            //Send notification to all clients in the session
+            Clients.Group("session_" + sessionId, Context.ConnectionId)
+                .interactiveSessionEnded(sessionId);
+
+            //Notify the weixin server about the ending operation
+            POIProxyToWxApi.interactiveSessionEnded(Clients.Caller.userId, sessionId);
         }
-        
+
+        //Function called by the tutor to confirm the rating is received
+        public void leaveInteractiveSession(string sessionId)
+        {
+            //Deregister connection id from the session group
+            Groups.Remove(Context.ConnectionId, "session_" + sessionId);
+        }
+
+        public void rateAndEndInteractiveSession(string sessionId, int rating)
+        {
+            //Update the database
+            interMsgHandler.rateInteractiveSession(sessionId, rating);
+
+            //Send notification to all clients in the session
+            Clients.Group("session_" + sessionId, Context.ConnectionId)
+                .interactiveSessionRatedAndEnded(sessionId, rating);
+        }
 
         #region Handle connection status change
         //When the client is joining the system for the first time

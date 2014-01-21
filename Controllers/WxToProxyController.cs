@@ -80,6 +80,16 @@ namespace POIProxy.Controllers
                     interMsgHandler.initSessionArchive(userId, sessionId);
                     break;
 
+                case "ratingReceived":
+                    //Update the database
+                    int rating = Convert.ToInt32(msgInfo["rating"]);
+                    interMsgHandler.rateInteractiveSession(sessionId, rating);
+
+                    //Send notification to all clients in the session
+                    hubContext.Clients.Group("session_" + sessionId)
+                        .interactiveSessionRatedAndEnded(sessionId, rating);
+                    break;
+
                 case "sessionJoined":
                     //Do not handle the session join event for now
                     break;
