@@ -67,6 +67,30 @@ namespace POIProxy
 
             EventList.Add(poiEvent);
         }
+
+        private void archiveSessionEvent(string userId, string type)
+        {
+            POIInteractiveEvent poiEvent = new POIInteractiveEvent
+            {
+                EventType = type,
+                MediaId = "",
+                UserId = userId,
+                TimeStamp = POITimestamp.ConvertToUnixTimestamp(DateTime.Now),
+                Message = ""
+            };
+
+            EventList.Add(poiEvent);
+        }
+
+        public void archiveSessionCreatedEvent(string userId)
+        {
+            archiveSessionEvent(userId, "session_created");
+        }
+
+        public void archiveSessionJoinedEvent(string userId)
+        {
+            archiveSessionEvent(userId, "session_joined");
+        }
     }
 
     public class POIInteractiveEvent

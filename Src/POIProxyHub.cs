@@ -294,6 +294,17 @@ namespace POIProxy
                 .interactiveSessionRatedAndEnded(sessionId, rating);
         }
 
+        //Event index is the last event that the client has received
+        public void syncClientMessageWithSession(string sessionId, int eventIndex)
+        {
+            //Send the client the missed event
+            Clients.Caller.interactiveSessionSynced
+            (
+                sessionId,
+                interMsgHandler.getMissedEventsInSession(sessionId, eventIndex)
+            );
+        }
+
         #region Handle connection status change
         //When the client is joining the system for the first time
         public override System.Threading.Tasks.Task OnConnected()
@@ -390,6 +401,9 @@ namespace POIProxy
         {
             //Handling user reconnecting
             POIGlobalVar.POIDebugLog("Client reconnected");
+
+            //Notify the client about the reconnection, the client handles the session syncing
+            Clients.Caller.clientReconnected();
 
             return base.OnReconnected();
         }

@@ -390,7 +390,10 @@ namespace POIProxy.Handlers
             //Create session archive and add the currrent user to the user list
             POIInteractiveSessionArchive archive = new POIInteractiveSessionArchive(sessionId);
             sessionArchives[sessionId.ToString()] = archive;
+            
+            //Add user to the list and archive the session_created event
             archive.addUserToUserList(userId);
+            archive.archiveSessionCreatedEvent(userId);
         }
 
         public void checkAndProcessArchiveDuringSessionEnd(string sessionId)
@@ -419,7 +422,11 @@ namespace POIProxy.Handlers
 
             if (sessionArchives.ContainsKey(sessionId))
             {
-                return sessionArchives[sessionId];
+                //Archive the session join event
+                var session = sessionArchives[sessionId];
+                session.archiveSessionJoinedEvent(userId);
+
+                return session;
             }
             else
             {
@@ -493,6 +500,27 @@ namespace POIProxy.Handlers
             else
             {
                 POIGlobalVar.POIDebugLog("No archive related to session id " + sessionId);
+            }
+        }
+
+        public List<POIInteractiveEvent> getMissedEventsInSession(string sessionId, int eventIndex)
+        {
+            if (sessionArchives.ContainsKey(sessionId))
+            {
+                var missedEvents = new List<POIInteractiveEvent>();
+                var eventList = sessionArchives[sessionId].EventList;
+                
+                for (int i = eventIndex + 1; i < eventList.Count; i++)
+                {
+                    missedEvents.Add(eventList[i]);
+                }
+
+                return missedEvents;
+            }
+            else
+            {
+                POIGlobalVar.POIDebugLog("No archive related to session id " + sessionId);
+                return null;
             }
         }
 
