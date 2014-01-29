@@ -235,7 +235,7 @@ namespace POIProxy.Handlers
 
         #endregion
 
-        public List<string> getUsersInSession(string sessionId)
+        public List<string> getUsersInSession(string sessionId, string excludedUser = "")
         {
             Dictionary<string, object> conditions = new Dictionary<string, object>();
             conditions["type"] = "session";
@@ -243,13 +243,18 @@ namespace POIProxy.Handlers
             conditions["user_right"] = 4;
 
             List<string> cols = new List<string>();
-            cols.Add("id");
+            cols.Add("user_id");
 
             DataTable result = dbManager.selectFromTable("user_right", cols, conditions);
             List<string> userList = new List<string>();
             foreach (DataRow row in result.Rows)
             {
-                userList.Add(row["id"] as string);
+                userList.Add(row["user_id"] as string);
+            }
+
+            if (excludedUser != "")
+            {
+                userList.Remove(excludedUser);
             }
 
             return userList;
@@ -524,11 +529,5 @@ namespace POIProxy.Handlers
             }
         }
 
-
-        //For communicating with the push notifier
-        public void issuePushNotification(string userId, string sessionId)
-        {
-
-        }
     }
 }

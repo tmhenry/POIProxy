@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>poiComClient</title>
+    
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7/jquery.js"></script> 
+    <script src="http://192.168.0.150/Scripts/jquery.signalR-1.1.1.min.js"></script>
+    <script src="http://192.168.0.150/signalr/hubs"></script>
+    
+    <script>
+        // wait for the DOM to be loaded 
+        $(document).ready(function () {
+            $.connection.hub.url = "http://192.168.0.150/signalr/";
+            $.connection.hub.qs = {
+                'userid': "huan",
+                'service': "interactive",
+                'sessions' : "dummy",
+                "isReconnect" : 0
+            };
+
+            //poiChatMsgSender.debugLog("Doc started");            
+            poiProxy = $.connection.poiProxy;
+
+            //bind client protocols
+            //poiChatMsgSender.debugLog("Doc 1");
+            //poiProxy.client.logMessage = addTextToMessageView;
+            
+            //poiChatMsgSender.debugLog("Doc 2");            
+            poiProxy.client.interactiveSessionCreated = interactiveSessionCreated;
+            
+            //poiChatMsgSender.debugLog("Doc 3");
+            poiProxy.client.interactiveSessionJoined = interactiveSessionJoined;
+            
+            //poiChatMsgSender.debugLog("Doc 4");
+            poiProxy.client.interactiveSessionJoinFailed = interactiveSessionJoinFailed;
+            
+            //poiChatMsgSender.debugLog("Doc 5");
+            poiProxy.client.interactiveSessionNewUserJoined = interactiveSessionNewUserJoined;
+
+            //poiChatMsgSender.debugLog("Doc 6");
+            poiProxy.client.textMsgReceived = textMsgReceived;
+            
+            //poiChatMsgSender.debugLog("Doc 7");
+            poiProxy.client.imageMsgReceived = imageMsgReceived;
+            
+            //poiChatMsgSender.debugLog("Doc 8");
+            poiProxy.client.voiceMsgReceived = voiceMsgReceived;
+            
+            //poiChatMsgSender.debugLog("Doc 9");
+            poiProxy.client.illustrationMsgReceived = illustrationMsgReceived;
+
+            
+            //To do
+            poiProxy.client.interactiveSessionEnded = interactiveSessionEnded;
+            
+            poiProxy.client.interactiveSessionRatedAndEnded = interactiveSessionRatedAndEnded;            
+
+            poiProxy.client.clientReconnected = clientReconnected;
+            
+            poiProxy.client.interactiveSessionSynced = interactiveSessionSynced;
+            //---------------------------
+            
+            $.connection.hub.reconnected(function(){
+                clientReconnected();
+            });
+
+            $.connection.hub.disconnected(function(){
+                clientDisconnected();
+            });
+            
+            $.connection.hub.start().done(function () {
+                poiChatMsgSender.debugLog("hub started");
+                poiChatMsgSender.connectionEstablished();
+            });
+        });
+
+        //Set user id for the underlying communication
+        function setUserId(userId)
+        {
+            poiProxy.state.userId = userId;
+        }
+
+        //Connection state change callbacks
+        function clientReconnected()
+        {        
+        	poiChatMsgSender.debugLog("reconnected");
+        	poiChatMsgReceiver.clientReconnected();
+        }
+        
+        //Message received functions, to be called by the proxy server
+        function textMsgReceived(senderId, sessionId, message)
+        {            
+        	poiChatMsgReceiver.receiveTextMsg(senderId, sessionId, message);
+        }
+
+        function imageMsgReceived(senderId, sessionId, mediaId)
+        {
+            poiChatMsgReceiver.receiveImageMsg(senderId, sessionId, mediaId);
+        }
+
+        function voiceMsgReceived(senderId, sessionId, mediaId)
+        {
+            poiChatMsgReceiver.receiveAudioMsg(senderId, sessionId, mediaId);
+        }
+
+        function illustrationMsgReceived(senderId, sessionId, mediaId)
+        {
+            poiChatMsgReceiver.receivePresMsg(senderId, sessionId, mediaId);
+        }
+
+        //Session created and joined functions, to be called by the proxy server
+        function interactiveSessionCreated(presId, sessionId)
+        {
+        	poiChatMsgSender.initNewSession(presId, sessionId);
+        }
+
+        function interactiveSessionJoined(sessionId, archive)
+        {
+            var archiveStr = JSON.stringify(archive);
+            poiChatMsgReceiver.sessionJoined(sessionId, archiveStr);
+        }
+
+        function interactiveSessionJoinFailed(sessionId)
+        {
+            //poiChatMsgReceiver.sessionJoined(sessionId, "Hello Steve!");
+        }
+        
+        function interactiveSessionNewUserJoined(userId, sessionId)
+        {
+        	poiChatMsgReceiver.sessionNewUserJoined(userId, sessionId);
+        }
+
+        //Message sending functions, to be called by the user interface
+        function sendTextMsg(sessionId, message)
+        {
+            poiProxy.server.textMsgReceived(sessionId, message);
+        }
+
+        function sendImageMsg(sessionId, mediaId)
+        {
+            poiProxy.server.imageMsgReceived(sessionId, mediaId);
+        }
+
+        function sendVoiceMsg(sessionId, mediaId)
+        {
+            poiProxy.server.voiceMsgReceived(sessionId, mediaId);
+        }
+
+        function sendIllustrationMsg(sessionId, mediaId)
+        {
+            poiProxy.server.illustrationMsgReceived(sessionId, mediaId);
+        }
+
+        //Session create and join functions, to be called by the user interface
+        function createInteractiveSession(mediaId)
+        {
+            poiProxy.server.createInteractiveSession(mediaId);
+        }
+
+        function joinInteractiveSession(sessionId)
+        {
+            poiProxy.server.joinInteractiveSession(sessionId);
+        }
+
+        //Teacher ends session.
+        function interactiveSessionEnded(sessionId)
+        {
+            //Add your code to handle session ended by tutor
+            //addTextToMessageView("Session ended: " + sessionId);
+        }
+
+        //Student ends session.
+        function interactiveSessionRatedAndEnded(sessionId, rating)
+        {
+            //Add your code to handle rating by student
+            //addTextToMessageView("Session rated and ended: " + sessionId + " with rating: " + rating);
+
+            //Leave the session
+            leaveInteractiveSession(sessionId);
+        }
+
+        //Student ends session.
+        //rating: integer
+        function rateAndEndInteractiveSession(sessionId, rating)
+        {
+            poiProxy.server.rateAndEndInteractiveSession(sessionId, rating);
+        }
+
+        //Teacher ends session.
+        function endInteractiveSession(sessionId)
+        {
+        	poiChatMsgSender.debugLog("Session ended.");
+            poiProxy.server.endInteractiveSession(sessionId);
+        }
+
+        function leaveInteractiveSession(sessionId)
+        {
+            poiProxy.server.leaveInteractiveSession(sessionId);
+        }
+        
+        function syncInteractiveSession(sessionId, eventIndex)
+        {
+            poiProxy.server.syncClientMessageWithSession(sessionId, eventIndex);
+        }
+
+        //Session synced callback
+        function interactiveSessionSynced(sessionId, missedEvent)
+        {
+            var missedEventStr = JSON.stringify(missedEvent);
+			poiChatMsgSender.debugLog("Missed event " + missedEventStr);
+			poiChatMsgReceiver.interactiveSessionSynced(sessionId, missedEventStr);
+        }
+        
+        function clientDisconnected()
+        {
+        	poiChatMsgReceiver.clientDisconnected();
+            poiChatMsgSender.debugLog("Client disconnected");
+        }
+
+        //Rebuild signalr connection with session states
+        function rebuildConnection(userId, sessionList)
+        {
+            $.connection.hub.qs = {
+                'userid': userId,
+                'service': "interactive",
+                'sessions' : sessionList,
+                'isReconnect' : 1
+            };
+
+            $.connection.hub.start();
+            poiChatMsgSender.debugLog("Rebuilding connection");
+        }
+
+    </script> 
+</head>
+<body>
+    
+</body>
+</html>

@@ -5,6 +5,7 @@ using System.Linq;
 using System.Web;
 
 using System.Net;
+using System.Threading.Tasks;
 //using System.Net.Http;
 
 using POILibCommunication;
@@ -15,7 +16,7 @@ namespace POIProxy
     {
         private static string baseReqUrl = "http://www.qdaan.com/POIWebService-test/dnsServer/weixinApi.php";
 
-        private async static void sendReq(NameValueCollection postVal)
+        private async static Task sendReq(NameValueCollection postVal)
         {
             postVal["appProxy"] = "Yes";
 
@@ -34,7 +35,7 @@ namespace POIProxy
             }
         }
 
-        public static void interactiveSessionEnded(string userId, string sessionId)
+        public static async Task interactiveSessionEnded(string userId, string sessionId)
         {
             NameValueCollection values = new NameValueCollection();
             values["userId"] = userId;
@@ -42,10 +43,10 @@ namespace POIProxy
 
             values["reqType"] = "interactiveSessionEnded";
 
-            sendReq(values);
+            await sendReq(values);
         }
 
-        public static void interactiveSessionJoined(string userId, string sessionId)
+        public static async Task interactiveSessionJoined(string userId, string sessionId)
         {
             NameValueCollection values = new NameValueCollection();
             values["userId"] = userId;
@@ -53,10 +54,10 @@ namespace POIProxy
 
             values["reqType"] = "interactiveSessionJoined";
 
-            sendReq(values);
+            await sendReq(values);
         }
 
-        private static void msgReceived(string userId, string sessionId, string msgType, string message, string mediaId)
+        private static async Task msgReceived(string userId, string sessionId, string msgType, string message, string mediaId)
         {
             NameValueCollection values = new NameValueCollection();
             values["userId"] = userId;
@@ -67,27 +68,27 @@ namespace POIProxy
 
             values["reqType"] = "msgReceived";
 
-            sendReq(values);
+            await sendReq(values);
         }
 
-        public static void textMsgReceived(string userId, string sessionId, string message)
+        public static async Task textMsgReceived(string userId, string sessionId, string message)
         {
-            msgReceived(userId, sessionId, "text", message, "");
+            await msgReceived(userId, sessionId, "text", message, "");
         }
 
-        public static void voiceMsgReceived(string userId, string sessionId, string mediaId)
+        public static async Task voiceMsgReceived(string userId, string sessionId, string mediaId)
         {
-            msgReceived(userId, sessionId, "voice", "", mediaId);
+            await msgReceived(userId, sessionId, "voice", "", mediaId);
         }
 
-        public static void imageMsgReceived(string userId, string sessionId, string mediaId)
+        public static async Task imageMsgReceived(string userId, string sessionId, string mediaId)
         {
-            msgReceived(userId, sessionId, "image", "", mediaId);
+            await msgReceived(userId, sessionId, "image", "", mediaId);
         }
 
-        public static void illustrationMsgReceived(string userId, string sessionId, string mediaId)
+        public static async Task illustrationMsgReceived(string userId, string sessionId, string mediaId)
         {
-            msgReceived(userId, sessionId, "illustration", "", mediaId);
+            await msgReceived(userId, sessionId, "illustration", "", mediaId);
         }
     }
 }

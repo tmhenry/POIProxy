@@ -22,6 +22,7 @@ namespace POIProxy
     {
         POIProxyWBCtrlHandler webWBHandler = POIProxyGlobalVar.Kernel.myWBCtrlHandler;
         POIProxyInteractiveMsgHandler interMsgHandler = POIProxyGlobalVar.Kernel.myInterMsgHandler;
+        JavaScriptSerializer jsonHandler = new JavaScriptSerializer();
         
         public void Log(string msg)
         {
@@ -185,61 +186,85 @@ namespace POIProxy
         }
 
         //Functions for receiving interactive messages
-        public void textMsgReceived(string sessionId, string message)
+        public async Task textMsgReceived(string sessionId, string message)
         {
             interMsgHandler.textMsgReceived(Clients.Caller.userId, sessionId, message);
 
             //Notify the weixin server
-            POIProxyToWxApi.textMsgReceived(Clients.Caller.userId, sessionId, message);
+            await POIProxyToWxApi.textMsgReceived(Clients.Caller.userId, sessionId, message);
+
+            /*
+            //Send push notification
+            POIProxyPushNotifier.textMsgReceived(
+                interMsgHandler.getUsersInSession(sessionId, Clients.Caller.userId)
+            );*/
 
             Clients.Group("session_" + sessionId, Context.ConnectionId).
                 textMsgReceived(Clients.Caller.userId, sessionId, message);
         }
 
-        public void imageMsgReceived(string sessionId, string mediaId)
+        public async Task imageMsgReceived(string sessionId, string mediaId)
         {
             interMsgHandler.imageMsgReceived(Clients.Caller.userId, sessionId, mediaId);
 
-            POIProxyToWxApi.imageMsgReceived(Clients.Caller.userId, sessionId, mediaId);
+            await POIProxyToWxApi.imageMsgReceived(Clients.Caller.userId, sessionId, mediaId);
+
+            /*
+            //Send push notification
+            POIProxyPushNotifier.imageMsgReceived(
+                interMsgHandler.getUsersInSession(sessionId, Clients.Caller.userId)
+            );*/
 
             Clients.Group("session_" + sessionId, Context.ConnectionId).
                 imageMsgReceived(Clients.Caller.userId, sessionId, mediaId);
         }
 
-        public void voiceMsgReceived(string sessionId, string mediaId)
+        public async Task voiceMsgReceived(string sessionId, string mediaId)
         {
             interMsgHandler.voiceMsgReceived(Clients.Caller.userId, sessionId, mediaId);
 
-            POIProxyToWxApi.voiceMsgReceived(Clients.Caller.userId, sessionId, mediaId);
+            await POIProxyToWxApi.voiceMsgReceived(Clients.Caller.userId, sessionId, mediaId);
+
+            /*
+            //Send push notification
+            POIProxyPushNotifier.voiceMsgReceived(
+                interMsgHandler.getUsersInSession(sessionId, Clients.Caller.userId)
+            );*/
 
             Clients.Group("session_" + sessionId, Context.ConnectionId).
                 voiceMsgReceived(Clients.Caller.userId, sessionId, mediaId);
         }
 
-        public void illustrationMsgReceived(string sessionId, string mediaId)
+        public async Task illustrationMsgReceived(string sessionId, string mediaId)
         {
             interMsgHandler.illustrationMsgReceived(Clients.Caller.userId, sessionId, mediaId);
 
-            POIProxyToWxApi.illustrationMsgReceived(Clients.Caller.userId, sessionId, mediaId);
+            await POIProxyToWxApi.illustrationMsgReceived(Clients.Caller.userId, sessionId, mediaId);
+
+            /*
+            //Send push notification
+            POIProxyPushNotifier.illustrationMsgReceived(
+                interMsgHandler.getUsersInSession(sessionId, Clients.Caller.userId)
+            );*/
 
             Clients.Group("session_" + sessionId, Context.ConnectionId).
                 illustrationMsgReceived(Clients.Caller.userId, sessionId, mediaId);
         }
 
-        public void createInteractiveSession(string mediaId)
+        public async Task createInteractiveSession(string mediaId)
         {
             //Create the session
             Tuple<string,string> result = interMsgHandler.createInteractiveSession(Clients.Caller.userId, mediaId);
             string presId = result.Item1;
             string sessionId = result.Item2;
 
-            Groups.Add(Context.ConnectionId, "session_" + sessionId);
+            await Groups.Add(Context.ConnectionId, "session_" + sessionId);
 
             //Notify the user the connection has been created
             Clients.Caller.interactiveSessionCreated(presId, sessionId);
         }
 
-        public void joinInteractiveSession(string sessionId)
+        public async Task joinInteractiveSession(string sessionId)
         {
             if (true || interMsgHandler.checkSessionOpen(sessionId))
             {
@@ -247,7 +272,7 @@ namespace POIProxy
                 POIInteractiveSessionArchive archive = 
                     interMsgHandler.joinInteractiveSession(Clients.Caller.userId, sessionId);
 
-                Groups.Add(Context.ConnectionId, "session_" + sessionId);
+                await Groups.Add(Context.ConnectionId, "session_" + sessionId);
 
                 //Notify the user the join operation has been completed
                 Clients.Caller.interactiveSessionJoined(sessionId, archive);
@@ -256,7 +281,7 @@ namespace POIProxy
                     interactiveSessionNewUserJoined(Clients.Caller.userId, sessionId);
 
                 //Notify the wexin server about the join operation
-                POIProxyToWxApi.interactiveSessionJoined(Clients.Caller.userId, sessionId);
+                await POIProxyToWxApi.interactiveSessionJoined(Clients.Caller.userId, sessionId);
             }
             else
             {
@@ -264,7 +289,7 @@ namespace POIProxy
             }
         }
 
-        public void endInteractiveSession(string sessionId)
+        public async Task endInteractiveSession(string sessionId)
         {
             //Update the database
             interMsgHandler.endInteractiveSession(sessionId);
@@ -274,7 +299,7 @@ namespace POIProxy
                 .interactiveSessionEnded(sessionId);
 
             //Notify the weixin server about the ending operation
-            POIProxyToWxApi.interactiveSessionEnded(Clients.Caller.userId, sessionId);
+            await POIProxyToWxApi.interactiveSessionEnded(Clients.Caller.userId, sessionId);
         }
 
         //Function called by the tutor to confirm the rating is received
@@ -358,6 +383,23 @@ namespace POIProxy
                 //Add the connection id to the user group
                 Groups.Add(Context.ConnectionId, info["userId"]);
 
+                if (info["isReconnect"] == "1")
+                {
+                    //Let the new connection enter the broadcast group
+                    if (info["sessions"] != "")
+                    {
+                        List<string> sessionList = jsonHandler.Deserialize<List<string>>(info["sessions"]);
+                        foreach (string sessionId in sessionList)
+                        {
+                            Groups.Add(Context.ConnectionId, "session_" + sessionId);
+                        }
+                    }
+
+                    //Call reconnect on the client
+                    Clients.Caller.clientReconnected();
+                }
+                
+                
                 //Add the connection id to the queried groups
                 POIGlobalVar.POIDebugLog(info["sessions"]);
             }
