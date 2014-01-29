@@ -35,25 +35,15 @@
                 window.location.reload(true);
             });*/
 
-            $('form').ajaxForm(function () {
-                poiProxy.server.textMsgReceived('huan', $('#DNSServer').val());
-            });
-
             $.connection.hub.url = "http://@(Model.ProxyServerIP)/signalr/";
             $.connection.hub.qs = {
-                'userid': "huan",
-                'service': "interactive"
+                'service': "log"
             };
 
             poiProxy = $.connection.poiProxy;
             poiProxy.client.logMessage = function (message) {
                 var curLog = $('#ServerLog').val();
                 $('#ServerLog').val(message + "\\\n" + curLog);
-            };
-
-            poiProxy.client.textMsgReceived = function (userId, message) {
-                var curLog = $('#ServerLog').val();
-                $('#ServerLog').val(userId + ": " + message + "\\\n" + curLog);
             };
 
             $.connection.hub.start().done(function () {

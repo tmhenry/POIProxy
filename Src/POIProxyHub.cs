@@ -332,7 +332,7 @@ namespace POIProxy
 
         #region Handle connection status change
         //When the client is joining the system for the first time
-        public override System.Threading.Tasks.Task OnConnected()
+        public override async System.Threading.Tasks.Task OnConnected()
         {
             //Retrieve the user information from the query string
             var info = Context.QueryString;
@@ -376,12 +376,10 @@ namespace POIProxy
             }
             else if (service == "interactive")
             {
-                //For receiving server error log
-                Groups.Add(Context.ConnectionId, "serverLog");
                 POIGlobalVar.POIDebugLog("Interactive service");
 
                 //Add the connection id to the user group
-                Groups.Add(Context.ConnectionId, info["userId"]);
+                await Groups.Add(Context.ConnectionId, info["userId"]);
 
                 if (info["isReconnect"] == "1")
                 {
@@ -391,7 +389,7 @@ namespace POIProxy
                         List<string> sessionList = jsonHandler.Deserialize<List<string>>(info["sessions"]);
                         foreach (string sessionId in sessionList)
                         {
-                            Groups.Add(Context.ConnectionId, "session_" + sessionId);
+                            await Groups.Add(Context.ConnectionId, "session_" + sessionId);
                         }
                     }
 
@@ -403,12 +401,18 @@ namespace POIProxy
                 //Add the connection id to the queried groups
                 POIGlobalVar.POIDebugLog(info["sessions"]);
             }
+            else if(service == "log")
+            {
+                //For receiving server error log
+                await Groups.Add(Context.ConnectionId, "serverLog");
+                POIGlobalVar.POIDebugLog("Server log connected!");
+            }
             else
             {
                 POIGlobalVar.POIDebugLog("Service type not recognized");
             }
 
-            return base.OnConnected();
+            await base.OnConnected();
         }
 
         public override System.Threading.Tasks.Task OnDisconnected()
