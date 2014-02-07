@@ -10,6 +10,7 @@ using System.Data;
 using System.Web.Script.Serialization;
 
 using POILibCommunication;
+using System.Threading.Tasks;
 
 namespace POIProxy.Handlers
 {
@@ -370,6 +371,9 @@ namespace POIProxy.Handlers
             values["course_id"] = -1;
             values["create_at"] = POITimestamp.ConvertToUnixTimestamp(DateTime.Now);
 
+            //Update the media id of the presentation, needs to be changed later
+            values["media_id"] = mediaId;
+
             string presId = dbManager.insertIntoTable("presentation", values);
 
             values.Clear();
@@ -401,18 +405,32 @@ namespace POIProxy.Handlers
             archive.archiveSessionCreatedEvent(userId);
         }
 
-        public void checkAndProcessArchiveDuringSessionEnd(string sessionId)
+        public async Task checkAndProcessArchiveDuringSessionEnd(string sessionId)
         {
             //Check if the session is in the right state (must be in serving state)
             if (checkSessionServing(sessionId))
             {
-                //Prepare the archive and upload to the cloud
+                POIGlobalVar.POIDebugLog("Uploading session archive!");
 
-
-                //Remove the session archive in the memory
                 if (sessionArchives.ContainsKey(sessionId))
                 {
+                    //Remove the session archive in the memory
+                    POIInteractiveSessionArchive archive;
+                    sessionArchives.TryRemove(sessionId, out archive);
 
+                    //Prepare the archive and upload to the cloud
+                    string mediaId = await POIContentServerHelper.uploadJsonStrToQiniuCDN(
+                        jsonHandler.Serialize(archive)
+                    );
+
+                    //Update the database given the media id
+                    Dictionary<string, object> conditions = new Dictionary<string, object>();
+                    conditions["id"] = sessionId;
+
+                    Dictionary<string, object> values = new Dictionary<string, object>();
+                    values["media_id"] = mediaId;
+
+                    dbManager.updateTable("session", values, conditions);
                 }
             }
         }
@@ -439,19 +457,19 @@ namespace POIProxy.Handlers
             }
         }
 
-        public void endInteractiveSession(string sessionId)
+        public async Task endInteractiveSession(string sessionId)
         {
             //Check if the archive needs to be processed
-            checkAndProcessArchiveDuringSessionEnd(sessionId);
+            await checkAndProcessArchiveDuringSessionEnd(sessionId);
 
             //Turn the session to waiting status for user rating
             updateSessionStatusWithEnding(sessionId);
         }
 
-        public void rateInteractiveSession(string sessionId, int rating)
+        public async Task rateInteractiveSession(string sessionId, int rating)
         {
             //Check if the archive needs to be processed
-            checkAndProcessArchiveDuringSessionEnd(sessionId);
+            await checkAndProcessArchiveDuringSessionEnd(sessionId);
 
             //Turn the session to closed status and update the rating
             updateSessionStatusWithRating(sessionId, rating);

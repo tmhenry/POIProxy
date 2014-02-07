@@ -292,7 +292,7 @@ namespace POIProxy
         public async Task endInteractiveSession(string sessionId)
         {
             //Update the database
-            interMsgHandler.endInteractiveSession(sessionId);
+            await interMsgHandler.endInteractiveSession(sessionId);
 
             //Send notification to all clients in the session
             Clients.Group("session_" + sessionId, Context.ConnectionId)
@@ -309,10 +309,10 @@ namespace POIProxy
             Groups.Remove(Context.ConnectionId, "session_" + sessionId);
         }
 
-        public void rateAndEndInteractiveSession(string sessionId, int rating)
+        public async Task rateAndEndInteractiveSession(string sessionId, int rating)
         {
             //Update the database
-            interMsgHandler.rateInteractiveSession(sessionId, rating);
+            await interMsgHandler.rateInteractiveSession(sessionId, rating);
 
             //Send notification to all clients in the session
             Clients.Group("session_" + sessionId, Context.ConnectionId)
@@ -332,7 +332,7 @@ namespace POIProxy
 
         #region Handle connection status change
         //When the client is joining the system for the first time
-        public override async System.Threading.Tasks.Task OnConnected()
+        public override System.Threading.Tasks.Task OnConnected()
         {
             //Retrieve the user information from the query string
             var info = Context.QueryString;
@@ -379,17 +379,29 @@ namespace POIProxy
                 POIGlobalVar.POIDebugLog("Interactive service");
 
                 //Add the connection id to the user group
-                await Groups.Add(Context.ConnectionId, info["userId"]);
+                Groups.Add(Context.ConnectionId, info["userId"]);
 
                 if (info["isReconnect"] == "1")
                 {
+                    POIGlobalVar.POIDebugLog("Reconnecting from onconnected!");
+
                     //Let the new connection enter the broadcast group
                     if (info["sessions"] != "")
                     {
                         List<string> sessionList = jsonHandler.Deserialize<List<string>>(info["sessions"]);
-                        foreach (string sessionId in sessionList)
+                        POIGlobalVar.POIDebugLog(info["sessions"]);
+                        POIGlobalVar.POIDebugLog("Total sessions is :" + sessionList.Count);
+
+                        try
                         {
-                            await Groups.Add(Context.ConnectionId, "session_" + sessionId);
+                            foreach (string sessionId in sessionList)
+                            {
+                                Groups.Add(Context.ConnectionId, "session_" + sessionId);
+                            }
+                        }
+                        catch(Exception e)
+                        {
+                            POIGlobalVar.POIDebugLog(e.Message);
                         }
                     }
 
@@ -404,7 +416,7 @@ namespace POIProxy
             else if(service == "log")
             {
                 //For receiving server error log
-                await Groups.Add(Context.ConnectionId, "serverLog");
+                Groups.Add(Context.ConnectionId, "serverLog");
                 POIGlobalVar.POIDebugLog("Server log connected!");
             }
             else
@@ -412,13 +424,28 @@ namespace POIProxy
                 POIGlobalVar.POIDebugLog("Service type not recognized");
             }
 
-            await base.OnConnected();
+            return base.OnConnected();
         }
 
         public override System.Threading.Tasks.Task OnDisconnected()
         {
-            POIGlobalVar.POIDebugLog("Ooops, disconnected!");
+            var info = Context.QueryString;
+            String service = info["service"];
 
+            if (service == "interactive")
+            {
+                try
+                {
+                    //Handling user reconnecting
+                    POIGlobalVar.POIDebugLog("Client " + info["userId"] + " disconnected");
+                }
+                catch (Exception e)
+                {
+                    POIGlobalVar.POIDebugLog(e.Message);
+                }
+
+            }
+            
             //Remove the user from the profile
             POIUser user = null;
             if (POIGlobalVar.WebConUserMap.ContainsKey(Context.ConnectionId))
@@ -445,8 +472,23 @@ namespace POIProxy
 
         public override System.Threading.Tasks.Task OnReconnected()
         {
-            //Handling user reconnecting
-            POIGlobalVar.POIDebugLog("Client reconnected");
+
+            var info = Context.QueryString;
+            String service = info["service"];
+
+            if (service == "interactive")
+            {
+                try
+                {
+                    //Handling user reconnecting
+                    POIGlobalVar.POIDebugLog("Client " + info["userId"] + " reconnected");
+                }
+                catch (Exception e)
+                {
+                    POIGlobalVar.POIDebugLog(e.Message);
+                }
+                
+            }
 
             //Notify the client about the reconnection, the client handles the session syncing
             Clients.Caller.clientReconnected();
