@@ -193,11 +193,11 @@ namespace POIProxy
             //Notify the weixin server
             await POIProxyToWxApi.textMsgReceived(Clients.Caller.userId, sessionId, message);
 
-            /*
+            
             //Send push notification
-            POIProxyPushNotifier.textMsgReceived(
+            await POIProxyPushNotifier.textMsgReceived(
                 interMsgHandler.getUsersInSession(sessionId, Clients.Caller.userId)
-            );*/
+            );
 
             Clients.Group("session_" + sessionId, Context.ConnectionId).
                 textMsgReceived(Clients.Caller.userId, sessionId, message);
@@ -209,11 +209,10 @@ namespace POIProxy
 
             await POIProxyToWxApi.imageMsgReceived(Clients.Caller.userId, sessionId, mediaId);
 
-            /*
             //Send push notification
-            POIProxyPushNotifier.imageMsgReceived(
+            await POIProxyPushNotifier.imageMsgReceived(
                 interMsgHandler.getUsersInSession(sessionId, Clients.Caller.userId)
-            );*/
+            );
 
             Clients.Group("session_" + sessionId, Context.ConnectionId).
                 imageMsgReceived(Clients.Caller.userId, sessionId, mediaId);
@@ -225,11 +224,10 @@ namespace POIProxy
 
             await POIProxyToWxApi.voiceMsgReceived(Clients.Caller.userId, sessionId, mediaId);
 
-            /*
             //Send push notification
-            POIProxyPushNotifier.voiceMsgReceived(
+            await POIProxyPushNotifier.voiceMsgReceived(
                 interMsgHandler.getUsersInSession(sessionId, Clients.Caller.userId)
-            );*/
+            );
 
             Clients.Group("session_" + sessionId, Context.ConnectionId).
                 voiceMsgReceived(Clients.Caller.userId, sessionId, mediaId);
@@ -241,11 +239,10 @@ namespace POIProxy
 
             await POIProxyToWxApi.illustrationMsgReceived(Clients.Caller.userId, sessionId, mediaId);
 
-            /*
             //Send push notification
-            POIProxyPushNotifier.illustrationMsgReceived(
+            await POIProxyPushNotifier.illustrationMsgReceived(
                 interMsgHandler.getUsersInSession(sessionId, Clients.Caller.userId)
-            );*/
+            );
 
             Clients.Group("session_" + sessionId, Context.ConnectionId).
                 illustrationMsgReceived(Clients.Caller.userId, sessionId, mediaId);

@@ -11,6 +11,8 @@ using Microsoft.AspNet.SignalR;
 using POILibCommunication;
 using System.Web.Script.Serialization;
 
+using System.Threading.Tasks;
+
 namespace POIProxy.Controllers
 {
 
@@ -21,7 +23,7 @@ namespace POIProxy.Controllers
         JavaScriptSerializer jsonHandler = new JavaScriptSerializer();
 
         [HttpPost]
-        public string Message(HttpRequestMessage request)
+        public async Task<string> Message(HttpRequestMessage request)
         {
             //Check if post is coming from the allowed IP address
             string content = request.Content.ReadAsStringAsync().Result;
@@ -37,24 +39,44 @@ namespace POIProxy.Controllers
             {
                 case "text":
                     interMsgHandler.textMsgReceived(userId, sessionId, message);
+
+                    await POIProxyPushNotifier.textMsgReceived(
+                        interMsgHandler.getUsersInSession(sessionId, userId)
+                    );
+
                     hubContext.Clients.Group("session_" + sessionId).
                         textMsgReceived(userId, sessionId, message);
                     break;
 
                 case "image":
                     interMsgHandler.imageMsgReceived(userId, sessionId, mediaId);
+
+                    await POIProxyPushNotifier.imageMsgReceived(
+                        interMsgHandler.getUsersInSession(sessionId, userId)
+                    );
+
                     hubContext.Clients.Group("session_" + sessionId).
                         imageMsgReceived(userId, sessionId, mediaId);
                     break;
 
                 case "voice":
                     interMsgHandler.voiceMsgReceived(userId, sessionId, mediaId);
+
+                    await POIProxyPushNotifier.voiceMsgReceived(
+                        interMsgHandler.getUsersInSession(sessionId, userId)
+                    );
+
                     hubContext.Clients.Group("session_" + sessionId).
                         voiceMsgReceived(userId, sessionId, mediaId);
                     break;
 
                 case "illustration":
                     interMsgHandler.illustrationMsgReceived(userId, sessionId, mediaId);
+
+                    await POIProxyPushNotifier.illustrationMsgReceived(
+                        interMsgHandler.getUsersInSession(sessionId, userId)
+                    );
+
                     hubContext.Clients.Group("session_" + sessionId).
                         illustrationMsgReceived(userId, sessionId, mediaId);
                     break;
@@ -64,7 +86,7 @@ namespace POIProxy.Controllers
         }
 
         [HttpPost]
-        public void Session(HttpRequestMessage request)
+        public async Task Session(HttpRequestMessage request)
         {
             string content = request.Content.ReadAsStringAsync().Result;
             Dictionary<string, string> msgInfo = jsonHandler.Deserialize<Dictionary<string, string>>(content);
@@ -83,7 +105,7 @@ namespace POIProxy.Controllers
                 case "ratingReceived":
                     //Update the database
                     int rating = Convert.ToInt32(msgInfo["rating"]);
-                    interMsgHandler.rateInteractiveSession(sessionId, rating);
+                    await interMsgHandler.rateInteractiveSession(sessionId, rating);
 
                     //Send notification to all clients in the session
                     hubContext.Clients.Group("session_" + sessionId)

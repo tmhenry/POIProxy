@@ -8,6 +8,8 @@ using System.Net;
 using POILibCommunication;
 using System.Web.Script.Serialization;
 
+using System.Threading.Tasks;
+
 namespace POIProxy
 {
     public class POIProxyPushNotifier
@@ -16,11 +18,15 @@ namespace POIProxy
         private static JavaScriptSerializer jsonHandler = new JavaScriptSerializer();
 
         //Note: user list needs to be json encoded list of user ids
-        public async static void sendPushNotification(List<string> userList, string message)
+        public async static Task sendPushNotification(List<string> userList, string message)
         {
             NameValueCollection postVal = new NameValueCollection();
             postVal["userList"] = jsonHandler.Serialize(userList);
             postVal["message"] = message;
+
+            POIGlobalVar.POIDebugLog(postVal["userList"]);
+            POIGlobalVar.POIDebugLog(postVal["message"]);
+
 
             using (WebClient client = new WebClient())
             {
@@ -37,24 +43,24 @@ namespace POIProxy
             }
         }
 
-        public static void textMsgReceived(List<string> userList)
+        public static async Task textMsgReceived(List<string> userList)
         {
-            sendPushNotification(userList, "收到文字消息");
+            await sendPushNotification(userList, "收到文字消息");
         }
 
-        public static void imageMsgReceived(List<string> userList)
+        public static async Task imageMsgReceived(List<string> userList)
         {
-            sendPushNotification(userList, "收到图片消息");
+            await sendPushNotification(userList, "收到图片消息");
         }
 
-        public static void voiceMsgReceived(List<string> userList)
+        public static async Task voiceMsgReceived(List<string> userList)
         {
-            sendPushNotification(userList, "收到语音消息");
+            await sendPushNotification(userList, "收到语音消息");
         }
 
-        public static void illustrationMsgReceived(List<string> userList)
+        public static async Task illustrationMsgReceived(List<string> userList)
         {
-            sendPushNotification(userList, "收到白板演算消息");
+            await sendPushNotification(userList, "收到白板演算消息");
         }
     }
 }
