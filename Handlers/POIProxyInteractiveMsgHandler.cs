@@ -295,6 +295,27 @@ namespace POIProxy.Handlers
             dbManager.insertIntoTable("user_right", values);
         }
 
+        public void addQuestionActivity(string userId, string sessionId)
+        {
+            Dictionary<string, object> values = new Dictionary<string, object>();
+            values["user_id"] = userId;
+            values["type"] = "int_session_question";
+            values["content_id"] = sessionId;
+
+            dbManager.insertIntoTable("activity", values);
+        }
+
+        public void addAnswerActivity(string userId, string sessionId, int rating)
+        {
+            Dictionary<string, object> values = new Dictionary<string, object>();
+            values["user_id"] = userId;
+            values["type"] = "int_session_answer";
+            values["content_id"] = sessionId;
+            values["data"] = rating;
+
+            dbManager.insertIntoTable("activity", values);
+        }
+
         public void updateSessionStatus(string sessionId, string status)
         {
             Dictionary<string, object> values = new Dictionary<string, object>();
@@ -361,7 +382,7 @@ namespace POIProxy.Handlers
             return isInState;
         }
 
-        public Tuple<string,string> createInteractiveSession(string userId, string mediaId)
+        public Tuple<string,string> createInteractiveSession(string userId, string mediaId, string desc)
         {
             //Create interactive presentation
             Dictionary<string, object> values = new Dictionary<string, object>();
@@ -369,6 +390,7 @@ namespace POIProxy.Handlers
             values["cover"] = mediaId;
             values["type"] = "interactive";
             values["course_id"] = -1;
+            values["description"] = desc;
             values["create_at"] = POITimestamp.ConvertToUnixTimestamp(DateTime.Now);
 
             //Update the media id of the presentation, needs to be changed later
@@ -387,6 +409,9 @@ namespace POIProxy.Handlers
 
             //Insert record into the database for the user to session relationship
             addUserToSessionRecord(userId, sessionId);
+
+            //Insert the question activity into the activity table
+            addQuestionActivity(userId, sessionId);
 
             //Create session archive and add the currrent user to the user list
             initSessionArchive(userId, sessionId);

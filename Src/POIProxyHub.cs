@@ -248,10 +248,11 @@ namespace POIProxy
                 illustrationMsgReceived(Clients.Caller.userId, sessionId, mediaId);
         }
 
-        public async Task createInteractiveSession(string mediaId)
+        public async Task createInteractiveSession(string mediaId, string description)
         {
             //Create the session
-            Tuple<string,string> result = interMsgHandler.createInteractiveSession(Clients.Caller.userId, mediaId);
+            Tuple<string,string> result = interMsgHandler.
+                createInteractiveSession(Clients.Caller.userId, mediaId, description);
             string presId = result.Item1;
             string sessionId = result.Item2;
 

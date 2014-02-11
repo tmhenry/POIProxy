@@ -71,7 +71,7 @@
             });
 
             $('#createSessionButton').click(function(){
-                createInteractiveSession("dummy");
+                createInteractiveSession("dummy", "dummy");
             });
 
 
@@ -164,9 +164,9 @@
         }
 
         //Session create and join functions, to be called by the user interface
-        function createInteractiveSession(mediaId)
+        function createInteractiveSession(mediaId, desc)
         {
-            poiProxy.server.createInteractiveSession(mediaId);
+            poiProxy.server.createInteractiveSession(mediaId, desc);
         }
 
         function joinInteractiveSession(sessionId)
