@@ -49,7 +49,7 @@ namespace POIProxy
             password = "";
 
             connectionString = "SERVER=" + server + ";" + "DATABASE=" +
-            database + ";" + "UID=" + uid + ";" + "PASSWORD=" + password + ";";
+            database + ";" + "UID=" + uid + ";" + "PASSWORD=" + password + ";charset=utf8;";
             
         }
 

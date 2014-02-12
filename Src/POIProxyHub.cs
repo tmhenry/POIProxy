@@ -256,6 +256,10 @@ namespace POIProxy
             string presId = result.Item1;
             string sessionId = result.Item2;
 
+            POIGlobalVar.POIDebugLog("Description is " + description);
+
+            POIGlobalVar.POIDebugLog("Session created!: " + sessionId);
+
             await Groups.Add(Context.ConnectionId, "session_" + sessionId);
 
             //Notify the user the connection has been created
