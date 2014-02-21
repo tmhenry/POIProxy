@@ -327,12 +327,28 @@ namespace POIProxy.Handlers
             dbManager.updateTable("session", values, conditions);
         }
 
-        public void updateSessionStatusWithRating(string sessionId, int rating)
+        public void updateSessionStatusWithTutorJoin(string userId, string sessionId)
+        {
+            Dictionary<string, object> values = new Dictionary<string, object>();
+            values["status"] = "serving";
+            values["start_at"] = POITimestamp.ConvertToUnixTimestamp(DateTime.Now);
+            values["tutor"] = userId;
+
+            Dictionary<string, object> conditions = new Dictionary<string, object>();
+            conditions["id"] = sessionId;
+
+            dbManager.updateTable("session", values, conditions);
+        }
+
+        public void updateSessionStatusWithRating(string sessionId, int rating, bool updateEndTime)
         {
             Dictionary<string, object> values = new Dictionary<string, object>();
             values["status"] = "closed";
             values["rating"] = rating;
-            values["end_at"] = POITimestamp.ConvertToUnixTimestamp(DateTime.Now);
+            values["rate_at"] = POITimestamp.ConvertToUnixTimestamp(DateTime.Now);
+
+            //Check if end_at attribute needs to be ended
+            if(updateEndTime) values["end_at"] = values["rate_at"];
 
             Dictionary<string, object> conditions = new Dictionary<string, object>();
             conditions["id"] = sessionId;
@@ -430,7 +446,7 @@ namespace POIProxy.Handlers
             archive.archiveSessionCreatedEvent(userId);
         }
 
-        public async Task checkAndProcessArchiveDuringSessionEnd(string sessionId)
+        public async Task<bool> checkAndProcessArchiveDuringSessionEnd(string sessionId)
         {
             //Check if the session is in the right state (must be in serving state)
             if (checkSessionServing(sessionId))
@@ -457,6 +473,12 @@ namespace POIProxy.Handlers
 
                     dbManager.updateTable("session", values, conditions);
                 }
+
+                return true;
+            }
+            else
+            {
+                return false;
             }
         }
 
@@ -466,7 +488,7 @@ namespace POIProxy.Handlers
             addUserToSessionRecord(userId, sessionId);
 
             //Turn the session to serving status
-            updateSessionStatus(sessionId, "serving");
+            updateSessionStatusWithTutorJoin(userId, sessionId);
 
             if (sessionArchives.ContainsKey(sessionId))
             {
@@ -494,10 +516,20 @@ namespace POIProxy.Handlers
         public async Task rateInteractiveSession(string sessionId, int rating)
         {
             //Check if the archive needs to be processed
-            await checkAndProcessArchiveDuringSessionEnd(sessionId);
+            bool archiveProcessed = await checkAndProcessArchiveDuringSessionEnd(sessionId);
 
             //Turn the session to closed status and update the rating
-            updateSessionStatusWithRating(sessionId, rating);
+            //Check if archive is processed by this event (if yes, session end is triggered by rating)
+            if (archiveProcessed)
+            {
+                //Session end initated by rating event
+                updateSessionStatusWithRating(sessionId, rating, true);
+            }
+            else
+            {
+                //Session end initiated by end event
+                updateSessionStatusWithRating(sessionId, rating, false);
+            }
         }
 
         

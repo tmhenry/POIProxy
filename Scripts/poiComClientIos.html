@@ -101,17 +101,18 @@
 
         function interactiveSessionJoined(sessionId,archive)
         {
-            
+	    var archiveStr = JSON.stringify(archive);
+            window.location = "poi:function:interactiveSessionJoined?sessionId="+sessionId+"&archive="+archiveStr;
         }
 
         function interactiveSessionJoinFailed(sessionId)
         {
-            
+            window.location = "poi:function:interactiveSessionJoinFailed?sessionId="+sessionId;
         }
 
         function interactiveSessionNewUserJoined(userId, sessionId)
         {
-
+            window.location = "poi:function:interactiveSessionNewUserJoined?userId="+userId+"&sessionId="+sessionId;
         }
 
         //Message sending functions, to be called by the user interface
