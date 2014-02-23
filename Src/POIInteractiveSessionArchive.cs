@@ -10,12 +10,15 @@ namespace POIProxy
     public class POIInteractiveSessionArchive
     {
         public string SessionId;
+        public string Info;
         public List<string> UserList;
         public List<POIInteractiveEvent> EventList;
 
-        public POIInteractiveSessionArchive(string sessionId)
+        public POIInteractiveSessionArchive(string sessionId, string info)
         {
             SessionId = sessionId;
+            Info = info;
+
             UserList = new List<string>();
             EventList = new List<POIInteractiveEvent>();
         }

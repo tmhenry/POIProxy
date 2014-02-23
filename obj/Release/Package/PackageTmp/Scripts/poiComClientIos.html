@@ -41,9 +41,10 @@
             poiProxy.client.voiceMsgReceived = voiceMsgReceived;
             poiProxy.client.illustrationMsgReceived = illustrationMsgReceived;
 
+            /*
             $.connection.hub.reconnected(function(){
                 clientReconnected();
-            });
+            });*/
           
             $.connection.hub.disconnected(function(){
                 clientDisconnected();

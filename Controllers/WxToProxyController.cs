@@ -99,13 +99,14 @@ namespace POIProxy.Controllers
             {
                 case "sessionCreated":
                     //Initialize the session archive
-                    interMsgHandler.initSessionArchive(userId, sessionId);
+                    string info = msgInfo["info"];
+                    interMsgHandler.initSessionArchive(userId, sessionId, info);
                     break;
 
                 case "ratingReceived":
                     //Update the database
                     int rating = Convert.ToInt32(msgInfo["rating"]);
-                    await interMsgHandler.rateInteractiveSession(sessionId, rating);
+                    await interMsgHandler.rateInteractiveSession(userId, sessionId, rating);
 
                     //Send notification to all clients in the session
                     hubContext.Clients.Group("session_" + sessionId)

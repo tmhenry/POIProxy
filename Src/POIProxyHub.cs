@@ -268,7 +268,7 @@ namespace POIProxy
 
         public async Task joinInteractiveSession(string sessionId)
         {
-            if (true || interMsgHandler.checkSessionOpen(sessionId))
+            if (interMsgHandler.checkSessionOpen(sessionId))
             {
                 //Add the current connection into the session
                 POIInteractiveSessionArchive archive = 
@@ -294,7 +294,7 @@ namespace POIProxy
         public async Task endInteractiveSession(string sessionId)
         {
             //Update the database
-            await interMsgHandler.endInteractiveSession(sessionId);
+            await interMsgHandler.endInteractiveSession(Clients.Caller.userId, sessionId);
 
             //Send notification to all clients in the session
             Clients.Group("session_" + sessionId, Context.ConnectionId)
@@ -314,7 +314,7 @@ namespace POIProxy
         public async Task rateAndEndInteractiveSession(string sessionId, int rating)
         {
             //Update the database
-            await interMsgHandler.rateInteractiveSession(sessionId, rating);
+            await interMsgHandler.rateInteractiveSession(Clients.Caller.userId, sessionId, rating);
 
             //Send notification to all clients in the session
             Clients.Group("session_" + sessionId, Context.ConnectionId)

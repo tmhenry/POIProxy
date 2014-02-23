@@ -295,25 +295,56 @@ namespace POIProxy.Handlers
             dbManager.insertIntoTable("user_right", values);
         }
 
-        public void addQuestionActivity(string userId, string sessionId)
+        public void addQuestionActivity(string userId, string sessionId, string info)
         {
             Dictionary<string, object> values = new Dictionary<string, object>();
             values["user_id"] = userId;
             values["type"] = "int_session_question";
             values["content_id"] = sessionId;
+            values["create_at"] = POITimestamp.ConvertToUnixTimestamp(DateTime.Now);
+            values["data"] = info;
 
             dbManager.insertIntoTable("activity", values);
         }
 
-        public void addAnswerActivity(string userId, string sessionId, int rating)
+        public void addAnswerActivity(string userId, string sessionId, string info)
         {
             Dictionary<string, object> values = new Dictionary<string, object>();
             values["user_id"] = userId;
             values["type"] = "int_session_answer";
             values["content_id"] = sessionId;
-            values["data"] = rating;
+            values["data"] = info;
+            values["create_at"] = POITimestamp.ConvertToUnixTimestamp(DateTime.Now);
 
             dbManager.insertIntoTable("activity", values);
+        }
+
+        public void updateAnswerActivity(string userId, string sessionId, int rating)
+        {
+            Dictionary<string, object> conditions = new Dictionary<string, object>();
+            conditions["content_id"] = sessionId;
+            conditions["type"] = "int_session_answer";
+
+            List<string> cols = new List<string>();
+            cols.Add("data");
+
+            DataTable result = dbManager.selectFromTable("activity", cols, conditions);
+            if (result.Rows.Count >= 1)
+            {
+                string infoStr = result.Rows[0]["data"] as string;
+                Dictionary<string, string> infoDict = jsonHandler.Deserialize<Dictionary<string, string>>(infoStr);
+                infoDict["rating"] = rating.ToString();
+                infoStr = jsonHandler.Serialize(infoDict);
+
+                Dictionary<string, object> values = new Dictionary<string, object>();
+                values["data"] = infoStr;
+
+                dbManager.updateTable("activity", values, conditions);
+            }
+            else
+            {
+                POIGlobalVar.POIDebugLog("Cannot find related answer activity!");
+            }
         }
 
         public void updateSessionStatus(string sessionId, string status)
@@ -355,6 +386,8 @@ namespace POIProxy.Handlers
 
             dbManager.updateTable("session", values, conditions);
         }
+
+        
 
         public void updateSessionStatusWithEnding(string sessionId)
         {
@@ -403,13 +436,10 @@ namespace POIProxy.Handlers
             //Create interactive presentation
             Dictionary<string, object> values = new Dictionary<string, object>();
             values["user_id"] = userId;
-            values["cover"] = mediaId;
             values["type"] = "interactive";
             values["course_id"] = -1;
             values["description"] = desc;
             values["create_at"] = POITimestamp.ConvertToUnixTimestamp(DateTime.Now);
-
-            //Update the media id of the presentation, needs to be changed later
             values["media_id"] = mediaId;
 
             string presId = dbManager.insertIntoTable("presentation", values);
@@ -426,19 +456,39 @@ namespace POIProxy.Handlers
             //Insert record into the database for the user to session relationship
             addUserToSessionRecord(userId, sessionId);
 
+            //Get the information about the activity
+            Dictionary<string, object> infoDict = new Dictionary<string, object>();
+            infoDict["student_id"] = userId;
+            infoDict["description"] = desc;
+            infoDict["cover"] = mediaId;
+
+            //Search for user name of the student
+            Dictionary<string, object> condition = new Dictionary<string, object>();
+            condition["id"] = userId;
+            DataTable result = dbManager.selectFromTable("users", null, condition);
+            if (result.Rows.Count == 1)
+            {
+                DataRow row = result.Rows[0];
+                infoDict["student_avatar"] = row["avatar"];
+                infoDict["student_name"] = row["username"];
+            }
+            
+
+            string info = jsonHandler.Serialize(infoDict);
+
             //Insert the question activity into the activity table
-            addQuestionActivity(userId, sessionId);
+            addQuestionActivity(userId, sessionId, info);
 
             //Create session archive and add the currrent user to the user list
-            initSessionArchive(userId, sessionId);
+            initSessionArchive(userId, sessionId, info);
 
             return new Tuple<string,string>(presId, sessionId);
         }
 
-        public void initSessionArchive(string userId, string sessionId)
+        public void initSessionArchive(string userId, string sessionId, string info)
         {
             //Create session archive and add the currrent user to the user list
-            POIInteractiveSessionArchive archive = new POIInteractiveSessionArchive(sessionId);
+            POIInteractiveSessionArchive archive = new POIInteractiveSessionArchive(sessionId, info);
             sessionArchives[sessionId.ToString()] = archive;
             
             //Add user to the list and archive the session_created event
@@ -490,11 +540,16 @@ namespace POIProxy.Handlers
             //Turn the session to serving status
             updateSessionStatusWithTutorJoin(userId, sessionId);
 
+            
+
             if (sessionArchives.ContainsKey(sessionId))
             {
                 //Archive the session join event
                 var session = sessionArchives[sessionId];
                 session.archiveSessionJoinedEvent(userId);
+
+                //Add the activity record
+                addAnswerActivity(userId, sessionId, session.Info);
 
                 return session;
             }
@@ -504,7 +559,7 @@ namespace POIProxy.Handlers
             }
         }
 
-        public async Task endInteractiveSession(string sessionId)
+        public async Task endInteractiveSession(string userId, string sessionId)
         {
             //Check if the archive needs to be processed
             await checkAndProcessArchiveDuringSessionEnd(sessionId);
@@ -513,7 +568,7 @@ namespace POIProxy.Handlers
             updateSessionStatusWithEnding(sessionId);
         }
 
-        public async Task rateInteractiveSession(string sessionId, int rating)
+        public async Task rateInteractiveSession(string userId, string sessionId, int rating)
         {
             //Check if the archive needs to be processed
             bool archiveProcessed = await checkAndProcessArchiveDuringSessionEnd(sessionId);
@@ -530,6 +585,9 @@ namespace POIProxy.Handlers
                 //Session end initiated by end event
                 updateSessionStatusWithRating(sessionId, rating, false);
             }
+
+            //Update the answer activity
+            updateAnswerActivity(userId, sessionId, rating);
         }
 
         
