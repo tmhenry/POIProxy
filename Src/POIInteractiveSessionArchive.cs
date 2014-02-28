@@ -10,6 +10,9 @@ namespace POIProxy
     public class POIInteractiveSessionArchive
     {
         public string SessionId;
+        public string Description;
+        public string QuestionMediaId;
+
         public string Info;
         public List<string> UserList;
         public List<POIInteractiveEvent> EventList;

@@ -100,10 +100,9 @@
             window.location = "poi:function:sessionCreated?presId="+presId+"&sessionId="+sessionId;
         }
 
-        function interactiveSessionJoined(sessionId,archive)
+        function interactiveSessionJoined(sessionId, archive)
         {
-	    var archiveStr = JSON.stringify(archive);
-            window.location = "poi:function:interactiveSessionJoined?sessionId="+sessionId+"&archive="+archiveStr;
+            window.location = "poi:function:interactiveSessionJoined?sessionId="+sessionId+"&archive="+archive;
         }
 
         function interactiveSessionJoinFailed(sessionId)
@@ -111,9 +110,9 @@
             window.location = "poi:function:interactiveSessionJoinFailed?sessionId="+sessionId;
         }
 
-        function interactiveSessionNewUserJoined(userId, sessionId)
+        function interactiveSessionNewUserJoined(userId, sessionId, userInfo)
         {
-            window.location = "poi:function:interactiveSessionNewUserJoined?userId="+userId+"&sessionId="+sessionId;
+            window.location = "poi:function:interactiveSessionNewUserJoined?userId=" + userId + "&sessionId=" + sessionId + "&userInfo=" + userInfo;
         }
 
         //Message sending functions, to be called by the user interface

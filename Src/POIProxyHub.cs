@@ -274,16 +274,21 @@ namespace POIProxy
                 POIInteractiveSessionArchive archive = 
                     interMsgHandler.joinInteractiveSession(Clients.Caller.userId, sessionId);
 
+                Dictionary<string, object> userInfo = interMsgHandler.getUserInfoById(Clients.Caller.userId);
+
+                string archiveJson = jsonHandler.Serialize(archive);
+                string userInfoJson = jsonHandler.Serialize(userInfo);
+
                 await Groups.Add(Context.ConnectionId, "session_" + sessionId);
 
                 //Notify the user the join operation has been completed
-                Clients.Caller.interactiveSessionJoined(sessionId, archive);
+                Clients.Caller.interactiveSessionJoined(sessionId, archiveJson);
 
                 Clients.Group("session_" + sessionId, Context.ConnectionId).
-                    interactiveSessionNewUserJoined(Clients.Caller.userId, sessionId);
+                    interactiveSessionNewUserJoined(Clients.Caller.userId, sessionId, userInfoJson);
 
                 //Notify the wexin server about the join operation
-                await POIProxyToWxApi.interactiveSessionJoined(Clients.Caller.userId, sessionId);
+                await POIProxyToWxApi.interactiveSessionJoined(Clients.Caller.userId, sessionId, userInfoJson);
             }
             else
             {

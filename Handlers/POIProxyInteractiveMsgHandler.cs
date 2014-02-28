@@ -480,15 +480,17 @@ namespace POIProxy.Handlers
             addQuestionActivity(userId, sessionId, info);
 
             //Create session archive and add the currrent user to the user list
-            initSessionArchive(userId, sessionId, info);
+            initSessionArchive(userId, sessionId, info, desc, mediaId);
 
             return new Tuple<string,string>(presId, sessionId);
         }
 
-        public void initSessionArchive(string userId, string sessionId, string info)
+        public void initSessionArchive(string userId, string sessionId, string info, string description, string mediaId)
         {
             //Create session archive and add the currrent user to the user list
             POIInteractiveSessionArchive archive = new POIInteractiveSessionArchive(sessionId, info);
+            archive.Description = description;
+            archive.QuestionMediaId = mediaId;
             sessionArchives[sessionId.ToString()] = archive;
             
             //Add user to the list and archive the session_created event
@@ -532,6 +534,67 @@ namespace POIProxy.Handlers
             }
         }
 
+        public Dictionary<string, object> getUserInfoById(string userId)
+        {
+            Dictionary<string, object> userInfo = new Dictionary<string, object>();
+
+            Dictionary<string, object> conditions = new Dictionary<string, object>();
+            List<string> cols = new List<string>();
+
+            conditions["id"] = userId;
+            cols.Add("username");
+            cols.Add("avatar");
+
+            DataRow user = dbManager.selectSingleRowFromTable("users", cols, conditions);
+            if(user != null)
+            {
+                userInfo["username"] = user["username"];
+                userInfo["avatar"] = user["avatar"];
+
+                //Find the user profile 
+                conditions.Clear();
+                cols.Clear();
+                conditions["user_id"] = userId;
+                cols.Add("school");
+                cols.Add("department");
+                cols.Add("rating");
+
+                DataRow profile = dbManager.selectSingleRowFromTable("user_profile", cols, conditions);
+                if(profile != null)
+                {
+                    userInfo["rating"] = profile["rating"];
+                    POIGlobalVar.POIDebugLog("School is " + profile["school"]);
+                    POIGlobalVar.POIDebugLog("Dept is " + profile["department"]);
+
+                    conditions.Clear();
+                    cols.Clear();
+
+                    conditions["sid"] = profile["school"];
+                    cols.Add("name");
+                    DataRow school = dbManager.selectSingleRowFromTable("school", cols, conditions);
+
+                    if (school != null)
+                    {
+                        userInfo["school"] = school["name"];
+                    }
+
+                    conditions.Clear();
+                    cols.Clear();
+
+                    conditions["did"] = profile["department"];
+                    cols.Add("name");
+                    DataRow dept = dbManager.selectSingleRowFromTable("department", cols, conditions);
+
+                    if (dept != null)
+                    {
+                        userInfo["department"] = dept["name"];
+                    }
+               }
+            }
+            
+            return userInfo;
+        }
+
         public POIInteractiveSessionArchive joinInteractiveSession(string userId, string sessionId)
         {
             //add the current user into the session table
@@ -539,8 +602,6 @@ namespace POIProxy.Handlers
 
             //Turn the session to serving status
             updateSessionStatusWithTutorJoin(userId, sessionId);
-
-            
 
             if (sessionArchives.ContainsKey(sessionId))
             {

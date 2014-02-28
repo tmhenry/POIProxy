@@ -94,13 +94,15 @@ namespace POIProxy.Controllers
             string type = msgInfo["type"];
             string userId = msgInfo["userId"];
             string sessionId = msgInfo["sessionId"];
+            string desc = msgInfo["description"];
+            string mediaId = msgInfo["mediaId"];
 
             switch (type)
             {
                 case "sessionCreated":
                     //Initialize the session archive
                     string info = msgInfo["info"];
-                    interMsgHandler.initSessionArchive(userId, sessionId, info);
+                    interMsgHandler.initSessionArchive(userId, sessionId, info, desc, mediaId);
                     break;
 
                 case "ratingReceived":

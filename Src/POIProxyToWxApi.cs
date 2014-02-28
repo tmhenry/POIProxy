@@ -46,11 +46,12 @@ namespace POIProxy
             await sendReq(values);
         }
 
-        public static async Task interactiveSessionJoined(string userId, string sessionId)
+        public static async Task interactiveSessionJoined(string userId, string sessionId, string userInfo)
         {
             NameValueCollection values = new NameValueCollection();
             values["userId"] = userId;
             values["sessionId"] = sessionId;
+            values["userInfo"] = userInfo;
 
             values["reqType"] = "interactiveSessionJoined";
 

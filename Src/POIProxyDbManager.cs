@@ -165,6 +165,19 @@ namespace POIProxy
             }
         }
 
+        public DataRow selectSingleRowFromTable(string tableName, List<string> columns, Dictionary<string, object> conditions)
+        {
+            DataTable result = selectFromTable(tableName, columns, conditions);
+            if (result != null && result.Rows.Count > 0)
+            {
+                return result.Rows[0];
+            }
+            else
+            {
+                return null;
+            }
+        }
+
         public DataTable selectFromTable(string tableName, List<string> columns, Dictionary<string, object> conditions)
         {
             string sql = String.Format("select {0} from " + tableName + " {1}",
