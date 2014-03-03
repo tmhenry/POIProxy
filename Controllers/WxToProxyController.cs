@@ -92,28 +92,38 @@ namespace POIProxy.Controllers
             Dictionary<string, string> msgInfo = jsonHandler.Deserialize<Dictionary<string, string>>(content);
 
             string type = msgInfo["type"];
-            string userId = msgInfo["userId"];
             string sessionId = msgInfo["sessionId"];
-            
+            string userId, infoStr, desc, mediaId; 
+            int rating;
 
             switch (type)
             {
                 case "sessionCreated":
                     //Initialize the session archive
-                    string info = msgInfo["info"];
-                    string desc = msgInfo["description"];
-                    string mediaId = msgInfo["mediaId"];
-                    interMsgHandler.initSessionArchive(userId, sessionId, info, desc, mediaId);
+                    userId = msgInfo["userId"];
+                    infoStr = msgInfo["info"];
+                    interMsgHandler.initSessionArchive(userId, sessionId, 
+                        jsonHandler.Deserialize<Dictionary<string,string>>(infoStr));
                     break;
 
                 case "ratingReceived":
                     //Update the database
-                    int rating = Convert.ToInt32(msgInfo["rating"]);
+                    userId = msgInfo["userId"];
+                    rating = Convert.ToInt32(msgInfo["rating"]);
                     await interMsgHandler.rateInteractiveSession(userId, sessionId, rating);
 
                     //Send notification to all clients in the session
                     hubContext.Clients.Group("session_" + sessionId)
                         .interactiveSessionRatedAndEnded(sessionId, rating);
+                    break;
+
+                case "sessionUpdated":
+                    desc = msgInfo["description"];
+                    mediaId = msgInfo["mediaId"];
+
+                    if (desc != "") interMsgHandler.updateQuestionDescription(sessionId, desc);
+                    if (mediaId != "") interMsgHandler.updateQuestionMediaId(sessionId, mediaId);
+
                     break;
 
                 case "sessionJoined":

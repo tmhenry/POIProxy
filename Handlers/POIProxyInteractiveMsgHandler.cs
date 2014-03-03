@@ -457,7 +457,7 @@ namespace POIProxy.Handlers
             addUserToSessionRecord(userId, sessionId);
 
             //Get the information about the activity
-            Dictionary<string, object> infoDict = new Dictionary<string, object>();
+            Dictionary<string, string> infoDict = new Dictionary<string, string>();
             infoDict["student_id"] = userId;
             infoDict["description"] = desc;
             infoDict["cover"] = mediaId;
@@ -469,28 +469,23 @@ namespace POIProxy.Handlers
             if (result.Rows.Count == 1)
             {
                 DataRow row = result.Rows[0];
-                infoDict["student_avatar"] = row["avatar"];
-                infoDict["student_name"] = row["username"];
+                infoDict["student_avatar"] = row["avatar"] as string;
+                infoDict["student_name"] = row["username"] as string;
             }
-            
-
-            string info = jsonHandler.Serialize(infoDict);
 
             //Insert the question activity into the activity table
-            addQuestionActivity(userId, sessionId, info);
+            addQuestionActivity(userId, sessionId, jsonHandler.Serialize(infoDict));
 
             //Create session archive and add the currrent user to the user list
-            initSessionArchive(userId, sessionId, info, desc, mediaId);
+            initSessionArchive(userId, sessionId, infoDict);
 
             return new Tuple<string,string>(presId, sessionId);
         }
 
-        public void initSessionArchive(string userId, string sessionId, string info, string description, string mediaId)
+        public void initSessionArchive(string userId, string sessionId, Dictionary<string,string> info)
         {
             //Create session archive and add the currrent user to the user list
             POIInteractiveSessionArchive archive = new POIInteractiveSessionArchive(sessionId, info);
-            archive.Description = description;
-            archive.QuestionMediaId = mediaId;
             sessionArchives[sessionId.ToString()] = archive;
             
             //Add user to the list and archive the session_created event
@@ -610,13 +605,31 @@ namespace POIProxy.Handlers
                 session.archiveSessionJoinedEvent(userId);
 
                 //Add the activity record
-                addAnswerActivity(userId, sessionId, session.Info);
+                addAnswerActivity(userId, sessionId, jsonHandler.Serialize(session.Info));
 
                 return session;
             }
             else
             {
                 return null;
+            }
+        }
+
+        public void updateQuestionDescription(string sessionId, string description)
+        {
+            if (sessionArchives.ContainsKey(sessionId))
+            {
+                //Archive the session join event
+                sessionArchives[sessionId].Info["description"] = description;
+            }
+        }
+
+        public void updateQuestionMediaId(string sessionId, string mediaId)
+        {
+            if (sessionArchives.ContainsKey(sessionId))
+            {
+                //Archive the session join event
+                sessionArchives[sessionId].Info["cover"] = mediaId;
             }
         }
 

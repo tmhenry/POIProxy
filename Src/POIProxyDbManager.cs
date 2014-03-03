@@ -43,10 +43,14 @@ namespace POIProxy
         //Initialize values
         private void Initialize()
         {
-            server = "127.0.0.1";
-            database = "poi";
-            uid = "root";
-            password = "";
+            //server = "127.0.0.1";
+            //database = "poi";
+            //uid = "root";
+            //password = "";
+            server = "115.29.8.28";
+            database = "uwenda";
+            uid = "poi";
+            password = "public11223";
 
             connectionString = "SERVER=" + server + ";" + "DATABASE=" +
             database + ";" + "UID=" + uid + ";" + "PASSWORD=" + password + ";charset=utf8;";
