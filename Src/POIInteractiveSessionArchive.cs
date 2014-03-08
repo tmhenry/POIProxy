@@ -33,6 +33,7 @@ namespace POIProxy
         {
             POIInteractiveEvent poiEvent = new POIInteractiveEvent
             {
+                EventIndex = EventList.Count,
                 EventType = "text",
                 MediaId = "",
                 UserId = userId,
@@ -62,6 +63,7 @@ namespace POIProxy
         {
             POIInteractiveEvent poiEvent = new POIInteractiveEvent
             {
+                EventIndex = EventList.Count,
                 EventType = type,
                 MediaId = mediaId,
                 UserId = userId,
@@ -76,6 +78,7 @@ namespace POIProxy
         {
             POIInteractiveEvent poiEvent = new POIInteractiveEvent
             {
+                EventIndex = EventList.Count,
                 EventType = type,
                 MediaId = "",
                 UserId = userId,
@@ -99,6 +102,7 @@ namespace POIProxy
 
     public class POIInteractiveEvent
     {
+        public int EventIndex { get; set; }
         public string EventType { get; set; }
         public string MediaId { get; set; }
         public string Message { get; set; }
