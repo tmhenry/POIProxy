@@ -14,6 +14,7 @@ using System.Web.Script.Serialization;
 
 using System.Threading.Tasks;
 using System.IO;
+using System.Data;
 
 namespace POIProxy
 {
@@ -329,12 +330,51 @@ namespace POIProxy
         //Event index is the last event that the client has received
         public void syncClientMessageWithSession(string sessionId, int eventIndex)
         {
-            //Send the client the missed event
-            Clients.Caller.interactiveSessionSynced
-            (
-                sessionId,
-                interMsgHandler.getMissedEventsInSession(sessionId, eventIndex)
-            );
+            DataRow record = interMsgHandler.getSessionState(sessionId);
+            string sessionState = record["status"] as string;
+
+            switch (sessionState)
+            {
+                case "serving":
+                    //Send the client the missed event
+                    Clients.Caller.interactiveSessionSynced
+                    (
+                        sessionId,
+                        interMsgHandler.getMissedEventsInSession(sessionId, eventIndex)
+                    );
+                    break;
+
+                case "session_end_waiting":
+                    Clients.Caller.interactiveSessionEnded(sessionId);
+                    break;
+
+                case "closed":
+                    int rating = (int) record["rating"];
+                    Clients.Caller.interactiveSessionRatedAndEnded(sessionId, rating);
+                    break;
+            }
+        }
+
+        public void rejoinSessionGroups(string sessions)
+        {
+            if (sessions != "")
+            {
+                List<string> sessionList = jsonHandler.Deserialize<List<string>>(sessions);
+
+                POIGlobalVar.POIDebugLog("In rejoin, total sessions is :" + sessionList.Count);
+
+                try
+                {
+                    foreach (string sessionId in sessionList)
+                    {
+                        Groups.Add(Context.ConnectionId, "session_" + sessionId);
+                    }
+                }
+                catch (Exception e)
+                {
+                    POIGlobalVar.POIDebugLog(e.Message);
+                }
+            }
         }
 
         #region Handle connection status change

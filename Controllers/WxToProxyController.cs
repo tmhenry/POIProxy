@@ -126,6 +126,13 @@ namespace POIProxy.Controllers
 
                     break;
 
+                case "sessionCancelled":
+                    POIGlobalVar.POIDebugLog("Here" + " " + sessionId);
+                    //userId = msgInfo["userId"];
+                    interMsgHandler.cancelInteractiveSession("", sessionId);
+
+                    break;
+
                 case "sessionJoined":
                     //Do not handle the session join event for now
                     break;

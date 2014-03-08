@@ -387,8 +387,6 @@ namespace POIProxy.Handlers
             dbManager.updateTable("session", values, conditions);
         }
 
-        
-
         public void updateSessionStatusWithEnding(string sessionId)
         {
             Dictionary<string, object> values = new Dictionary<string, object>();
@@ -429,6 +427,14 @@ namespace POIProxy.Handlers
             }
 
             return isInState;
+        }
+
+        public DataRow getSessionState(string sessionId)
+        {
+            Dictionary<string, object> conditions = new Dictionary<string, object>();
+            conditions["id"] = sessionId;
+
+            return dbManager.selectSingleRowFromTable("session", null, conditions);
         }
 
         public Tuple<string,string> createInteractiveSession(string userId, string mediaId, string desc)
@@ -630,6 +636,19 @@ namespace POIProxy.Handlers
             {
                 //Archive the session join event
                 sessionArchives[sessionId].Info["cover"] = mediaId;
+            }
+        }
+
+        public void cancelInteractiveSession(string userId, string sessionId)
+        {
+            //Set the status to cancelled
+            updateSessionStatus(sessionId, "cancelled");
+
+            //Remove the session archive
+            if (sessionArchives.ContainsKey(sessionId))
+            {
+                POIInteractiveSessionArchive archive;
+                sessionArchives.TryRemove(sessionId, out archive);
             }
         }
 
