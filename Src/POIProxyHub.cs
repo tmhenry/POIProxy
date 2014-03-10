@@ -191,22 +191,24 @@ namespace POIProxy
         {
             interMsgHandler.textMsgReceived(Clients.Caller.userId, sessionId, message);
 
+            Clients.Group("session_" + sessionId, Context.ConnectionId).
+                textMsgReceived(Clients.Caller.userId, sessionId, message);
+
             //Notify the weixin server
             await POIProxyToWxApi.textMsgReceived(Clients.Caller.userId, sessionId, message);
 
-            
             //Send push notification
             await POIProxyPushNotifier.textMsgReceived(
                 interMsgHandler.getUsersInSession(sessionId, Clients.Caller.userId)
             );
-
-            Clients.Group("session_" + sessionId, Context.ConnectionId).
-                textMsgReceived(Clients.Caller.userId, sessionId, message);
         }
 
         public async Task imageMsgReceived(string sessionId, string mediaId)
         {
             interMsgHandler.imageMsgReceived(Clients.Caller.userId, sessionId, mediaId);
+
+            Clients.Group("session_" + sessionId, Context.ConnectionId).
+                imageMsgReceived(Clients.Caller.userId, sessionId, mediaId);
 
             await POIProxyToWxApi.imageMsgReceived(Clients.Caller.userId, sessionId, mediaId);
 
@@ -214,14 +216,14 @@ namespace POIProxy
             await POIProxyPushNotifier.imageMsgReceived(
                 interMsgHandler.getUsersInSession(sessionId, Clients.Caller.userId)
             );
-
-            Clients.Group("session_" + sessionId, Context.ConnectionId).
-                imageMsgReceived(Clients.Caller.userId, sessionId, mediaId);
         }
 
         public async Task voiceMsgReceived(string sessionId, string mediaId)
         {
             interMsgHandler.voiceMsgReceived(Clients.Caller.userId, sessionId, mediaId);
+
+            Clients.Group("session_" + sessionId, Context.ConnectionId).
+                voiceMsgReceived(Clients.Caller.userId, sessionId, mediaId);
 
             await POIProxyToWxApi.voiceMsgReceived(Clients.Caller.userId, sessionId, mediaId);
 
@@ -229,14 +231,14 @@ namespace POIProxy
             await POIProxyPushNotifier.voiceMsgReceived(
                 interMsgHandler.getUsersInSession(sessionId, Clients.Caller.userId)
             );
-
-            Clients.Group("session_" + sessionId, Context.ConnectionId).
-                voiceMsgReceived(Clients.Caller.userId, sessionId, mediaId);
         }
 
         public async Task illustrationMsgReceived(string sessionId, string mediaId)
         {
             interMsgHandler.illustrationMsgReceived(Clients.Caller.userId, sessionId, mediaId);
+
+            Clients.Group("session_" + sessionId, Context.ConnectionId).
+                illustrationMsgReceived(Clients.Caller.userId, sessionId, mediaId);
 
             await POIProxyToWxApi.illustrationMsgReceived(Clients.Caller.userId, sessionId, mediaId);
 
@@ -244,9 +246,6 @@ namespace POIProxy
             await POIProxyPushNotifier.illustrationMsgReceived(
                 interMsgHandler.getUsersInSession(sessionId, Clients.Caller.userId)
             );
-
-            Clients.Group("session_" + sessionId, Context.ConnectionId).
-                illustrationMsgReceived(Clients.Caller.userId, sessionId, mediaId);
         }
 
         public async Task createInteractiveSession(string mediaId, string description)
