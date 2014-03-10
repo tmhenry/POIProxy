@@ -683,14 +683,35 @@ namespace POIProxy.Handlers
             updateAnswerActivity(userId, sessionId, rating);
         }
 
-        
+
+        //Check if the message is duplicated
+        public bool checkSessionMsgDuplicate(string sessionId, double msgTimestamp)
+        {
+            //POIGlobalVar.POIDebugLog("In check msg duplicate, timestamp is:" + msgTimestamp);
+
+            if (sessionArchives.ContainsKey(sessionId))
+            {
+                if (sessionArchives[sessionId].checkEventExists(msgTimestamp))
+                {
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+            else
+            {
+                return true;
+            }
+        }
 
         //Functions for sending messages
-        public void textMsgReceived(string userId, string sessionId, string message)
+        public void textMsgReceived(string userId, string sessionId, string message, double timestamp)
         {
             if (sessionArchives.ContainsKey(sessionId))
             {
-                sessionArchives[sessionId].archiveTextEvent(userId, message);
+                sessionArchives[sessionId].archiveTextEvent(userId, message, timestamp);
             }
             else
             {
@@ -698,11 +719,11 @@ namespace POIProxy.Handlers
             }
         }
 
-        public void imageMsgReceived(string userId, string sessionId, string mediaId)
+        public void imageMsgReceived(string userId, string sessionId, string mediaId, double timestamp)
         {
             if (sessionArchives.ContainsKey(sessionId))
             {
-                sessionArchives[sessionId].archiveImageEvent(userId, mediaId);
+                sessionArchives[sessionId].archiveImageEvent(userId, mediaId, timestamp);
             }
             else
             {
@@ -710,11 +731,11 @@ namespace POIProxy.Handlers
             }
         }
 
-        public void voiceMsgReceived(string userId, string sessionId, string mediaId)
+        public void voiceMsgReceived(string userId, string sessionId, string mediaId, double timestamp)
         {
             if (sessionArchives.ContainsKey(sessionId))
             {
-                sessionArchives[sessionId].archiveVoiceEvent(userId, mediaId);
+                sessionArchives[sessionId].archiveVoiceEvent(userId, mediaId, timestamp);
             }
             else
             {
@@ -722,11 +743,11 @@ namespace POIProxy.Handlers
             }
         }
 
-        public void illustrationMsgReceived(string userId, string sessionId, string mediaId)
+        public void illustrationMsgReceived(string userId, string sessionId, string mediaId, double timestamp)
         {
             if (sessionArchives.ContainsKey(sessionId))
             {
-                sessionArchives[sessionId].archiveIllustrationEvent(userId, mediaId);
+                sessionArchives[sessionId].archiveIllustrationEvent(userId, mediaId, timestamp);
             }
             else
             {
@@ -734,23 +755,31 @@ namespace POIProxy.Handlers
             }
         }
 
-        public List<POIInteractiveEvent> getMissedEventsInSession(string sessionId, int eventIndex)
+        public List<POIInteractiveEvent> getMissedEventsInSession(string sessionId, double timestamp)
         {
             if (sessionArchives.ContainsKey(sessionId))
             {
                 var missedEvents = new List<POIInteractiveEvent>();
                 var eventList = sessionArchives[sessionId].EventList;
                 
-                for (int i = eventIndex + 1; i < eventList.Count; i++)
+                //Get all event with timestamp larger than the given timestamp
+                for (int i = 0; i <eventList.Count; i++)
                 {
-                    missedEvents.Add(eventList[i]);
+                    //POIGlobalVar.POIDebugLog("Event index is " + i + " timestamp is " + eventList[i].TimeStamp);
+
+                    if (eventList[i].TimeStamp > timestamp)
+                    {
+                        missedEvents.Add(eventList[i]);
+                    }
                 }
+
+                //POIGlobalVar.POIDebugLog(jsonHandler.Serialize(missedEvents));
 
                 return missedEvents;
             }
             else
             {
-                POIGlobalVar.POIDebugLog("No archive related to session id " + sessionId);
+                //POIGlobalVar.POIDebugLog("No archive related to session id " + sessionId);
                 return null;
             }
         }

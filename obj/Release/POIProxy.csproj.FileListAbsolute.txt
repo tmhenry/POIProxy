@@ -12,9 +12,6 @@ C:\Users\HenryXia\Desktop\POIProxy\bin\System.Web.WebPages.Deployment.dll
 C:\Users\HenryXia\Desktop\POIProxy\bin\System.Web.WebPages.dll
 C:\Users\HenryXia\Desktop\POIProxy\bin\System.Web.WebPages.Razor.dll
 C:\Users\HenryXia\Desktop\POIProxy\bin\Microsoft.AspNet.SignalR.Core.xml
-C:\Users\HenryXia\Desktop\POIProxy\bin\Microsoft.AspNet.SignalR.Owin.xml
-C:\Users\HenryXia\Desktop\POIProxy\bin\Microsoft.AspNet.SignalR.SystemWeb.xml
-C:\Users\HenryXia\Desktop\POIProxy\bin\Microsoft.Owin.Host.SystemWeb.xml
 C:\Users\HenryXia\Desktop\POIProxy\bin\Newtonsoft.Json.xml
 C:\Users\HenryXia\Desktop\POIProxy\bin\POILibCommunication.pdb
 C:\Users\HenryXia\Desktop\POIProxy\bin\Microsoft.Web.Infrastructure.xml

@@ -14,6 +14,7 @@ namespace POIProxy
         public Dictionary<string,string> Info;
         public List<string> UserList;
         public List<POIInteractiveEvent> EventList;
+        private List<double> EventTimestamps;
 
         public POIInteractiveSessionArchive(string sessionId, Dictionary<string, string> info)
         {
@@ -22,6 +23,7 @@ namespace POIProxy
 
             UserList = new List<string>();
             EventList = new List<POIInteractiveEvent>();
+            EventTimestamps = new List<double>();
         }
 
         public void addUserToUserList(string userId)
@@ -29,7 +31,12 @@ namespace POIProxy
             UserList.Add(userId);
         }
 
-        public void archiveTextEvent(string userId, string message)
+        public bool checkEventExists(double eventTimestamp)
+        {
+            return EventTimestamps.Contains(eventTimestamp);
+        }
+
+        public void archiveTextEvent(string userId, string message, double timestamp)
         {
             POIInteractiveEvent poiEvent = new POIInteractiveEvent
             {
@@ -37,29 +44,32 @@ namespace POIProxy
                 EventType = "text",
                 MediaId = "",
                 UserId = userId,
-                TimeStamp = POITimestamp.ConvertToUnixTimestamp(DateTime.Now),
+                TimeStamp = timestamp,
                 Message = message
             };
 
+            //POIGlobalVar.POIDebugLog("In archive text, event array count is " + EventList.Count);
+
             EventList.Add(poiEvent);
+            EventTimestamps.Add(timestamp);
         }
 
-        public void archiveImageEvent(string userId, string mediaId)
+        public void archiveImageEvent(string userId, string mediaId, double timestamp)
         {
-            archiveMediaEvent(userId, "image", mediaId);
+            archiveMediaEvent(userId, "image", mediaId, timestamp);
         }
 
-        public void archiveVoiceEvent(string userId, string mediaId)
+        public void archiveVoiceEvent(string userId, string mediaId, double timestamp)
         {
-            archiveMediaEvent(userId, "voice", mediaId);
+            archiveMediaEvent(userId, "voice", mediaId, timestamp);
         }
 
-        public void archiveIllustrationEvent(string userId, string mediaId)
+        public void archiveIllustrationEvent(string userId, string mediaId, double timestamp)
         {
-            archiveMediaEvent(userId, "illustration", mediaId);
+            archiveMediaEvent(userId, "illustration", mediaId, timestamp);
         }
 
-        private void archiveMediaEvent(string userId, string type, string mediaId)
+        private void archiveMediaEvent(string userId, string type, string mediaId, double timestamp)
         {
             POIInteractiveEvent poiEvent = new POIInteractiveEvent
             {
@@ -67,14 +77,15 @@ namespace POIProxy
                 EventType = type,
                 MediaId = mediaId,
                 UserId = userId,
-                TimeStamp = POITimestamp.ConvertToUnixTimestamp(DateTime.Now),
+                TimeStamp = timestamp,
                 Message = ""
             };
 
             EventList.Add(poiEvent);
+            EventTimestamps.Add(timestamp);
         }
 
-        private void archiveSessionEvent(string userId, string type)
+        private void archiveSessionEvent(string userId, string type, double timestamp)
         {
             POIInteractiveEvent poiEvent = new POIInteractiveEvent
             {
@@ -82,21 +93,24 @@ namespace POIProxy
                 EventType = type,
                 MediaId = "",
                 UserId = userId,
-                TimeStamp = POITimestamp.ConvertToUnixTimestamp(DateTime.Now),
+                TimeStamp = timestamp,
                 Message = ""
             };
 
             EventList.Add(poiEvent);
+            EventTimestamps.Add(timestamp);
         }
 
         public void archiveSessionCreatedEvent(string userId)
         {
-            archiveSessionEvent(userId, "session_created");
+            double timestamp = POITimestamp.ConvertToUnixTimestamp(DateTime.Now);
+            archiveSessionEvent(userId, "session_created", timestamp);
         }
 
         public void archiveSessionJoinedEvent(string userId)
         {
-            archiveSessionEvent(userId, "session_joined");
+            double timestamp = POITimestamp.ConvertToUnixTimestamp(DateTime.Now);
+            archiveSessionEvent(userId, "session_joined", timestamp);
         }
     }
 

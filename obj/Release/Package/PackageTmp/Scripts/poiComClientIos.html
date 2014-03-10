@@ -74,66 +74,66 @@
         }
 
         //Message received functions, to be called by the proxy server
-        function textMsgReceived(senderId, sessionId, message)
+        function textMsgReceived(senderId, sessionId, message, timestamp)
         {
-            window.location = "poi:function:textMsgReceived?senderId="+senderId+"&sessionId="+sessionId+"&message="+message;
+            window.location = "poi:function:textMsgReceived?senderId=" + senderId + "&sessionId=" + sessionId + "&message=" + message + "&timestamp=" + timestamp;
         }
 
-        function imageMsgReceived(senderId, sessionId, mediaId)
+        function imageMsgReceived(senderId, sessionId, mediaId, timestamp)
         {
-            window.location = "poi:function:imageMsgReceived?senderId="+senderId+"&sessionId="+sessionId+"&mediaId="+mediaId;
+            window.location = "poi:function:imageMsgReceived?senderId=" + senderId + "&sessionId=" + sessionId + "&mediaId=" + mediaId + "&timestamp=" + timestamp;
         }
 
-        function voiceMsgReceived(senderId, sessionId, mediaId)
+        function voiceMsgReceived(senderId, sessionId, mediaId, timestamp)
         {
-            window.location = "poi:function:voiceMsgReceived?senderId="+senderId+"&sessionId="+sessionId+"&mediaId="+mediaId;
+            window.location = "poi:function:voiceMsgReceived?senderId=" + senderId + "&sessionId=" + sessionId + "&mediaId=" + mediaId + "&timestamp=" + timestamp;
         }
 
-        function illustrationMsgReceived(senderId, sessionId, mediaId)
+        function illustrationMsgReceived(senderId, sessionId, mediaId, timestamp)
         {
             
         }
 
         //Session created and joined functions, to be called by the proxy server
-        function interactiveSessionCreated(presId, sessionId)
+        function interactiveSessionCreated(presId, sessionId, timestamp)
         {
-            window.location = "poi:function:sessionCreated?presId="+presId+"&sessionId="+sessionId;
+            window.location = "poi:function:sessionCreated?presId=" + presId + "&sessionId=" + sessionId + "&timestamp=" + timestamp;
         }
 
-        function interactiveSessionJoined(sessionId, archive)
+        function interactiveSessionJoined(sessionId, archive, timestamp)
         {
-            window.location = "poi:function:interactiveSessionJoined?sessionId="+sessionId+"&archive="+archive;
+            window.location = "poi:function:interactiveSessionJoined?sessionId=" + sessionId + "&timestamp=" + timestamp + "&archive=" + archive;
         }
 
         function interactiveSessionJoinFailed(sessionId)
         {
-            window.location = "poi:function:interactiveSessionJoinFailed?sessionId="+sessionId;
+            window.location = "poi:function:interactiveSessionJoinFailed?sessionId=" + sessionId;
         }
 
-        function interactiveSessionNewUserJoined(userId, sessionId, userInfo)
+        function interactiveSessionNewUserJoined(userId, sessionId, userInfo, timestamp)
         {
-            window.location = "poi:function:interactiveSessionNewUserJoined?userId=" + userId + "&sessionId=" + sessionId + "&userInfo=" + userInfo;
+            window.location = "poi:function:interactiveSessionNewUserJoined?userId=" + userId + "&sessionId=" + sessionId + "&timestamp=" + timestamp + "&userInfo=" + userInfo;
         }
 
         //Message sending functions, to be called by the user interface
-        function sendTextMsg(sessionId, message)
+        function sendTextMsg(sessionId, message, timestamp)
         {
-            poiProxy.server.textMsgReceived(sessionId, message);
+            poiProxy.server.textMsgReceived(sessionId, message, timestamp);
         }
 
-        function sendImageMsg(sessionId, mediaId)
+        function sendImageMsg(sessionId, mediaId, timestamp)
         {
-            poiProxy.server.imageMsgReceived(sessionId, mediaId);
+            poiProxy.server.imageMsgReceived(sessionId, mediaId, timestamp);
         }
 
-        function sendVoiceMsg(sessionId, mediaId)
+        function sendVoiceMsg(sessionId, mediaId, timestamp)
         {
-            poiProxy.server.voiceMsgReceived(sessionId, mediaId);
+            poiProxy.server.voiceMsgReceived(sessionId, mediaId, timestamp);
         }
 
-        function sendIllustrationMsg(sessionId, mediaId)
+        function sendIllustrationMsg(sessionId, mediaId, timestamp)
         {
-            poiProxy.server.illustrationMsgReceived(sessionId, mediaId);
+            poiProxy.server.illustrationMsgReceived(sessionId, mediaId, timestamp);
         }
 
         //Session create and join functions, to be called by the user interface
@@ -177,9 +177,9 @@
             poiProxy.server.leaveInteractiveSession(sessionId);
         }
     
-        function syncInteractiveSession(sessionId, eventIndex)
+        function syncInteractiveSession(sessionId, timestamp)
         {
-            poiProxy.server.syncClientMessageWithSession(sessionId, eventIndex);
+            poiProxy.server.syncClientMessageWithSession(sessionId, timestamp);
         }
         
         //Session synced callback
@@ -203,6 +203,11 @@
         function rejoinSessionGroups(sessionList)
         {
             poiProxy.server.rejoinSessionGroups(sessionList);
+        }
+
+        function disconnectFromProxy()
+        {
+            $.connection.hub.stop();
         }
 
     </script>

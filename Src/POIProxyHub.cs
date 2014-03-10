@@ -187,65 +187,78 @@ namespace POIProxy
         }
 
         //Functions for receiving interactive messages
-        public async Task textMsgReceived(string sessionId, string message)
+        public async Task textMsgReceived(string sessionId, string message, double timestamp)
         {
-            interMsgHandler.textMsgReceived(Clients.Caller.userId, sessionId, message);
+            if (!interMsgHandler.checkSessionMsgDuplicate(sessionId, timestamp))
+            {
+                interMsgHandler.textMsgReceived(Clients.Caller.userId, sessionId, message, timestamp);
 
-            Clients.Group("session_" + sessionId, Context.ConnectionId).
-                textMsgReceived(Clients.Caller.userId, sessionId, message);
+                Clients.Group("session_" + sessionId, Context.ConnectionId).
+                    textMsgReceived(Clients.Caller.userId, sessionId, message, timestamp);
 
-            //Notify the weixin server
-            await POIProxyToWxApi.textMsgReceived(Clients.Caller.userId, sessionId, message);
+                //Notify the weixin server
+                await POIProxyToWxApi.textMsgReceived(Clients.Caller.userId, sessionId, message);
 
-            //Send push notification
-            await POIProxyPushNotifier.textMsgReceived(
-                interMsgHandler.getUsersInSession(sessionId, Clients.Caller.userId)
-            );
+                //Send push notification
+                await POIProxyPushNotifier.textMsgReceived(
+                    interMsgHandler.getUsersInSession(sessionId, Clients.Caller.userId)
+                );
+            }
+            
         }
 
-        public async Task imageMsgReceived(string sessionId, string mediaId)
+        public async Task imageMsgReceived(string sessionId, string mediaId, double timestamp)
         {
-            interMsgHandler.imageMsgReceived(Clients.Caller.userId, sessionId, mediaId);
+            if (!interMsgHandler.checkSessionMsgDuplicate(sessionId, timestamp))
+            {
+                interMsgHandler.imageMsgReceived(Clients.Caller.userId, sessionId, mediaId, timestamp);
 
-            Clients.Group("session_" + sessionId, Context.ConnectionId).
-                imageMsgReceived(Clients.Caller.userId, sessionId, mediaId);
+                Clients.Group("session_" + sessionId, Context.ConnectionId).
+                    imageMsgReceived(Clients.Caller.userId, sessionId, mediaId, timestamp);
 
-            await POIProxyToWxApi.imageMsgReceived(Clients.Caller.userId, sessionId, mediaId);
+                await POIProxyToWxApi.imageMsgReceived(Clients.Caller.userId, sessionId, mediaId);
 
-            //Send push notification
-            await POIProxyPushNotifier.imageMsgReceived(
-                interMsgHandler.getUsersInSession(sessionId, Clients.Caller.userId)
-            );
+                //Send push notification
+                await POIProxyPushNotifier.imageMsgReceived(
+                    interMsgHandler.getUsersInSession(sessionId, Clients.Caller.userId)
+                );
+            }
         }
 
-        public async Task voiceMsgReceived(string sessionId, string mediaId)
+        public async Task voiceMsgReceived(string sessionId, string mediaId, double timestamp)
         {
-            interMsgHandler.voiceMsgReceived(Clients.Caller.userId, sessionId, mediaId);
+            if (!interMsgHandler.checkSessionMsgDuplicate(sessionId, timestamp))
+            {
+                interMsgHandler.voiceMsgReceived(Clients.Caller.userId, sessionId, mediaId, timestamp);
 
-            Clients.Group("session_" + sessionId, Context.ConnectionId).
-                voiceMsgReceived(Clients.Caller.userId, sessionId, mediaId);
+                Clients.Group("session_" + sessionId, Context.ConnectionId).
+                    voiceMsgReceived(Clients.Caller.userId, sessionId, mediaId, timestamp);
 
-            await POIProxyToWxApi.voiceMsgReceived(Clients.Caller.userId, sessionId, mediaId);
+                await POIProxyToWxApi.voiceMsgReceived(Clients.Caller.userId, sessionId, mediaId);
 
-            //Send push notification
-            await POIProxyPushNotifier.voiceMsgReceived(
-                interMsgHandler.getUsersInSession(sessionId, Clients.Caller.userId)
-            );
+                //Send push notification
+                await POIProxyPushNotifier.voiceMsgReceived(
+                    interMsgHandler.getUsersInSession(sessionId, Clients.Caller.userId)
+                );
+            }
         }
 
-        public async Task illustrationMsgReceived(string sessionId, string mediaId)
+        public async Task illustrationMsgReceived(string sessionId, string mediaId, double timestamp)
         {
-            interMsgHandler.illustrationMsgReceived(Clients.Caller.userId, sessionId, mediaId);
+            if (!interMsgHandler.checkSessionMsgDuplicate(sessionId, timestamp))
+            {
+                interMsgHandler.illustrationMsgReceived(Clients.Caller.userId, sessionId, mediaId, timestamp);
 
-            Clients.Group("session_" + sessionId, Context.ConnectionId).
-                illustrationMsgReceived(Clients.Caller.userId, sessionId, mediaId);
+                Clients.Group("session_" + sessionId, Context.ConnectionId).
+                    illustrationMsgReceived(Clients.Caller.userId, sessionId, mediaId, timestamp);
 
-            await POIProxyToWxApi.illustrationMsgReceived(Clients.Caller.userId, sessionId, mediaId);
+                await POIProxyToWxApi.illustrationMsgReceived(Clients.Caller.userId, sessionId, mediaId);
 
-            //Send push notification
-            await POIProxyPushNotifier.illustrationMsgReceived(
-                interMsgHandler.getUsersInSession(sessionId, Clients.Caller.userId)
-            );
+                //Send push notification
+                await POIProxyPushNotifier.illustrationMsgReceived(
+                    interMsgHandler.getUsersInSession(sessionId, Clients.Caller.userId)
+                );
+            }
         }
 
         public async Task createInteractiveSession(string mediaId, string description)
@@ -263,7 +276,8 @@ namespace POIProxy
             await Groups.Add(Context.ConnectionId, "session_" + sessionId);
 
             //Notify the user the connection has been created
-            Clients.Caller.interactiveSessionCreated(presId, sessionId);
+            double timestamp = POITimestamp.ConvertToUnixTimestamp(DateTime.Now);
+            Clients.Caller.interactiveSessionCreated(presId, sessionId, timestamp);
         }
 
         public async Task joinInteractiveSession(string sessionId)
@@ -281,11 +295,13 @@ namespace POIProxy
 
                 await Groups.Add(Context.ConnectionId, "session_" + sessionId);
 
+                double timestamp = POITimestamp.ConvertToUnixTimestamp(DateTime.Now);
+
                 //Notify the user the join operation has been completed
-                Clients.Caller.interactiveSessionJoined(sessionId, archiveJson);
+                Clients.Caller.interactiveSessionJoined(sessionId, archiveJson, timestamp);
 
                 Clients.Group("session_" + sessionId, Context.ConnectionId).
-                    interactiveSessionNewUserJoined(Clients.Caller.userId, sessionId, userInfoJson);
+                    interactiveSessionNewUserJoined(Clients.Caller.userId, sessionId, userInfoJson, timestamp);
 
                 //Notify the wexin server about the join operation
                 await POIProxyToWxApi.interactiveSessionJoined(Clients.Caller.userId, sessionId, userInfoJson);
@@ -326,11 +342,13 @@ namespace POIProxy
                 .interactiveSessionRatedAndEnded(sessionId, rating);
         }
 
-        //Event index is the last event that the client has received
-        public void syncClientMessageWithSession(string sessionId, int eventIndex)
+        //Timestamp is the timestamp of the latest event received by the client
+        public void syncClientMessageWithSession(string sessionId, double timestamp)
         {
             DataRow record = interMsgHandler.getSessionState(sessionId);
             string sessionState = record["status"] as string;
+
+            POIGlobalVar.POIDebugLog("In sync timestamp is: " + timestamp);
 
             switch (sessionState)
             {
@@ -339,7 +357,7 @@ namespace POIProxy
                     Clients.Caller.interactiveSessionSynced
                     (
                         sessionId,
-                        interMsgHandler.getMissedEventsInSession(sessionId, eventIndex)
+                        interMsgHandler.getMissedEventsInSession(sessionId, timestamp)
                     );
                     break;
 

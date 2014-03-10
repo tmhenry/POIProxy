@@ -38,47 +38,55 @@ namespace POIProxy.Controllers
             switch (msgType)
             {
                 case "text":
-                    interMsgHandler.textMsgReceived(userId, sessionId, message);
+                    interMsgHandler.textMsgReceived(userId, sessionId, message, POITimestamp.ConvertToUnixTimestamp(DateTime.Now));
+
+                    hubContext.Clients.Group("session_" + sessionId).
+                        textMsgReceived(userId, sessionId, message);
 
                     await POIProxyPushNotifier.textMsgReceived(
                         interMsgHandler.getUsersInSession(sessionId, userId)
                     );
 
-                    hubContext.Clients.Group("session_" + sessionId).
-                        textMsgReceived(userId, sessionId, message);
+                    
                     break;
 
                 case "image":
-                    interMsgHandler.imageMsgReceived(userId, sessionId, mediaId);
+                    interMsgHandler.imageMsgReceived(userId, sessionId, mediaId, POITimestamp.ConvertToUnixTimestamp(DateTime.Now));
+
+                    hubContext.Clients.Group("session_" + sessionId).
+                        imageMsgReceived(userId, sessionId, mediaId);
 
                     await POIProxyPushNotifier.imageMsgReceived(
                         interMsgHandler.getUsersInSession(sessionId, userId)
                     );
 
-                    hubContext.Clients.Group("session_" + sessionId).
-                        imageMsgReceived(userId, sessionId, mediaId);
+                    
                     break;
 
                 case "voice":
-                    interMsgHandler.voiceMsgReceived(userId, sessionId, mediaId);
+                    interMsgHandler.voiceMsgReceived(userId, sessionId, mediaId, POITimestamp.ConvertToUnixTimestamp(DateTime.Now));
+
+                    hubContext.Clients.Group("session_" + sessionId).
+                        voiceMsgReceived(userId, sessionId, mediaId);
 
                     await POIProxyPushNotifier.voiceMsgReceived(
                         interMsgHandler.getUsersInSession(sessionId, userId)
                     );
 
-                    hubContext.Clients.Group("session_" + sessionId).
-                        voiceMsgReceived(userId, sessionId, mediaId);
+                    
                     break;
 
                 case "illustration":
-                    interMsgHandler.illustrationMsgReceived(userId, sessionId, mediaId);
+                    interMsgHandler.illustrationMsgReceived(userId, sessionId, mediaId, POITimestamp.ConvertToUnixTimestamp(DateTime.Now));
+
+                    hubContext.Clients.Group("session_" + sessionId).
+                        illustrationMsgReceived(userId, sessionId, mediaId);
 
                     await POIProxyPushNotifier.illustrationMsgReceived(
                         interMsgHandler.getUsersInSession(sessionId, userId)
                     );
 
-                    hubContext.Clients.Group("session_" + sessionId).
-                        illustrationMsgReceived(userId, sessionId, mediaId);
+                    
                     break;
             }
 

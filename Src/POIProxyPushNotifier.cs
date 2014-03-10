@@ -24,8 +24,8 @@ namespace POIProxy
             postVal["userList"] = jsonHandler.Serialize(userList);
             postVal["message"] = message;
 
-            POIGlobalVar.POIDebugLog(postVal["userList"]);
-            POIGlobalVar.POIDebugLog(postVal["message"]);
+            //POIGlobalVar.POIDebugLog(postVal["userList"]);
+            //POIGlobalVar.POIDebugLog(postVal["message"]);
 
 
             using (WebClient client = new WebClient())
