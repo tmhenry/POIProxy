@@ -9,12 +9,14 @@ using System.Threading.Tasks;
 //using System.Net.Http;
 
 using POILibCommunication;
+using System.Web.Configuration;
 
 namespace POIProxy
 {
     public class POIProxyToWxApi
     {
-        private static string baseReqUrl = "http://www.qdaan.com/POIWebService-test/dnsServer/weixinApi.php";
+        //private static string baseReqUrl = "http://www.qdaan.com/POIWebService-test/dnsServer/weixinApi.php";
+        private static string baseReqUrl = WebConfigurationManager.AppSettings["WxServer"];
 
         private async static Task sendReq(NameValueCollection postVal)
         {

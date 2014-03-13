@@ -4,16 +4,30 @@ using System.Linq;
 using System.Web;
 using System.Web.Mvc;
 
+using POIProxy.Models;
+using POILibCommunication;
+
 namespace POIProxy.Controllers
 {
     public class ComClientController : Controller
     {
+        private ComClientViewModel model = new ComClientViewModel
+        {
+            ProxyHost = POIGlobalVar.ProxyHost,
+            ProxyPort = POIGlobalVar.ProxyPort
+        }; 
+
         //
         // GET: /ComClient/
 
         public ActionResult Index()
         {
-            return View();
+            return View(model);
+        }
+
+        public ActionResult Ios()
+        {
+            return View(model);
         }
 
     }

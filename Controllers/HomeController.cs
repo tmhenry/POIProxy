@@ -25,6 +25,9 @@ namespace POIProxy.Controllers
                 ProxyServerIP = POIGlobalVar.ProxyServerIP,
                 ProxyServerPort = POIGlobalVar.ProxyServerPort,
 
+                ProxyHost = POIGlobalVar.ProxyHost,
+                ProxyPort = POIGlobalVar.ProxyPort,
+
                 NumMobileClients = numMobileClients,
                 NumWebClients = numWebClients,
             };

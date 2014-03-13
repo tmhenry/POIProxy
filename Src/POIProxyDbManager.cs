@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Data;
 
 using POILibCommunication;
+using System.Web.Configuration;
 
 namespace POIProxy
 {
@@ -43,14 +44,17 @@ namespace POIProxy
         //Initialize values
         private void Initialize()
         {
-            //server = "127.0.0.1";
-            //database = "poi";
-            //uid = "root";
-            //password = "";
-            server = "115.29.8.28";
-            database = "uwenda";
-            uid = "poi";
-            password = "public11223";
+            try
+            {
+                server = WebConfigurationManager.AppSettings["DbHost"];
+                database = WebConfigurationManager.AppSettings["DbName"];
+                uid = WebConfigurationManager.AppSettings["DbUsername"];
+                password = WebConfigurationManager.AppSettings["DbPassword"];
+            }
+            catch
+            {
+                POIGlobalVar.POIDebugLog("Error in db init");
+            }
 
             connectionString = "SERVER=" + server + ";" + "DATABASE=" +
             database + ";" + "UID=" + uid + ";" + "PASSWORD=" + password + ";charset=utf8;";

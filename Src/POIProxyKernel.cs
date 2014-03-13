@@ -96,6 +96,14 @@ namespace POIProxy
                 POIGlobalVar.ProxyServerIP = WebConfigurationManager.AppSettings["ProxyServerIP"];
                 POIGlobalVar.ProxyServerPort = Int32.Parse(WebConfigurationManager.AppSettings["ProxyServerPort"]);
 
+                POIGlobalVar.ProxyHost = WebConfigurationManager.AppSettings["ProxyHost"];
+                POIGlobalVar.ProxyPort = Int32.Parse(WebConfigurationManager.AppSettings["ProxyPort"]);
+
+                POIGlobalVar.DbHost = WebConfigurationManager.AppSettings["DbHost"];
+                POIGlobalVar.DbName = WebConfigurationManager.AppSettings["DbName"];
+                POIGlobalVar.DbUsername = WebConfigurationManager.AppSettings["DbUsername"];
+                POIGlobalVar.DbPassword = WebConfigurationManager.AppSettings["DbPassword"];
+
                 //POIGlobalVar.POIDebugLog(POIGlobalVar.ContentServerHome);
 
             }
