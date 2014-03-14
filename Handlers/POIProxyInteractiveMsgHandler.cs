@@ -621,6 +621,16 @@ namespace POIProxy.Handlers
             }
         }
 
+        public void archiveSessionJoinedEvent(string userId, string sessionId)
+        {
+            if (sessionArchives.ContainsKey(sessionId))
+            {
+                //Archive the session join event
+                var session = sessionArchives[sessionId];
+                session.archiveSessionJoinedEvent(userId);
+            }
+        }
+
         public void updateQuestionDescription(string sessionId, string description)
         {
             if (sessionArchives.ContainsKey(sessionId))

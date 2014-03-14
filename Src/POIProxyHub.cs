@@ -189,8 +189,11 @@ namespace POIProxy
         //Functions for receiving interactive messages
         public async Task textMsgReceived(string sessionId, string message, double timestamp)
         {
+            POIGlobalVar.POIDebugLog("Text received: " + message + " , session is :" + sessionId + " ," + timestamp);
+
             if (!interMsgHandler.checkSessionMsgDuplicate(sessionId, timestamp))
             {
+                
                 interMsgHandler.textMsgReceived(Clients.Caller.userId, sessionId, message, timestamp);
 
                 Clients.Group("session_" + sessionId, Context.ConnectionId).

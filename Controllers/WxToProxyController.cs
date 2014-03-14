@@ -112,6 +112,7 @@ namespace POIProxy.Controllers
                     infoStr = msgInfo["info"];
                     interMsgHandler.initSessionArchive(userId, sessionId, 
                         jsonHandler.Deserialize<Dictionary<string,string>>(infoStr));
+
                     break;
 
                 case "ratingReceived":
@@ -123,6 +124,7 @@ namespace POIProxy.Controllers
                     //Send notification to all clients in the session
                     hubContext.Clients.Group("session_" + sessionId)
                         .interactiveSessionRatedAndEnded(sessionId, rating);
+
                     break;
 
                 case "sessionUpdated":
@@ -142,7 +144,21 @@ namespace POIProxy.Controllers
                     break;
 
                 case "sessionJoined":
-                    //Do not handle the session join event for now
+                    userId = msgInfo["userId"];
+                    interMsgHandler.archiveSessionJoinedEvent(userId, sessionId);
+
+                    hubContext.Clients.Group("session_" + sessionId)
+                        .interactiveSessionNewUserJoined(userId, sessionId, "{}", POITimestamp.ConvertToUnixTimestamp(DateTime.Now));
+
+                    break;
+
+                case "sessionEnded":
+                    userId = msgInfo["userId"];
+                    await interMsgHandler.endInteractiveSession(userId, sessionId);
+
+                    hubContext.Clients.Group("session_" + sessionId)
+                        .interactiveSessionEnded(sessionId);
+
                     break;
             }
         }
