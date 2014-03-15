@@ -144,11 +144,16 @@ namespace POIProxy.Controllers
                     break;
 
                 case "sessionJoined":
+                    POIGlobalVar.POIDebugLog("Session joined: " + sessionId);
                     userId = msgInfo["userId"];
+                    POIGlobalVar.POIDebugLog("user id is: " + userId);
                     interMsgHandler.archiveSessionJoinedEvent(userId, sessionId);
 
+                    Dictionary<string, object> userInfo = interMsgHandler.getUserInfoById(userId);
+
                     hubContext.Clients.Group("session_" + sessionId)
-                        .interactiveSessionNewUserJoined(userId, sessionId, "{}", POITimestamp.ConvertToUnixTimestamp(DateTime.Now));
+                        .interactiveSessionNewUserJoined(userId, sessionId, 
+                        jsonHandler.Serialize(userInfo), POITimestamp.ConvertToUnixTimestamp(DateTime.Now));
 
                     break;
 
