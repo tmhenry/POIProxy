@@ -785,13 +785,13 @@ namespace POIProxy.Handlers
                 {
                     //POIGlobalVar.POIDebugLog("Event index is " + i + " timestamp is " + eventList[i].TimeStamp);
 
-                    if (eventList[i].TimeStamp > timestamp)
+                    if (eventList[i].Timestamp > timestamp)
                     {
                         missedEvents.Add(eventList[i]);
                     }
                 }
 
-                //POIGlobalVar.POIDebugLog(jsonHandler.Serialize(missedEvents));
+                POIGlobalVar.POIDebugLog(jsonHandler.Serialize(missedEvents));
 
                 return missedEvents;
             }

@@ -292,6 +292,8 @@ namespace POIProxy
 
                 double timestamp = POITimestamp.ConvertToUnixTimestamp(DateTime.Now);
 
+                POIGlobalVar.POIDebugLog(archiveJson);
+
                 //Notify the user the join operation has been completed
                 Clients.Caller.interactiveSessionJoined(sessionId, archiveJson, timestamp);
 

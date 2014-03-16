@@ -24,7 +24,8 @@ namespace POIProxy
 
                 push.Data = new Dictionary<string, object> {
                     {"alert", message},
-                    {"sessionId", sessionId}
+                    {"sessionId", sessionId},
+                    {"action", "com.poi.login.HANDLE_NOTIFICATION"}
                 };
 
                 push.Channels = new List<string> { "session_" + sessionId };

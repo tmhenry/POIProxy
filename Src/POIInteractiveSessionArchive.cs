@@ -44,7 +44,7 @@ namespace POIProxy
                 EventType = "text",
                 MediaId = "",
                 UserId = userId,
-                TimeStamp = timestamp,
+                Timestamp = timestamp,
                 Message = message
             };
 
@@ -77,7 +77,7 @@ namespace POIProxy
                 EventType = type,
                 MediaId = mediaId,
                 UserId = userId,
-                TimeStamp = timestamp,
+                Timestamp = timestamp,
                 Message = ""
             };
 
@@ -93,7 +93,7 @@ namespace POIProxy
                 EventType = type,
                 MediaId = "",
                 UserId = userId,
-                TimeStamp = timestamp,
+                Timestamp = timestamp,
                 Message = ""
             };
 
@@ -121,6 +121,6 @@ namespace POIProxy
         public string MediaId { get; set; }
         public string Message { get; set; }
         public string UserId { get; set; }
-        public double TimeStamp { get; set; }
+        public double Timestamp { get; set; }
     }
 }

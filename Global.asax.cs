@@ -9,6 +9,8 @@ using System.Web.Routing;
 using System.Threading;
 using Parse;
 
+using System.Web.Configuration;
+
 namespace POIProxy
 {
     // Note: For instructions on enabling IIS6 or IIS7 classic mode, 
@@ -26,7 +28,8 @@ namespace POIProxy
             FilterConfig.RegisterGlobalFilters(GlobalFilters.Filters);
             RouteConfig.RegisterRoutes(RouteTable.Routes);
 
-            ParseClient.Initialize("w8asEzg0uyaKrahtp9fzkfjH0gqChLLiWezklL1v", "wWAVbEjQKW5WvW1ZJwIeEcLbGxMbvorJKhBNS6bk");
+            ParseClient.Initialize(WebConfigurationManager.AppSettings["ParseAppId"], 
+                WebConfigurationManager.AppSettings["ParseAppKey"]);
         }
 
         private void StartKernelThread()
