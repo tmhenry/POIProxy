@@ -203,9 +203,7 @@ namespace POIProxy
                 await POIProxyToWxApi.textMsgReceived(Clients.Caller.userId, sessionId, message);
 
                 //Send push notification
-                await POIProxyPushNotifier.textMsgReceived(
-                    interMsgHandler.getUsersInSession(sessionId, Clients.Caller.userId)
-                );
+                await POIProxyPushNotifier.textMsgReceived(sessionId);
             }
             
         }
@@ -222,9 +220,7 @@ namespace POIProxy
                 await POIProxyToWxApi.imageMsgReceived(Clients.Caller.userId, sessionId, mediaId);
 
                 //Send push notification
-                await POIProxyPushNotifier.imageMsgReceived(
-                    interMsgHandler.getUsersInSession(sessionId, Clients.Caller.userId)
-                );
+                await POIProxyPushNotifier.imageMsgReceived(sessionId);
             }
         }
 
@@ -240,9 +236,7 @@ namespace POIProxy
                 await POIProxyToWxApi.voiceMsgReceived(Clients.Caller.userId, sessionId, mediaId);
 
                 //Send push notification
-                await POIProxyPushNotifier.voiceMsgReceived(
-                    interMsgHandler.getUsersInSession(sessionId, Clients.Caller.userId)
-                );
+                await POIProxyPushNotifier.voiceMsgReceived(sessionId);
             }
         }
 
@@ -258,9 +252,7 @@ namespace POIProxy
                 await POIProxyToWxApi.illustrationMsgReceived(Clients.Caller.userId, sessionId, mediaId);
 
                 //Send push notification
-                await POIProxyPushNotifier.illustrationMsgReceived(
-                    interMsgHandler.getUsersInSession(sessionId, Clients.Caller.userId)
-                );
+                await POIProxyPushNotifier.illustrationMsgReceived(sessionId);
             }
         }
 

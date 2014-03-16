@@ -73,6 +73,12 @@
     <Reference Include="Owin">
       <HintPath>..\packages\Owin.1.0\lib\net40\Owin.dll</HintPath>
     </Reference>
+    <Reference Include="Parse">
+      <HintPath>packages\parse.1.2.14\lib\net45\Parse.dll</HintPath>
+    </Reference>
+    <Reference Include="Parse.NetFx45">
+      <HintPath>packages\parse.1.2.14\lib\net45\Parse.NetFx45.dll</HintPath>
+    </Reference>
     <Reference Include="POILibCommunication, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\POILibCommunication\POILibCommunication\bin\Debug\POILibCommunication.dll</HintPath>

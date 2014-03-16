@@ -378,11 +378,19 @@ namespace POIProxy.Handlers
             values["rating"] = rating;
             values["rate_at"] = POITimestamp.ConvertToUnixTimestamp(DateTime.Now);
 
-            //Check if end_at attribute needs to be ended
-            if(updateEndTime) values["end_at"] = values["rate_at"];
-
             Dictionary<string, object> conditions = new Dictionary<string, object>();
             conditions["id"] = sessionId;
+
+            //Check if end_at attribute needs to be ended
+            if (updateEndTime)
+            {
+                values["end_at"] = values["rate_at"];
+                conditions["status"] = "serving";
+            }
+            else
+            {
+                conditions["status"] = "session_end_waiting";
+            }
 
             dbManager.updateTable("session", values, conditions);
         }

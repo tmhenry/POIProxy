@@ -9,58 +9,53 @@ using POILibCommunication;
 using System.Web.Script.Serialization;
 
 using System.Threading.Tasks;
+using Parse;
 
 namespace POIProxy
 {
     public class POIProxyPushNotifier
     {
-        private static string baseReqUrl = "http://www.qdaan.com/POIWebService-test/dnsServer/pushInterface.php";
-        private static JavaScriptSerializer jsonHandler = new JavaScriptSerializer();
-
         //Note: user list needs to be json encoded list of user ids
-        public async static Task sendPushNotification(List<string> userList, string message)
+        public async static Task sendPushNotification(string sessionId, string message)
         {
-            NameValueCollection postVal = new NameValueCollection();
-            postVal["userList"] = jsonHandler.Serialize(userList);
-            postVal["message"] = message;
-
-            //POIGlobalVar.POIDebugLog(postVal["userList"]);
-            //POIGlobalVar.POIDebugLog(postVal["message"]);
-
-
-            using (WebClient client = new WebClient())
+            try
             {
-                client.Proxy = null;
+                var push = new ParsePush();
 
-                try
-                {
-                    await client.UploadValuesTaskAsync(baseReqUrl, postVal);
-                }
-                catch (WebException ex)
-                {
-                    POIGlobalVar.POIDebugLog(ex);
-                }
+                push.Data = new Dictionary<string, object> {
+                    {"alert", message},
+                    {"sessionId", sessionId}
+                };
+
+                push.Channels = new List<string> { "session_" + sessionId };
+
+                await push.SendAsync();
             }
+            catch (Exception e)
+            {
+                POIGlobalVar.POIDebugLog(e.Message);
+            }
+            
         }
 
-        public static async Task textMsgReceived(List<string> userList)
+        public static async Task textMsgReceived(string sessionId)
         {
-            await sendPushNotification(userList, "收到文字消息");
+            await sendPushNotification(sessionId, "收到文字消息");
         }
 
-        public static async Task imageMsgReceived(List<string> userList)
+        public static async Task imageMsgReceived(string sessionId)
         {
-            await sendPushNotification(userList, "收到图片消息");
+            await sendPushNotification(sessionId, "收到图片消息");
         }
 
-        public static async Task voiceMsgReceived(List<string> userList)
+        public static async Task voiceMsgReceived(string sessionId)
         {
-            await sendPushNotification(userList, "收到语音消息");
+            await sendPushNotification(sessionId, "收到语音消息");
         }
 
-        public static async Task illustrationMsgReceived(List<string> userList)
+        public static async Task illustrationMsgReceived(string sessionId)
         {
-            await sendPushNotification(userList, "收到白板演算消息");
+            await sendPushNotification(sessionId, "收到白板演算消息");
         }
     }
 }

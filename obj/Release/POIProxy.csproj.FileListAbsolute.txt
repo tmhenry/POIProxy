@@ -33,3 +33,7 @@ C:\Users\HenryXia\Desktop\POIProxy\bin\EntityFramework.SqlServer.dll
 C:\Users\HenryXia\Desktop\POIProxy\bin\Newtonsoft.Json.dll
 C:\Users\HenryXia\Desktop\POIProxy\bin\EntityFramework.xml
 C:\Users\HenryXia\Desktop\POIProxy\bin\EntityFramework.SqlServer.xml
+C:\Users\HenryXia\Desktop\POIProxy\bin\Parse.dll
+C:\Users\HenryXia\Desktop\POIProxy\bin\Parse.NetFx45.dll
+C:\Users\HenryXia\Desktop\POIProxy\bin\Parse.xml
+C:\Users\HenryXia\Desktop\POIProxy\bin\Parse.NetFx45.xml

@@ -7,6 +7,7 @@ using System.Web.Mvc;
 using System.Web.Routing;
 
 using System.Threading;
+using Parse;
 
 namespace POIProxy
 {
@@ -24,6 +25,8 @@ namespace POIProxy
             WebApiConfig.Register(GlobalConfiguration.Configuration);
             FilterConfig.RegisterGlobalFilters(GlobalFilters.Filters);
             RouteConfig.RegisterRoutes(RouteTable.Routes);
+
+            ParseClient.Initialize("w8asEzg0uyaKrahtp9fzkfjH0gqChLLiWezklL1v", "wWAVbEjQKW5WvW1ZJwIeEcLbGxMbvorJKhBNS6bk");
         }
 
         private void StartKernelThread()
