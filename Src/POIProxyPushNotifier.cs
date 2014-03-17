@@ -20,17 +20,47 @@ namespace POIProxy
         {
             try
             {
-                var push = new ParsePush();
+                //Send ios push
+                var iosPush = new ParsePush();
 
-                push.Data = new Dictionary<string, object> {
+                iosPush.Query = from installation in ParseInstallation.Query
+                                where installation.DeviceType == "ios"
+                                select installation;
+
+                iosPush.Data = new Dictionary<string, object> {
                     {"alert", message},
+                    {"sound", "cheering.caf"},
                     {"sessionId", sessionId},
                     {"action", "com.poi.login.HANDLE_NOTIFICATION"}
                 };
 
-                push.Channels = new List<string> { "session_" + sessionId };
+                iosPush.Channels = new List<string> { "session_" + sessionId };
 
-                await push.SendAsync();
+                await iosPush.SendAsync();
+            }
+            catch (Exception e)
+            {
+                POIGlobalVar.POIDebugLog(e.Message);
+            }
+
+            try
+            {
+                //Send android push
+                var androidPush = new ParsePush();
+
+                androidPush.Query = from installation in ParseInstallation.Query
+                                    where installation.DeviceType == "android"
+                                    select installation;
+
+                androidPush.Data = new Dictionary<string, object> {
+                    {"message", message},
+                    {"sessionId", sessionId},
+                    {"action", "com.poi.login.HANDLE_NOTIFICATION"}
+                };
+
+                androidPush.Channels = new List<string> { "session_" + sessionId };
+
+                await androidPush.SendAsync();
             }
             catch (Exception e)
             {
