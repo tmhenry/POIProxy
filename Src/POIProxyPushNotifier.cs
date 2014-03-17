@@ -88,5 +88,20 @@ namespace POIProxy
         {
             await sendPushNotification(sessionId, "收到白板演算消息");
         }
+
+        public static async Task sessionJoined(string sessionId)
+        {
+            await sendPushNotification(sessionId, "老师来了！");
+        }
+
+        public static async Task sessionRated(string sessionId, int rating)
+        {
+            await sendPushNotification(sessionId, "收到评分" + rating);
+        }
+
+        public static async Task sessionEnded(string sessionId)
+        {
+            await sendPushNotification(sessionId, "解答已经结束");
+        }
     }
 }

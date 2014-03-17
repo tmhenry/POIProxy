@@ -302,6 +302,9 @@ namespace POIProxy
 
                 //Notify the wexin server about the join operation
                 await POIProxyToWxApi.interactiveSessionJoined(Clients.Caller.userId, sessionId, userInfoJson);
+
+                //Send push notification
+                await POIProxyPushNotifier.sessionJoined(sessionId);
             }
             else
             {
@@ -320,6 +323,9 @@ namespace POIProxy
 
             //Notify the weixin server about the ending operation
             await POIProxyToWxApi.interactiveSessionEnded(Clients.Caller.userId, sessionId);
+
+            //Send push notification
+            await POIProxyPushNotifier.sessionEnded(sessionId);
         }
 
         //Function called by the tutor to confirm the rating is received
@@ -337,6 +343,9 @@ namespace POIProxy
             //Send notification to all clients in the session
             Clients.Group("session_" + sessionId, Context.ConnectionId)
                 .interactiveSessionRatedAndEnded(sessionId, rating);
+
+            //Send push notification
+            await POIProxyPushNotifier.sessionRated(sessionId, rating);
         }
 
         //Timestamp is the timestamp of the latest event received by the client

@@ -119,6 +119,8 @@ namespace POIProxy.Controllers
                     hubContext.Clients.Group("session_" + sessionId)
                         .interactiveSessionRatedAndEnded(sessionId, rating);
 
+                    await POIProxyPushNotifier.sessionRated(sessionId, rating);
+
                     break;
 
                 case "sessionUpdated":
@@ -147,6 +149,8 @@ namespace POIProxy.Controllers
                     hubContext.Clients.Group("session_" + sessionId)
                         .interactiveSessionNewUserJoined(userId, sessionId, userInfo, POITimestamp.ConvertToUnixTimestamp(DateTime.Now));
 
+                    await POIProxyPushNotifier.sessionJoined(sessionId);
+
                     break;
 
                 case "sessionEnded":
@@ -156,6 +160,8 @@ namespace POIProxy.Controllers
 
                     hubContext.Clients.Group("session_" + sessionId)
                         .interactiveSessionEnded(sessionId);
+
+                    await POIProxyPushNotifier.sessionEnded(sessionId);
 
                     break;
             }
