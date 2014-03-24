@@ -47,9 +47,14 @@
             };
 
             $.connection.hub.start().done(function () {
-                alert("Start done!");
+                log("Start done!");
             });
         });
+
+        function log(message) {
+            var curLog = $('#ServerLog').val();
+            $('#ServerLog').val(message + "\\\n" + curLog);
+        }
     </script> 
 </head>
 <body>

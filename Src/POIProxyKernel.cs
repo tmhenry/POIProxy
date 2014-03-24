@@ -41,7 +41,7 @@ namespace POIProxy
             //Set the system kernel to connect with POI Communication lib
             POIGlobalVar.SystemKernel = this;
             POIGlobalVar.MaxMobileClientCount = 2000;
-            /*
+            
             //Initialize the buffer pool
             POITCPBufferPool.InitPool();
             
@@ -57,7 +57,7 @@ namespace POIProxy
             myDataHandler = new POIComServer(POIWebService.ServiceSocket);
             POIGlobalVar.SystemDataHandler = myDataHandler;
             POIGlobalVar.UserProfiles = userCollection;
-            */
+            
 
             //Intialize the web user profiles
             POIGlobalVar.WebUserProfiles = new Dictionary<string, POIUser>();
