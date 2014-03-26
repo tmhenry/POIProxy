@@ -604,6 +604,22 @@ namespace POIProxy.Handlers
             return userInfo;
         }
 
+        public void reraiseInteractiveSession(string userId, string sessionId, string newSessionId)
+        {
+            //Set the status to cancelled for the initial session
+            updateSessionStatus(sessionId, "cancelled");
+
+            //Remove the initial session archive and insert the new archive
+            if (sessionArchives.ContainsKey(sessionId))
+            {
+                POIInteractiveSessionArchive archive;
+                sessionArchives.TryRemove(sessionId, out archive);
+
+                //Initialize the archive for the new session
+                initSessionArchive(userId, newSessionId, archive.Info);
+            }
+        }
+
         public POIInteractiveSessionArchive joinInteractiveSession(string userId, string sessionId)
         {
             //add the current user into the session table

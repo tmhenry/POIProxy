@@ -273,6 +273,8 @@ namespace POIProxy
             //Notify the user the connection has been created
             double timestamp = POITimestamp.ConvertToUnixTimestamp(DateTime.Now);
             Clients.Caller.interactiveSessionCreated(presId, sessionId, timestamp);
+
+            await POIProxyPushNotifier.sessionCreated(sessionId);
         }
 
         public async Task joinInteractiveSession(string sessionId)

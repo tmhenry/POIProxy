@@ -15,6 +15,7 @@ namespace POIProxy
 {
     public class POIProxyPushNotifier
     {
+
         //Note: user list needs to be json encoded list of user ids
         public async static Task sendPushNotification(string sessionId, string message)
         {
@@ -40,7 +41,7 @@ namespace POIProxy
             }
             catch (Exception e)
             {
-                POIGlobalVar.POIDebugLog(e.Message);
+                POIGlobalVar.POIDebugLog("Push to ios: " + e.Message);
             }
 
             try
@@ -64,9 +65,61 @@ namespace POIProxy
             }
             catch (Exception e)
             {
-                POIGlobalVar.POIDebugLog(e.Message);
+                POIGlobalVar.POIDebugLog("Push to android: " + e.Message);
             }
             
+        }
+
+        public static async Task broadcastNotification(string sessionId, string message)
+        {
+            try
+            {
+                //Send ios push
+                var iosPush = new ParsePush();
+
+                iosPush.Query = from installation in ParseInstallation.Query
+                                where installation.DeviceType == "ios"
+                                select installation;
+
+                iosPush.Data = new Dictionary<string, object> {
+                    {"alert", message},
+                    {"sound", "cheering.caf"},
+                    {"sessionId", sessionId},
+                    {"action", "com.poi.login.HANDLE_NOTIFICATION"}
+                };
+
+                iosPush.Channels = new List<string> { "broadcast" };
+
+                await iosPush.SendAsync();
+            }
+            catch (Exception e)
+            {
+                POIGlobalVar.POIDebugLog("Push to ios: " + e.Message);
+            }
+
+            try
+            {
+                //Send android push
+                var androidPush = new ParsePush();
+
+                androidPush.Query = from installation in ParseInstallation.Query
+                                    where installation.DeviceType == "android"
+                                    select installation;
+
+                androidPush.Data = new Dictionary<string, object> {
+                    {"message", message},
+                    {"sessionId", sessionId},
+                    {"action", "com.poi.login.HANDLE_NOTIFICATION"}
+                };
+
+                androidPush.Channels = new List<string> { "broadcast" };
+
+                await androidPush.SendAsync();
+            }
+            catch (Exception e)
+            {
+                POIGlobalVar.POIDebugLog("Push to android: " + e.Message);
+            }
         }
 
         public static async Task textMsgReceived(string sessionId)
@@ -102,6 +155,11 @@ namespace POIProxy
         public static async Task sessionEnded(string sessionId)
         {
             await sendPushNotification(sessionId, "解答已经结束");
+        }
+
+        public static async Task sessionCreated(string sessionId)
+        {
+            await broadcastNotification(sessionId, "有题了，快来抢！");
         }
     }
 }

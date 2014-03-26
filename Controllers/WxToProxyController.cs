@@ -95,7 +95,7 @@ namespace POIProxy.Controllers
 
             string type = msgInfo["type"];
             string sessionId = msgInfo["sessionId"];
-            string userId, infoStr, desc, mediaId, userInfo; 
+            string userId, infoStr, desc, mediaId, userInfo, newSessionId; 
             int rating;
 
             switch (type)
@@ -106,6 +106,8 @@ namespace POIProxy.Controllers
                     infoStr = msgInfo["info"];
                     interMsgHandler.initSessionArchive(userId, sessionId, 
                         jsonHandler.Deserialize<Dictionary<string,string>>(infoStr));
+
+                    await POIProxyPushNotifier.sessionCreated(sessionId);
 
                     break;
 
@@ -162,6 +164,22 @@ namespace POIProxy.Controllers
                         .interactiveSessionEnded(sessionId);
 
                     await POIProxyPushNotifier.sessionEnded(sessionId);
+
+                    break;
+
+                case "sessionReraised":
+                    POIGlobalVar.POIDebugLog("Session reraised " + sessionId);
+                    newSessionId = msgInfo["newSessionId"];
+                    userId = msgInfo["userId"];
+                    POIGlobalVar.POIDebugLog("New session is " + newSessionId);
+
+                    interMsgHandler.reraiseInteractiveSession(userId, sessionId, newSessionId);
+
+                    await POIProxyPushNotifier.sessionCreated(newSessionId);
+
+                    //Notify the tutor about the cancelling operation
+                    //hubContext.Clients.Group("session_" + sessionId)
+                    //    .interactiveSessionCancelled(sessionId);
 
                     break;
             }
