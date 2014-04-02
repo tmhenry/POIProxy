@@ -35,6 +35,8 @@
                           
             poiProxy.client.interactiveSessionEnded = interactiveSessionEnded;
             poiProxy.client.interactiveSessionRatedAndEnded = interactiveSessionRatedAndEnded;
+            poiProxy.client.interactiveSessionCancelled = interactiveSessionCancelled;
+            poiProxy.client.interactiveSessionReraised = interactiveSessionReraised;
                           
             poiProxy.client.clientReconnected = clientReconnected;
             
@@ -162,6 +164,23 @@
             window.location = "poi:function:interactiveSessionRatedAndEnded?sessionId="+sessionId+"&rating="+rating;
             //Leave the session
             leaveInteractiveSession(sessionId);
+        }
+
+        function interactiveSessionCancelled(sessionId)
+        {
+            window.location = "poi:function:interactiveSessionCancelled?sessionId=" + sessionId;
+            //Leave the session
+            leaveInteractiveSession(sessionId);
+        }
+
+        function reraiseInteractiveSession(sessionId)
+        {
+            poiProxy.server.reraiseInteractiveSession(sessionId);
+        }
+
+        function interactiveSessionReraised(sessionId, newSessionId)
+        {
+            window.location = "poi:function:interactiveSessionReraised?sessionId=" + sessionId + "&newSessionId=" + newSessionId;
         }
         
         function rateAndEndInteractiveSession(sessionId, rating)

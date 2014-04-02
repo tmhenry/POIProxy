@@ -175,11 +175,18 @@ namespace POIProxy.Controllers
 
                     interMsgHandler.reraiseInteractiveSession(userId, sessionId, newSessionId);
 
-                    await POIProxyPushNotifier.sessionCreated(newSessionId);
+                    hubContext.Clients.Group("session_" + sessionId)
+                        .textMsgReceived(userId, sessionId, "志愿者你好，同学已经取消了这次提问，取消的提问不会影响你的积分",
+                        POITimestamp.ConvertToUnixTimestamp(DateTime.Now));
 
                     //Notify the tutor about the cancelling operation
-                    //hubContext.Clients.Group("session_" + sessionId)
-                    //    .interactiveSessionCancelled(sessionId);
+                    hubContext.Clients.Group("session_" + sessionId)
+                        .interactiveSessionCancelled(sessionId);
+
+                    //Make the session open after everything is ready
+                    interMsgHandler.updateSessionStatus(newSessionId, "open");
+
+                    await POIProxyPushNotifier.sessionCreated(newSessionId);
 
                     break;
             }

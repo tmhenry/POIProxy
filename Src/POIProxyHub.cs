@@ -274,6 +274,9 @@ namespace POIProxy
             double timestamp = POITimestamp.ConvertToUnixTimestamp(DateTime.Now);
             Clients.Caller.interactiveSessionCreated(presId, sessionId, timestamp);
 
+            //Make the session open after everything is ready
+            interMsgHandler.updateSessionStatus(sessionId, "open");
+
             await POIProxyPushNotifier.sessionCreated(sessionId);
         }
 
@@ -316,18 +319,25 @@ namespace POIProxy
 
         public async Task endInteractiveSession(string sessionId)
         {
-            //Update the database
-            await interMsgHandler.endInteractiveSession(Clients.Caller.userId, sessionId);
+            if (interMsgHandler.checkSessionServing(sessionId))
+            {
+                //Update the database
+                await interMsgHandler.endInteractiveSession(Clients.Caller.userId, sessionId);
 
-            //Send notification to all clients in the session
-            Clients.Group("session_" + sessionId, Context.ConnectionId)
-                .interactiveSessionEnded(sessionId);
+                //Send notification to all clients in the session
+                Clients.Group("session_" + sessionId, Context.ConnectionId)
+                    .interactiveSessionEnded(sessionId);
 
-            //Notify the weixin server about the ending operation
-            await POIProxyToWxApi.interactiveSessionEnded(Clients.Caller.userId, sessionId);
+                //Notify the weixin server about the ending operation
+                await POIProxyToWxApi.interactiveSessionEnded(Clients.Caller.userId, sessionId);
 
-            //Send push notification
-            await POIProxyPushNotifier.sessionEnded(sessionId);
+                //Send push notification
+                await POIProxyPushNotifier.sessionEnded(sessionId);
+            }
+            else
+            {
+                POIGlobalVar.POIDebugLog("End a session that is not serving");
+            }
         }
 
         //Function called by the tutor to confirm the rating is received
@@ -348,6 +358,26 @@ namespace POIProxy
 
             //Send push notification
             await POIProxyPushNotifier.sessionRated(sessionId, rating);
+        }
+
+        public async Task reraiseInteractiveSession(string sessionId)
+        {
+            string newSessionId = interMsgHandler.duplicateInteractiveSession(sessionId);
+
+            interMsgHandler.reraiseInteractiveSession(Clients.Caller.userId, sessionId, newSessionId);
+
+            //Add the student to the session group
+            await Groups.Add(Context.ConnectionId, "session_" + newSessionId);
+
+            //Notify the session about interactive session reraised
+            Clients.Caller.interactiveSessionReraised(sessionId, newSessionId);
+
+            //Notify the others about the cancel operation
+            Clients.Group("session_" + sessionId, Context.ConnectionId)
+                .interactiveSessionCancelled(sessionId);
+
+            //Make the session open after everything is ready
+            interMsgHandler.updateSessionStatus(newSessionId, "open");
         }
 
         //Timestamp is the timestamp of the latest event received by the client
@@ -376,6 +406,10 @@ namespace POIProxy
                 case "closed":
                     int rating = (int) record["rating"];
                     Clients.Caller.interactiveSessionRatedAndEnded(sessionId, rating);
+                    break;
+
+                case "cancelled":
+                    Clients.Caller.interactiveSessionCancelled(sessionId);
                     break;
             }
         }

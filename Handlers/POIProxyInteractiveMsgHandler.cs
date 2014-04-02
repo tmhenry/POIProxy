@@ -431,6 +431,7 @@ namespace POIProxy.Handlers
             DataTable result = dbManager.selectFromTable("session", cols, conditions);
             if (result.Rows.Count > 0)
             {
+                POIGlobalVar.POIDebugLog("found session open " + result.Rows[0]["id"]);
                 isInState = true;
             }
 
@@ -463,7 +464,7 @@ namespace POIProxy.Handlers
             values["presId"] = presId;
             values["creator"] = userId;
             values["create_at"] = POITimestamp.ConvertToUnixTimestamp(DateTime.Now);
-            values["status"] = "open";
+            values["status"] = "created";
 
             string sessionId = dbManager.insertIntoTable("session", values);
 
@@ -509,6 +510,8 @@ namespace POIProxy.Handlers
 
         public async Task<bool> checkAndProcessArchiveDuringSessionEnd(string sessionId)
         {
+            POIGlobalVar.POIDebugLog("Session id is " + sessionId);
+
             //Check if the session is in the right state (must be in serving state)
             if (checkSessionServing(sessionId))
             {
@@ -602,6 +605,30 @@ namespace POIProxy.Handlers
             }
             
             return userInfo;
+        }
+
+        public string duplicateInteractiveSession(string sessionId)
+        {
+            Dictionary<string, object> conditions = new Dictionary<string, object>();
+            conditions["id"] = sessionId;
+            DataRow result = dbManager.selectSingleRowFromTable("session", null, conditions);
+
+            if (result != null)
+            {
+                Dictionary<string, object> values = new Dictionary<string, object>();
+
+                values["type"] = "interactive";
+                values["presId"] = result["presId"];
+                values["creator"] = result["creator"];
+                values["create_at"] = POITimestamp.ConvertToUnixTimestamp(DateTime.Now);
+                values["status"] = "created";
+
+                return dbManager.insertIntoTable("session", values);
+            }
+            else
+            {
+                return (-1).ToString();
+            }
         }
 
         public void reraiseInteractiveSession(string userId, string sessionId, string newSessionId)
