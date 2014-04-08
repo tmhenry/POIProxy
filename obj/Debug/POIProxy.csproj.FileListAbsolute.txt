@@ -113,7 +113,6 @@ C:\Users\HenryXia\Desktop\POIProxy\bin\System.Web.Razor.dll
 C:\Users\HenryXia\Desktop\POIProxy\bin\System.Web.WebPages.Deployment.dll
 C:\Users\HenryXia\Desktop\POIProxy\bin\System.Web.WebPages.dll
 C:\Users\HenryXia\Desktop\POIProxy\bin\System.Web.WebPages.Razor.dll
-C:\Users\HenryXia\Desktop\POIProxy\bin\Microsoft.AspNet.SignalR.Core.xml
 C:\Users\HenryXia\Desktop\POIProxy\bin\Newtonsoft.Json.xml
 C:\Users\HenryXia\Desktop\POIProxy\bin\POILibCommunication.pdb
 C:\Users\HenryXia\Desktop\POIProxy\bin\Microsoft.Web.Infrastructure.xml
@@ -136,3 +135,8 @@ C:\Users\HenryXia\Desktop\POIProxy\bin\EntityFramework.SqlServer.xml
 C:\Users\HenryXia\Desktop\POIProxy\bin\Newtonsoft.Json.dll
 C:\Users\HenryXia\Desktop\POIProxy\bin\POIProxy.dll.CodeAnalysisLog.xml
 C:\Users\HenryXia\Desktop\POIProxy\bin\POIProxy.dll.lastcodeanalysissucceeded
+C:\Users\HenryXia\Desktop\POIProxy\bin\Parse.dll
+C:\Users\HenryXia\Desktop\POIProxy\bin\Parse.NetFx45.dll
+C:\Users\HenryXia\Desktop\POIProxy\bin\Parse.xml
+C:\Users\HenryXia\Desktop\POIProxy\bin\Parse.NetFx45.xml
+C:\Users\HenryXia\Desktop\POIProxy\obj\Debug\POIProxy.csprojResolveAssemblyReference.cache

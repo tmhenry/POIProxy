@@ -10,20 +10,69 @@ namespace POIProxy
     public class POIInteractiveSessionArchive
     {
         public string SessionId;
-
         public Dictionary<string,string> Info;
         public List<string> UserList;
         public List<POIInteractiveEvent> EventList;
+
+        //For checking duplicate messages
         private List<double> EventTimestamps;
 
-        public POIInteractiveSessionArchive(string sessionId, Dictionary<string, string> info)
+        //For checking session state
+        private readonly object statusLock = new object();
+        private string Status;
+
+        public POIInteractiveSessionArchive(Dictionary<string, string> info)
         {
-            SessionId = sessionId;
+            SessionId = info["session_id"];
             Info = info;
 
             UserList = new List<string>();
             EventList = new List<POIInteractiveEvent>();
             EventTimestamps = new List<double>();
+
+            //Update the archive status
+            lock (statusLock)
+            {
+                Status = info["status"];
+            }
+
+            //Add the users to the session user list and archive the correponding events
+            if (info["student_id"] != null)
+            {
+                addUserToUserList(info["student_id"]);
+                archiveSessionCreatedEvent(info["student_id"]);
+            }
+
+            if (info["tutor_id"] != null)
+            {
+                addUserToUserList(info["tutor_id"]);
+                archiveSessionJoinedEvent(info["tutor_id"]);
+            }
+        }
+
+        public bool joinSessionIfOpen()
+        {
+            lock (statusLock)
+            {
+                if (Status == "open")
+                {
+                    POIGlobalVar.POIDebugLog("Session is open!");
+                    Status = "serving";
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+        }
+
+        public void updateSessionStatusServing()
+        {
+            lock (statusLock)
+            {
+                Status = "serving";
+            }
         }
 
         public void addUserToUserList(string userId)

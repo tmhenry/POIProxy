@@ -409,7 +409,8 @@ namespace POIProxy.Handlers
 
         public bool checkSessionOpen(string sessionId)
         {
-            return checkSessionState(sessionId, "open");
+            var session = getArchiveBySessionId(sessionId);
+            return session.joinSessionIfOpen();
         }
 
         public bool checkSessionServing(string sessionId)
@@ -473,9 +474,14 @@ namespace POIProxy.Handlers
 
             //Get the information about the activity
             Dictionary<string, string> infoDict = new Dictionary<string, string>();
+            infoDict["session_id"] = sessionId;
             infoDict["student_id"] = userId;
             infoDict["description"] = desc;
             infoDict["cover"] = mediaId;
+            infoDict["status"] = "open";
+            infoDict["tutor_id"] = null;
+            infoDict["tutor_avatar"] = null;
+            infoDict["tutor_name"] = null;
 
             //Search for user name of the student
             Dictionary<string, object> condition = new Dictionary<string, object>();
@@ -492,20 +498,66 @@ namespace POIProxy.Handlers
             addQuestionActivity(userId, sessionId, jsonHandler.Serialize(infoDict));
 
             //Create session archive and add the currrent user to the user list
-            initSessionArchive(userId, sessionId, infoDict);
+            initSessionArchive(infoDict);
 
             return new Tuple<string,string>(presId, sessionId);
         }
 
-        public void initSessionArchive(string userId, string sessionId, Dictionary<string,string> info)
+        public void initSessionArchive(Dictionary<string,string> info)
         {
             //Create session archive and add the currrent user to the user list
-            POIInteractiveSessionArchive archive = new POIInteractiveSessionArchive(sessionId, info);
-            sessionArchives[sessionId.ToString()] = archive;
+            POIInteractiveSessionArchive archive = new POIInteractiveSessionArchive(info);
+            sessionArchives[archive.SessionId] = archive;
+        }
+
+        private Dictionary<string, string> getArchiveInfoFromDb(string sessionId)
+        {
+            //Get the pres id from session table
+            Dictionary<string, object> conditions = new Dictionary<string, object> 
+            { 
+                {"id", sessionId}
+            };
+
+            var sessionRecord = dbManager.selectSingleRowFromTable("session", null, conditions);
+            var presId = sessionRecord["presId"];
+            string userId = sessionRecord["creator"] as string;
+            string tutorId = sessionRecord["tutor"] as string;
+
+            conditions.Clear();
+            conditions["pid"] = presId;
+            var presRecord = dbManager.selectSingleRowFromTable("presentation", null, conditions);
+
+            Dictionary<string, string> info = new Dictionary<string, string>
+            {
+                {"session_id", sessionId},
+                {"student_id", userId},
+                {"tutor_id",  tutorId},
+                {"cover", presRecord["media_id"] as string},
+                {"description", presRecord["description"] as string},
+                {"status", sessionRecord["status"] as string}
+            };
+
+            if (userId != null)
+            {
+                conditions.Clear();
+                conditions["id"] = userId;
+                var userRecord = dbManager.selectSingleRowFromTable("users", null, conditions);
+
+                info["student_avatar"] = userRecord["avatar"] as string;
+                info["student_name"] = userRecord["username"] as string;
+            }
+
+            if (tutorId != null)
+            {
+                conditions.Clear();
+                conditions["id"] = tutorId;
+                var tutorRecord = dbManager.selectSingleRowFromTable("users", null, conditions);
+
+                info["tutor_avatar"] = tutorRecord["avatar"] as string;
+                info["tutor_name"] = tutorRecord["username"] as string;
+            }
             
-            //Add user to the list and archive the session_created event
-            archive.addUserToUserList(userId);
-            archive.archiveSessionCreatedEvent(userId);
+            return info;
         }
 
         public async Task<bool> checkAndProcessArchiveDuringSessionEnd(string sessionId)
@@ -517,26 +569,25 @@ namespace POIProxy.Handlers
             {
                 POIGlobalVar.POIDebugLog("Uploading session archive!");
 
-                if (sessionArchives.ContainsKey(sessionId))
-                {
-                    //Remove the session archive in the memory
-                    POIInteractiveSessionArchive archive;
-                    sessionArchives.TryRemove(sessionId, out archive);
+                var session = getArchiveBySessionId(sessionId);
 
-                    //Prepare the archive and upload to the cloud
-                    string mediaId = await POIContentServerHelper.uploadJsonStrToQiniuCDN(
-                        jsonHandler.Serialize(archive)
-                    );
+                //Prepare the archive and upload to the cloud
+                string mediaId = await POIContentServerHelper.uploadJsonStrToQiniuCDN(
+                    jsonHandler.Serialize(session)
+                );
 
-                    //Update the database given the media id
-                    Dictionary<string, object> conditions = new Dictionary<string, object>();
-                    conditions["id"] = sessionId;
+                //Update the database given the media id
+                Dictionary<string, object> conditions = new Dictionary<string, object>();
+                conditions["id"] = sessionId;
 
-                    Dictionary<string, object> values = new Dictionary<string, object>();
-                    values["media_id"] = mediaId;
+                Dictionary<string, object> values = new Dictionary<string, object>();
+                values["media_id"] = mediaId;
 
-                    dbManager.updateTable("session", values, conditions);
-                }
+                dbManager.updateTable("session", values, conditions);
+
+                //Remove the session archive in the memory
+                POIInteractiveSessionArchive archive;
+                sessionArchives.TryRemove(sessionId, out archive);
 
                 return true;
             }
@@ -643,7 +694,15 @@ namespace POIProxy.Handlers
                 sessionArchives.TryRemove(sessionId, out archive);
 
                 //Initialize the archive for the new session
-                initSessionArchive(userId, newSessionId, archive.Info);
+                archive.Info["session_id"] = newSessionId;
+                initSessionArchive(archive.Info);
+            }
+            else
+            {
+                //No archive exists in memory, read it from database
+                Dictionary<string,string> archiveInfo = getArchiveInfoFromDb(sessionId);
+                archiveInfo["session_id"] = newSessionId;
+                initSessionArchive(archiveInfo);
             }
         }
 
@@ -655,49 +714,52 @@ namespace POIProxy.Handlers
             //Turn the session to serving status
             updateSessionStatusWithTutorJoin(userId, sessionId);
 
+            POIInteractiveSessionArchive session = null;
             if (sessionArchives.ContainsKey(sessionId))
             {
                 //Archive the session join event
-                var session = sessionArchives[sessionId];
+                session = sessionArchives[sessionId];
                 session.archiveSessionJoinedEvent(userId);
-
-                //Add the activity record
-                addAnswerActivity(userId, sessionId, jsonHandler.Serialize(session.Info));
-
-                return session;
             }
             else
             {
-                return null;
+                //Initialize the session archive
+                session = new POIInteractiveSessionArchive(getArchiveInfoFromDb(sessionId));
             }
+
+            //Add the activity record
+            addAnswerActivity(userId, sessionId, jsonHandler.Serialize(session.Info));
+
+            return session;
+        }
+
+        public POIInteractiveSessionArchive getArchiveBySessionId(string sessionId)
+        {
+            if (!sessionArchives.ContainsKey(sessionId))
+            {
+                initSessionArchive(getArchiveInfoFromDb(sessionId));
+            }
+
+            return sessionArchives[sessionId];
         }
 
         public void archiveSessionJoinedEvent(string userId, string sessionId)
         {
-            if (sessionArchives.ContainsKey(sessionId))
-            {
-                //Archive the session join event
-                var session = sessionArchives[sessionId];
-                session.archiveSessionJoinedEvent(userId);
-            }
+            var session = getArchiveBySessionId(sessionId);
+            session.archiveSessionJoinedEvent(userId);
+            session.updateSessionStatusServing();
         }
 
         public void updateQuestionDescription(string sessionId, string description)
         {
-            if (sessionArchives.ContainsKey(sessionId))
-            {
-                //Archive the session join event
-                sessionArchives[sessionId].Info["description"] = description;
-            }
+            var session = getArchiveBySessionId(sessionId);
+            sessionArchives[sessionId].Info["description"] = description;
         }
 
         public void updateQuestionMediaId(string sessionId, string mediaId)
         {
-            if (sessionArchives.ContainsKey(sessionId))
-            {
-                //Archive the session join event
-                sessionArchives[sessionId].Info["cover"] = mediaId;
-            }
+            var session = getArchiveBySessionId(sessionId);
+            sessionArchives[sessionId].Info["cover"] = mediaId;
         }
 
         public void cancelInteractiveSession(string userId, string sessionId)
@@ -749,100 +811,60 @@ namespace POIProxy.Handlers
         public bool checkSessionMsgDuplicate(string sessionId, double msgTimestamp)
         {
             //POIGlobalVar.POIDebugLog("In check msg duplicate, timestamp is:" + msgTimestamp);
-
-            if (sessionArchives.ContainsKey(sessionId))
+            var session = getArchiveBySessionId(sessionId);
+            if (session.checkEventExists(msgTimestamp))
             {
-                if (sessionArchives[sessionId].checkEventExists(msgTimestamp))
-                {
-                    return true;
-                }
-                else
-                {
-                    return false;
-                }
+                return true;
             }
             else
             {
-                return true;
+                return false;
             }
         }
 
         //Functions for sending messages
         public void textMsgReceived(string userId, string sessionId, string message, double timestamp)
         {
-            if (sessionArchives.ContainsKey(sessionId))
-            {
-                sessionArchives[sessionId].archiveTextEvent(userId, message, timestamp);
-            }
-            else
-            {
-                POIGlobalVar.POIDebugLog("No archive related to session id " + sessionId);
-            }
+            var session = getArchiveBySessionId(sessionId);
+            session.archiveTextEvent(userId, message, timestamp);
         }
 
         public void imageMsgReceived(string userId, string sessionId, string mediaId, double timestamp)
         {
-            if (sessionArchives.ContainsKey(sessionId))
-            {
-                sessionArchives[sessionId].archiveImageEvent(userId, mediaId, timestamp);
-            }
-            else
-            {
-                POIGlobalVar.POIDebugLog("No archive related to session id " + sessionId);
-            }
+            var session = getArchiveBySessionId(sessionId);
+            session.archiveImageEvent(userId, mediaId, timestamp);
         }
 
         public void voiceMsgReceived(string userId, string sessionId, string mediaId, double timestamp)
         {
-            if (sessionArchives.ContainsKey(sessionId))
-            {
-                sessionArchives[sessionId].archiveVoiceEvent(userId, mediaId, timestamp);
-            }
-            else
-            {
-                POIGlobalVar.POIDebugLog("No archive related to session id " + sessionId);
-            }
+            var session = getArchiveBySessionId(sessionId);
+            session.archiveVoiceEvent(userId, mediaId, timestamp);
         }
 
         public void illustrationMsgReceived(string userId, string sessionId, string mediaId, double timestamp)
         {
-            if (sessionArchives.ContainsKey(sessionId))
-            {
-                sessionArchives[sessionId].archiveIllustrationEvent(userId, mediaId, timestamp);
-            }
-            else
-            {
-                POIGlobalVar.POIDebugLog("No archive related to session id " + sessionId);
-            }
+            var session = getArchiveBySessionId(sessionId);
+            session.archiveIllustrationEvent(userId, mediaId, timestamp);
         }
 
         public List<POIInteractiveEvent> getMissedEventsInSession(string sessionId, double timestamp)
         {
-            if (sessionArchives.ContainsKey(sessionId))
+            var session = getArchiveBySessionId(sessionId);
+            var missedEvents = new List<POIInteractiveEvent>();
+            var eventList = session.EventList;
+
+            //Get all event with timestamp larger than the given timestamp
+            for (int i = 0; i < eventList.Count; i++)
             {
-                var missedEvents = new List<POIInteractiveEvent>();
-                var eventList = sessionArchives[sessionId].EventList;
-                
-                //Get all event with timestamp larger than the given timestamp
-                for (int i = 0; i <eventList.Count; i++)
+                if (eventList[i].Timestamp > timestamp)
                 {
-                    //POIGlobalVar.POIDebugLog("Event index is " + i + " timestamp is " + eventList[i].TimeStamp);
-
-                    if (eventList[i].Timestamp > timestamp)
-                    {
-                        missedEvents.Add(eventList[i]);
-                    }
+                    missedEvents.Add(eventList[i]);
                 }
-
-                POIGlobalVar.POIDebugLog(jsonHandler.Serialize(missedEvents));
-
-                return missedEvents;
             }
-            else
-            {
-                //POIGlobalVar.POIDebugLog("No archive related to session id " + sessionId);
-                return null;
-            }
+
+            POIGlobalVar.POIDebugLog(jsonHandler.Serialize(missedEvents));
+
+            return missedEvents;
         }
 
     }

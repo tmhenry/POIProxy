@@ -8,33 +8,51 @@
      <Namespaces>
       <Namespace Name="POIProxy">
        <Types>
+        <Type Name="POIInteractiveSessionArchive" Kind="Class" Accessibility="Public" ExternallyVisible="True">
+         <Members>
+          <Member Name="#.ctor(System.String,System.Collections.Generic.Dictionary`2&lt;System.String,System.String&gt;)" Kind="Method" Static="False" Accessibility="Public" ExternallyVisible="True">
+           <Messages>
+            <Message TypeName="DoNotLockOnObjectsWithWeakIdentity" Category="Microsoft.Reliability" CheckId="CA2002" Status="Active" Created="2014-04-06 16:23:10Z" FixCategory="NonBreaking">
+             <Issue Certainty="75" Level="CriticalError" Path="c:\Users\HenryXia\Desktop\POIProxy\Src" File="POIInteractiveSessionArchive.cs" Line="36">'POIInteractiveSessionArchive.POIInteractiveSessionArchive(string, Dictionary&lt;string, string&gt;)' locks on a reference of type 'string'. Replace this with a lock against an object with strong-identity.</Issue>
+            </Message>
+           </Messages>
+          </Member>
+          <Member Name="#joinSessionIfOpen()" Kind="Method" Static="False" Accessibility="Public" ExternallyVisible="True">
+           <Messages>
+            <Message TypeName="DoNotLockOnObjectsWithWeakIdentity" Category="Microsoft.Reliability" CheckId="CA2002" Status="Active" Created="2014-04-06 16:23:10Z" FixCategory="NonBreaking">
+             <Issue Certainty="75" Level="CriticalError" Path="c:\Users\HenryXia\Desktop\POIProxy\Src" File="POIInteractiveSessionArchive.cs" Line="52">'POIInteractiveSessionArchive.joinSessionIfOpen()' locks on a reference of type 'string'. Replace this with a lock against an object with strong-identity.</Issue>
+            </Message>
+           </Messages>
+          </Member>
+         </Members>
+        </Type>
         <Type Name="POIProxyDbManager" Kind="Class" Accessibility="Public" ExternallyVisible="True">
          <Members>
           <Member Name="#deleteFromTable(System.String,System.Collections.Generic.Dictionary`2&lt;System.String,System.Object&gt;)" Kind="Method" Static="False" Accessibility="Public" ExternallyVisible="True">
            <Messages>
-            <Message TypeName="Review SQL queries for security vulnerabilities" Category="Microsoft.Security" CheckId="CA2100" Status="Active" Created="2014-03-10 16:43:13Z" FixCategory="DependsOnFix">
-             <Issue Name="WithNonLiterals" Certainty="75" Level="Warning" Path="c:\Users\HenryXia\Desktop\POIProxy\Src" File="POIProxyDbManager.cs" Line="139">The query string passed to 'MySqlCommand.MySqlCommand(string, MySqlConnection)' in 'POIProxyDbManager.deleteFromTable(string, Dictionary&lt;string, object&gt;)' could contain the following variables 'tableName'. If any of these variables could come from user input, consider using a stored procedure or a parameterized SQL query instead of building the query with string concatenations.</Issue>
+            <Message TypeName="Review SQL queries for security vulnerabilities" Category="Microsoft.Security" CheckId="CA2100" Status="Active" Created="2014-04-06 16:23:10Z" FixCategory="DependsOnFix">
+             <Issue Name="WithNonLiterals" Certainty="75" Level="Warning" Path="c:\Users\HenryXia\Desktop\POIProxy\Src" File="POIProxyDbManager.cs" Line="143">The query string passed to 'MySqlCommand.MySqlCommand(string, MySqlConnection)' in 'POIProxyDbManager.deleteFromTable(string, Dictionary&lt;string, object&gt;)' could contain the following variables 'tableName'. If any of these variables could come from user input, consider using a stored procedure or a parameterized SQL query instead of building the query with string concatenations.</Issue>
             </Message>
            </Messages>
           </Member>
           <Member Name="#insertIntoTable(System.String,System.Collections.Generic.Dictionary`2&lt;System.String,System.Object&gt;)" Kind="Method" Static="False" Accessibility="Public" ExternallyVisible="True">
            <Messages>
-            <Message TypeName="Review SQL queries for security vulnerabilities" Category="Microsoft.Security" CheckId="CA2100" Status="Active" Created="2014-03-10 16:43:13Z" FixCategory="DependsOnFix">
-             <Issue Name="WithNonLiterals" Certainty="75" Level="Warning" Path="c:\Users\HenryXia\Desktop\POIProxy\Src" File="POIProxyDbManager.cs" Line="114">The query string passed to 'MySqlCommand.MySqlCommand(string, MySqlConnection)' in 'POIProxyDbManager.insertIntoTable(string, Dictionary&lt;string, object&gt;)' could contain the following variables 'tableName'. If any of these variables could come from user input, consider using a stored procedure or a parameterized SQL query instead of building the query with string concatenations.</Issue>
+            <Message TypeName="Review SQL queries for security vulnerabilities" Category="Microsoft.Security" CheckId="CA2100" Status="Active" Created="2014-04-06 16:23:10Z" FixCategory="DependsOnFix">
+             <Issue Name="WithNonLiterals" Certainty="75" Level="Warning" Path="c:\Users\HenryXia\Desktop\POIProxy\Src" File="POIProxyDbManager.cs" Line="118">The query string passed to 'MySqlCommand.MySqlCommand(string, MySqlConnection)' in 'POIProxyDbManager.insertIntoTable(string, Dictionary&lt;string, object&gt;)' could contain the following variables 'tableName'. If any of these variables could come from user input, consider using a stored procedure or a parameterized SQL query instead of building the query with string concatenations.</Issue>
             </Message>
            </Messages>
           </Member>
           <Member Name="#selectFromTable(System.String,System.Collections.Generic.List`1&lt;System.String&gt;,System.Collections.Generic.Dictionary`2&lt;System.String,System.Object&gt;)" Kind="Method" Static="False" Accessibility="Public" ExternallyVisible="True">
            <Messages>
-            <Message TypeName="Review SQL queries for security vulnerabilities" Category="Microsoft.Security" CheckId="CA2100" Status="Active" Created="2014-03-10 16:43:13Z" FixCategory="DependsOnFix">
-             <Issue Name="WithNonLiterals" Certainty="75" Level="Warning" Path="c:\Users\HenryXia\Desktop\POIProxy\Src" File="POIProxyDbManager.cs" Line="198">The query string passed to 'MySqlDataAdapter.MySqlDataAdapter(string, MySqlConnection)' in 'POIProxyDbManager.selectFromTable(string, List&lt;string&gt;, Dictionary&lt;string, object&gt;)' could contain the following variables 'tableName'. If any of these variables could come from user input, consider using a stored procedure or a parameterized SQL query instead of building the query with string concatenations.</Issue>
+            <Message TypeName="Review SQL queries for security vulnerabilities" Category="Microsoft.Security" CheckId="CA2100" Status="Active" Created="2014-04-06 16:23:10Z" FixCategory="DependsOnFix">
+             <Issue Name="WithNonLiterals" Certainty="75" Level="Warning" Path="c:\Users\HenryXia\Desktop\POIProxy\Src" File="POIProxyDbManager.cs" Line="202">The query string passed to 'MySqlDataAdapter.MySqlDataAdapter(string, MySqlConnection)' in 'POIProxyDbManager.selectFromTable(string, List&lt;string&gt;, Dictionary&lt;string, object&gt;)' could contain the following variables 'tableName'. If any of these variables could come from user input, consider using a stored procedure or a parameterized SQL query instead of building the query with string concatenations.</Issue>
             </Message>
            </Messages>
           </Member>
           <Member Name="#updateTable(System.String,System.Collections.Generic.Dictionary`2&lt;System.String,System.Object&gt;,System.Collections.Generic.Dictionary`2&lt;System.String,System.Object&gt;)" Kind="Method" Static="False" Accessibility="Public" ExternallyVisible="True">
            <Messages>
-            <Message TypeName="Review SQL queries for security vulnerabilities" Category="Microsoft.Security" CheckId="CA2100" Status="Active" Created="2014-03-10 16:43:13Z" FixCategory="DependsOnFix">
-             <Issue Name="WithNonLiterals" Certainty="75" Level="Warning" Path="c:\Users\HenryXia\Desktop\POIProxy\Src" File="POIProxyDbManager.cs" Line="161">The query string passed to 'MySqlCommand.MySqlCommand(string, MySqlConnection)' in 'POIProxyDbManager.updateTable(string, Dictionary&lt;string, object&gt;, Dictionary&lt;string, object&gt;)' could contain the following variables 'tableName'. If any of these variables could come from user input, consider using a stored procedure or a parameterized SQL query instead of building the query with string concatenations.</Issue>
+            <Message TypeName="Review SQL queries for security vulnerabilities" Category="Microsoft.Security" CheckId="CA2100" Status="Active" Created="2014-04-06 16:23:10Z" FixCategory="DependsOnFix">
+             <Issue Name="WithNonLiterals" Certainty="75" Level="Warning" Path="c:\Users\HenryXia\Desktop\POIProxy\Src" File="POIProxyDbManager.cs" Line="165">The query string passed to 'MySqlCommand.MySqlCommand(string, MySqlConnection)' in 'POIProxyDbManager.updateTable(string, Dictionary&lt;string, object&gt;, Dictionary&lt;string, object&gt;)' could contain the following variables 'tableName'. If any of these variables could come from user input, consider using a stored procedure or a parameterized SQL query instead of building the query with string concatenations.</Issue>
             </Message>
            </Messages>
           </Member>
@@ -48,7 +66,7 @@
          <Members>
           <Member Name="#handleSnapshotMsgReceived(POILibCommunication.POIPushMsg,POILibCommunication.POIUser)" Kind="Method" Static="False" Accessibility="Private" ExternallyVisible="False">
            <Messages>
-            <Message TypeName="Do not dispose objects multiple times" Category="Microsoft.Usage" CheckId="CA2202" Status="Active" Created="2014-03-10 16:43:13Z" FixCategory="DependsOnFix">
+            <Message TypeName="Do not dispose objects multiple times" Category="Microsoft.Usage" CheckId="CA2202" Status="Active" Created="2014-04-06 16:23:10Z" FixCategory="DependsOnFix">
              <Issue Certainty="75" Level="Warning" Path="c:\Users\HenryXia\Desktop\POIProxy\Handlers" File="POIProxyDataHandler.cs" Line="55">Object 'writeStream' can be disposed more than once in method 'POIProxyDataHandler.handleSnapshotMsgReceived(POIPushMsg, POIUser)'. To avoid generating a System.ObjectDisposedException you should not call Dispose more than one time on an object.: Lines: 55</Issue>
             </Message>
            </Messages>
@@ -72,6 +90,16 @@
    <Email />
    <MessageLevel Certainty="75">Warning</MessageLevel>
    <File Name="dataflowrules.dll" Version="11.0.0.0" />
+  </Rule>
+  <Rule TypeName="DoNotLockOnObjectsWithWeakIdentity" Category="Microsoft.Reliability" CheckId="CA2002">
+   <Name>Do not lock on objects with weak identity</Name>
+   <Description>Don't take locks on objects that may bleed across AppDomains or that don't have a strong identity.</Description>
+   <Resolution Name="Default">{0} locks on a reference of type {1}. Replace this with a lock against an object with strong-identity.</Resolution>
+   <Owner />
+   <Url>http://msdn.microsoft.com/library/ms182290(VS.100).aspx</Url>
+   <Email>[none]</Email>
+   <MessageLevel Certainty="75">CriticalError</MessageLevel>
+   <File Name="reliabilityrules.dll" Version="11.0.0.0" />
   </Rule>
   <Rule TypeName="Review SQL queries for security vulnerabilities" Category="Microsoft.Security" CheckId="CA2100">
    <Name>Review SQL queries for security vulnerabilities</Name>

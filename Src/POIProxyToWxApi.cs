@@ -37,6 +37,17 @@ namespace POIProxy
             }
         }
 
+        public static async Task interactiveSessionCreated(string userId, string sessionId)
+        {
+            NameValueCollection values = new NameValueCollection();
+            values["userId"] = userId;
+            values["sessionId"] = sessionId;
+
+            values["reqType"] = "interactiveSessionCreated";
+
+            await sendReq(values);
+        }
+
         public static async Task interactiveSessionEnded(string userId, string sessionId)
         {
             NameValueCollection values = new NameValueCollection();
@@ -48,14 +59,59 @@ namespace POIProxy
             await sendReq(values);
         }
 
-        public static async Task interactiveSessionJoined(string userId, string sessionId, string userInfo)
+        public static async Task interactiveSessionNewUserJoined(string userId, string sessionId, string userInfo)
         {
             NameValueCollection values = new NameValueCollection();
             values["userId"] = userId;
             values["sessionId"] = sessionId;
             values["userInfo"] = userInfo;
 
+            values["reqType"] = "interactiveSessionNewUserJoined";
+
+            await sendReq(values);
+        }
+
+        public static async Task interactiveSessionJoined(string userId, string sessionId)
+        {
+            NameValueCollection values = new NameValueCollection();
+            values["userId"] = userId;
+            values["sessionId"] = sessionId;
+
             values["reqType"] = "interactiveSessionJoined";
+
+            await sendReq(values);
+        }
+
+        public static async Task interactiveSessionJoinFailed(string userId, string sessionId)
+        {
+            NameValueCollection values = new NameValueCollection();
+            values["userId"] = userId;
+            values["sessionId"] = sessionId;
+
+            values["reqType"] = "interactiveSessionJoinFailed";
+
+            await sendReq(values);
+        }
+
+        public static async Task interactiveSessionReraised(string userId, string sessionId, string newSessionId)
+        {
+            NameValueCollection values = new NameValueCollection();
+            values["userId"] = userId;
+            values["sessionId"] = sessionId;
+            values["newSessionId"] = newSessionId;
+
+            values["reqType"] = "interactiveSessionReraised";
+
+            await sendReq(values);
+        }
+
+        public static async Task interactiveSessionCancelled(string userId, string sessionId)
+        {
+            NameValueCollection values = new NameValueCollection();
+            values["userId"] = userId;
+            values["sessionId"] = sessionId;
+
+            values["reqType"] = "interactiveSessionCancelled";
 
             await sendReq(values);
         }

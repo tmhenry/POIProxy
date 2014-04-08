@@ -284,6 +284,8 @@ namespace POIProxy
         {
             if (interMsgHandler.checkSessionOpen(sessionId))
             {
+                POIGlobalVar.POIDebugLog("Session is open, joined!");
+
                 //Add the current connection into the session
                 POIInteractiveSessionArchive archive = 
                     interMsgHandler.joinInteractiveSession(Clients.Caller.userId, sessionId);
@@ -306,7 +308,7 @@ namespace POIProxy
                     interactiveSessionNewUserJoined(Clients.Caller.userId, sessionId, userInfoJson, timestamp);
 
                 //Notify the wexin server about the join operation
-                await POIProxyToWxApi.interactiveSessionJoined(Clients.Caller.userId, sessionId, userInfoJson);
+                await POIProxyToWxApi.interactiveSessionNewUserJoined(Clients.Caller.userId, sessionId, userInfoJson);
 
                 //Send push notification
                 await POIProxyPushNotifier.sessionJoined(sessionId);
@@ -369,12 +371,15 @@ namespace POIProxy
             //Add the student to the session group
             await Groups.Add(Context.ConnectionId, "session_" + newSessionId);
 
-            //Notify the session about interactive session reraised
+            //Notify the student about interactive session reraised
             Clients.Caller.interactiveSessionReraised(sessionId, newSessionId);
 
-            //Notify the others about the cancel operation
+            //Notify the signalr users about the cancel operation
             Clients.Group("session_" + sessionId, Context.ConnectionId)
                 .interactiveSessionCancelled(sessionId);
+
+            //Notify the weixin users about the cancel operation
+            await POIProxyToWxApi.interactiveSessionCancelled(Clients.Caller.userId, sessionId);
 
             //Make the session open after everything is ready
             interMsgHandler.updateSessionStatus(newSessionId, "open");
