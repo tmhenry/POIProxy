@@ -449,13 +449,15 @@ namespace POIProxy.Handlers
 
         public Tuple<string,string> createInteractiveSession(string userId, string mediaId, string desc)
         {
+            double timestamp = POITimestamp.ConvertToUnixTimestamp(DateTime.Now);
+
             //Create interactive presentation
             Dictionary<string, object> values = new Dictionary<string, object>();
             values["user_id"] = userId;
             values["type"] = "interactive";
             values["course_id"] = -1;
             values["description"] = desc;
-            values["create_at"] = POITimestamp.ConvertToUnixTimestamp(DateTime.Now);
+            values["create_at"] = timestamp;
             values["media_id"] = mediaId;
 
             string presId = dbManager.insertIntoTable("presentation", values);
@@ -464,7 +466,7 @@ namespace POIProxy.Handlers
             values["type"] = "interactive";
             values["presId"] = presId;
             values["creator"] = userId;
-            values["create_at"] = POITimestamp.ConvertToUnixTimestamp(DateTime.Now);
+            values["create_at"] = timestamp;
             values["status"] = "created";
 
             string sessionId = dbManager.insertIntoTable("session", values);
@@ -475,6 +477,7 @@ namespace POIProxy.Handlers
             //Get the information about the activity
             Dictionary<string, string> infoDict = new Dictionary<string, string>();
             infoDict["session_id"] = sessionId;
+            infoDict["create_at"] =  timestamp.ToString();
             infoDict["student_id"] = userId;
             infoDict["description"] = desc;
             infoDict["cover"] = mediaId;
@@ -520,6 +523,7 @@ namespace POIProxy.Handlers
 
             var sessionRecord = dbManager.selectSingleRowFromTable("session", null, conditions);
             var presId = sessionRecord["presId"];
+            var timestamp = sessionRecord["create_at"];
             string userId = sessionRecord["creator"] as string;
             string tutorId = sessionRecord["tutor"] as string;
 
@@ -530,6 +534,7 @@ namespace POIProxy.Handlers
             Dictionary<string, string> info = new Dictionary<string, string>
             {
                 {"session_id", sessionId},
+                {"create_at", timestamp.ToString()},
                 {"student_id", userId},
                 {"tutor_id",  tutorId},
                 {"cover", presRecord["media_id"] as string},
@@ -556,6 +561,8 @@ namespace POIProxy.Handlers
                 info["tutor_avatar"] = tutorRecord["avatar"] as string;
                 info["tutor_name"] = tutorRecord["username"] as string;
             }
+
+            POIGlobalVar.POIDebugLog(jsonHandler.Serialize(info));
             
             return info;
         }
@@ -658,7 +665,7 @@ namespace POIProxy.Handlers
             return userInfo;
         }
 
-        public string duplicateInteractiveSession(string sessionId)
+        public string duplicateInteractiveSession(string sessionId, double timestamp)
         {
             Dictionary<string, object> conditions = new Dictionary<string, object>();
             conditions["id"] = sessionId;
@@ -671,18 +678,19 @@ namespace POIProxy.Handlers
                 values["type"] = "interactive";
                 values["presId"] = result["presId"];
                 values["creator"] = result["creator"];
-                values["create_at"] = POITimestamp.ConvertToUnixTimestamp(DateTime.Now);
+                values["create_at"] = timestamp;
                 values["status"] = "created";
 
                 return dbManager.insertIntoTable("session", values);
             }
             else
             {
+                POIGlobalVar.POIDebugLog("In duplicate session, cannot find original session");
                 return (-1).ToString();
             }
         }
 
-        public void reraiseInteractiveSession(string userId, string sessionId, string newSessionId)
+        public void reraiseInteractiveSession(string userId, string sessionId, string newSessionId, double timestamp)
         {
             //Set the status to cancelled for the initial session
             updateSessionStatus(sessionId, "cancelled");
@@ -690,18 +698,30 @@ namespace POIProxy.Handlers
             //Remove the initial session archive and insert the new archive
             if (sessionArchives.ContainsKey(sessionId))
             {
+                POIGlobalVar.POIDebugLog("Found archive in reraise session");
                 POIInteractiveSessionArchive archive;
                 sessionArchives.TryRemove(sessionId, out archive);
 
                 //Initialize the archive for the new session
                 archive.Info["session_id"] = newSessionId;
+                archive.Info["create_at"] = timestamp.ToString();
+                archive.Info["status"] = "open";
+                archive.Info["tutor_id"] = null;
+                archive.Info["tutor_name"] = null;
+                archive.Info["tutor_avatar"] = null;
                 initSessionArchive(archive.Info);
             }
             else
             {
+                POIGlobalVar.POIDebugLog("Cannot find archive in reraise session");
                 //No archive exists in memory, read it from database
                 Dictionary<string,string> archiveInfo = getArchiveInfoFromDb(sessionId);
                 archiveInfo["session_id"] = newSessionId;
+                archiveInfo["create_at"] = timestamp.ToString();
+                archiveInfo["status"] = "open";
+                archiveInfo["tutor_id"] = null;
+                archiveInfo["tutor_name"] = null;
+                archiveInfo["tutor_avatar"] = null;
                 initSessionArchive(archiveInfo);
             }
         }
@@ -738,7 +758,10 @@ namespace POIProxy.Handlers
             if (!sessionArchives.ContainsKey(sessionId))
             {
                 initSessionArchive(getArchiveInfoFromDb(sessionId));
+                POIGlobalVar.POIDebugLog("Cannot find archive, read from db");
             }
+
+            POIGlobalVar.POIDebugLog(jsonHandler.Serialize(sessionArchives[sessionId]));
 
             return sessionArchives[sessionId];
         }

@@ -56,12 +56,24 @@ namespace POIProxy
             {
                 if (Status == "open")
                 {
-                    POIGlobalVar.POIDebugLog("Session is open!");
-                    Status = "serving";
-                    return true;
+                    double createTime = double.Parse(Info["create_at"]);
+                    POIGlobalVar.POIDebugLog("In join, create time is " + createTime + 
+                        " and threshold is" + POITimestamp.ConvertToUnixTimestamp(DateTime.Now.AddSeconds(-20)));
+                    if (createTime < POITimestamp.ConvertToUnixTimestamp(DateTime.Now.AddSeconds(-20)))
+                    {
+                        POIGlobalVar.POIDebugLog("Session is open!");
+                        Status = "serving";
+                        return true;
+                    }
+                    else
+                    {
+                        POIGlobalVar.POIDebugLog("Session is counting for open!");
+                        return false;
+                    }
                 }
                 else
                 {
+                    POIGlobalVar.POIDebugLog("In join, session is not open");
                     return false;
                 }
             }

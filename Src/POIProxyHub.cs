@@ -364,9 +364,9 @@ namespace POIProxy
 
         public async Task reraiseInteractiveSession(string sessionId)
         {
-            string newSessionId = interMsgHandler.duplicateInteractiveSession(sessionId);
-
-            interMsgHandler.reraiseInteractiveSession(Clients.Caller.userId, sessionId, newSessionId);
+            double timestamp = POITimestamp.ConvertToUnixTimestamp(DateTime.Now);
+            string newSessionId = interMsgHandler.duplicateInteractiveSession(sessionId, timestamp);
+            interMsgHandler.reraiseInteractiveSession(Clients.Caller.userId, sessionId, newSessionId, timestamp);
 
             //Add the student to the session group
             await Groups.Add(Context.ConnectionId, "session_" + newSessionId);

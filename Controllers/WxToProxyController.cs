@@ -174,29 +174,29 @@ namespace POIProxy.Controllers
 
                         break;
 
-                    case "sessionReraised":
-                        sessionId = msgInfo["sessionId"];
-                        POIGlobalVar.POIDebugLog("Session reraised " + sessionId);
-                        newSessionId = msgInfo["newSessionId"];
-                        userId = msgInfo["userId"];
-                        POIGlobalVar.POIDebugLog("New session is " + newSessionId);
+                    //case "sessionReraised":
+                    //    sessionId = msgInfo["sessionId"];
+                    //    POIGlobalVar.POIDebugLog("Session reraised " + sessionId);
+                    //    newSessionId = msgInfo["newSessionId"];
+                    //    userId = msgInfo["userId"];
+                    //    POIGlobalVar.POIDebugLog("New session is " + newSessionId);
 
-                        interMsgHandler.reraiseInteractiveSession(userId, sessionId, newSessionId);
+                    //    interMsgHandler.reraiseInteractiveSession(userId, sessionId, newSessionId);
 
-                        hubContext.Clients.Group("session_" + sessionId)
-                            .textMsgReceived(userId, sessionId, "志愿者你好，同学已经取消了这次提问，取消的提问不会影响你的积分",
-                            POITimestamp.ConvertToUnixTimestamp(DateTime.Now));
+                    //    hubContext.Clients.Group("session_" + sessionId)
+                    //        .textMsgReceived(userId, sessionId, "志愿者你好，同学已经取消了这次提问，取消的提问不会影响你的积分",
+                    //        POITimestamp.ConvertToUnixTimestamp(DateTime.Now));
 
-                        //Notify the tutor about the cancelling operation
-                        hubContext.Clients.Group("session_" + sessionId)
-                            .interactiveSessionCancelled(sessionId);
+                    //    //Notify the tutor about the cancelling operation
+                    //    hubContext.Clients.Group("session_" + sessionId)
+                    //        .interactiveSessionCancelled(sessionId);
 
-                        //Make the session open after everything is ready
-                        interMsgHandler.updateSessionStatus(newSessionId, "open");
+                    //    //Make the session open after everything is ready
+                    //    interMsgHandler.updateSessionStatus(newSessionId, "open");
 
-                        await POIProxyPushNotifier.sessionCreated(newSessionId);
+                    //    await POIProxyPushNotifier.sessionCreated(newSessionId);
 
-                        break;
+                    //    break;
 
                     //Join and create operation received from weixin 
                     case "joinSession":
@@ -258,6 +258,7 @@ namespace POIProxy.Controllers
             {
                 POIGlobalVar.POIDebugLog("Session is open, joined!");
 
+                interMsgHandler.joinInteractiveSession(userId, sessionId);
                 Dictionary<string, object> userInfo = interMsgHandler.getUserInfoById(userId);
 
                 string userInfoJson = jsonHandler.Serialize(userInfo);
@@ -277,6 +278,7 @@ namespace POIProxy.Controllers
             }
             else
             {
+                POIGlobalVar.POIDebugLog("Cannot join the session, not open or taken by others");
                 //Notify the weixin user about the join failed
                 await POIProxyToWxApi.interactiveSessionJoinFailed(userId, sessionId);
             }
@@ -284,12 +286,16 @@ namespace POIProxy.Controllers
 
         private async Task wxReraiseInteractiveSession(string userId, string sessionId)
         {
-            string newSessionId = interMsgHandler.duplicateInteractiveSession(sessionId);
-
-            interMsgHandler.reraiseInteractiveSession(userId, sessionId, newSessionId);
+            double timestamp = POITimestamp.ConvertToUnixTimestamp(DateTime.Now);
+            string newSessionId = interMsgHandler.duplicateInteractiveSession(sessionId, timestamp);
+            interMsgHandler.reraiseInteractiveSession(userId, sessionId, newSessionId, timestamp);
 
             //Notify the student about interactive session reraised
             await POIProxyToWxApi.interactiveSessionReraised(userId, sessionId, newSessionId);
+
+            hubContext.Clients.Group("session_" + sessionId).
+                textMsgReceived(userId, sessionId,
+                "志愿者你好，同学已经取消了这次提问，取消的提问不会影响你的积分", timestamp);
 
             //Notify the signalr users about the cancel operation
             hubContext.Clients.Group("session_" + sessionId).
