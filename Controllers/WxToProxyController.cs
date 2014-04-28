@@ -10,7 +10,6 @@ using Microsoft.AspNet.SignalR;
 
 using POILibCommunication;
 using System.Web.Script.Serialization;
-
 using System.Threading.Tasks;
 
 namespace POIProxy.Controllers
@@ -79,7 +78,6 @@ namespace POIProxy.Controllers
 
                     await POIProxyPushNotifier.illustrationMsgReceived(sessionId);
 
-                    
                     break;
             }
 
@@ -254,7 +252,10 @@ namespace POIProxy.Controllers
 
         private async Task wxJoinInteractiveSession(string userId, string sessionId)
         {
-            if (interMsgHandler.checkSessionOpen(sessionId))
+            int joinStatus = interMsgHandler.checkSessionOpen(sessionId);
+            POIGlobalVar.POIDebugLog("here join status is " + joinStatus);
+
+            if (joinStatus == 0)
             {
                 POIGlobalVar.POIDebugLog("Session is open, joined!");
 
@@ -276,9 +277,15 @@ namespace POIProxy.Controllers
                 //Send push notification
                 await POIProxyPushNotifier.sessionJoined(sessionId);
             }
-            else
+            else if(joinStatus == 1)
             {
-                POIGlobalVar.POIDebugLog("Cannot join the session, not open or taken by others");
+                POIGlobalVar.POIDebugLog("Cannot join the session, not passing time limit");
+                //Notify the weixin user about the join failed
+                await POIProxyToWxApi.interactiveSessionJoinBeforeTimeLimit(userId, sessionId);
+            }
+            else if (joinStatus == 2)
+            {
+                POIGlobalVar.POIDebugLog("Cannot join the session, taken by others");
                 //Notify the weixin user about the join failed
                 await POIProxyToWxApi.interactiveSessionJoinFailed(userId, sessionId);
             }
@@ -306,6 +313,8 @@ namespace POIProxy.Controllers
 
             //Make the session open after everything is ready
             interMsgHandler.updateSessionStatus(newSessionId, "open");
+
+            await POIProxyPushNotifier.sessionCreated(newSessionId);
         }
     }
 }

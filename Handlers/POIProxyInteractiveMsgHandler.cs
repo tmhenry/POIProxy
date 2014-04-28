@@ -407,7 +407,7 @@ namespace POIProxy.Handlers
             dbManager.updateTable("session", values, conditions);
         }
 
-        public bool checkSessionOpen(string sessionId)
+        public int checkSessionOpen(string sessionId)
         {
             var session = getArchiveBySessionId(sessionId);
             return session.joinSessionIfOpen();
@@ -735,11 +735,27 @@ namespace POIProxy.Handlers
             updateSessionStatusWithTutorJoin(userId, sessionId);
 
             POIInteractiveSessionArchive session = null;
+
             if (sessionArchives.ContainsKey(sessionId))
             {
                 //Archive the session join event
                 session = sessionArchives[sessionId];
                 session.archiveSessionJoinedEvent(userId);
+
+                //Get the tutor information and insert into archive info
+                if (userId != null)
+                {
+                    Dictionary<string, object> conditions = new Dictionary<string, object>
+                    {
+                        {"id", userId}
+                    };
+           
+                    var tutorRecord = dbManager.selectSingleRowFromTable("users", null, conditions);
+
+                    session.Info["tutor_id"] = userId;
+                    session.Info["tutor_avatar"] = tutorRecord["avatar"] as string;
+                    session.Info["tutor_name"] = tutorRecord["username"] as string;
+                }
             }
             else
             {

@@ -50,31 +50,31 @@ namespace POIProxy
             }
         }
 
-        public bool joinSessionIfOpen()
+        public int joinSessionIfOpen()
         {
             lock (statusLock)
             {
                 if (Status == "open")
                 {
                     double createTime = double.Parse(Info["create_at"]);
-                    POIGlobalVar.POIDebugLog("In join, create time is " + createTime + 
-                        " and threshold is" + POITimestamp.ConvertToUnixTimestamp(DateTime.Now.AddSeconds(-20)));
-                    if (createTime < POITimestamp.ConvertToUnixTimestamp(DateTime.Now.AddSeconds(-20)))
+                    POIGlobalVar.POIDebugLog("In join, create time is a " + createTime + 
+                        " and threshold is" + POITimestamp.ConvertToUnixTimestamp(DateTime.Now.AddSeconds(-60)));
+                    if (createTime < POITimestamp.ConvertToUnixTimestamp(DateTime.Now.AddSeconds(-60)))
                     {
                         POIGlobalVar.POIDebugLog("Session is open!");
                         Status = "serving";
-                        return true;
+                        return 0;
                     }
                     else
                     {
                         POIGlobalVar.POIDebugLog("Session is counting for open!");
-                        return false;
+                        return 1;
                     }
                 }
                 else
                 {
                     POIGlobalVar.POIDebugLog("In join, session is not open");
-                    return false;
+                    return 2;
                 }
             }
         }

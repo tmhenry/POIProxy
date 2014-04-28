@@ -46,6 +46,7 @@
             poiProxy.client.imageMsgReceived = imageMsgReceived;
             poiProxy.client.voiceMsgReceived = voiceMsgReceived;
             poiProxy.client.illustrationMsgReceived = illustrationMsgReceived;
+            poiProxy.client.msgAckReceived = msgAckReceived;
 
             /*
             $.connection.hub.reconnected(function(){
@@ -97,7 +98,12 @@
 
         function illustrationMsgReceived(senderId, sessionId, mediaId, timestamp)
         {
-            
+            window.location = "poi:function:illustrationMsgReceived?senderId=" + senderId + "&sessionId=" + sessionId + "&mediaId=" + mediaId + "&timestamp=" + timestamp;
+        }
+
+        function msgAckReceived(sessionId, timestamp)
+        {
+            window.location = "poi:function:msgAckReceived?sessionId=" + sessionId + "&timestamp=" + timestamp;
         }
 
         //Session created and joined functions, to be called by the proxy server

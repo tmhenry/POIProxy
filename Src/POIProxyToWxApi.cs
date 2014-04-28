@@ -93,6 +93,17 @@ namespace POIProxy
             await sendReq(values);
         }
 
+        public static async Task interactiveSessionJoinBeforeTimeLimit(string userId, string sessionId)
+        {
+            NameValueCollection values = new NameValueCollection();
+            values["userId"] = userId;
+            values["sessionId"] = sessionId;
+
+            values["reqType"] = "interactiveSessionJoinBeforeTimeLimit";
+
+            await sendReq(values);
+        }
+
         public static async Task interactiveSessionReraised(string userId, string sessionId, string newSessionId)
         {
             NameValueCollection values = new NameValueCollection();

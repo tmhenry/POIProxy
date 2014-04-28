@@ -68,6 +68,7 @@ namespace POIProxy
                 POIUser curUser = POIGlobalVar.WebConUserMap[Context.ConnectionId];
                 if (curUser == null)
                 {
+                    POIGlobalVar.POIDebugLog("wrong connection!");
                     POIGlobalVar.POIDebugLog("Cannot find the web user associated with connection");
                     return;
                 }
@@ -193,17 +194,24 @@ namespace POIProxy
 
             if (!interMsgHandler.checkSessionMsgDuplicate(sessionId, timestamp))
             {
-                
                 interMsgHandler.textMsgReceived(Clients.Caller.userId, sessionId, message, timestamp);
 
                 Clients.Group("session_" + sessionId, Context.ConnectionId).
                     textMsgReceived(Clients.Caller.userId, sessionId, message, timestamp);
+
+                Clients.Caller.msgAckReceived(sessionId, timestamp);
 
                 //Notify the weixin server
                 await POIProxyToWxApi.textMsgReceived(Clients.Caller.userId, sessionId, message);
 
                 //Send push notification
                 await POIProxyPushNotifier.textMsgReceived(sessionId);
+
+            }
+            else
+            {
+                //Message duplicate: send back the ack
+                Clients.Caller.msgAckReceived(sessionId, timestamp);
             }
             
         }
@@ -217,10 +225,17 @@ namespace POIProxy
                 Clients.Group("session_" + sessionId, Context.ConnectionId).
                     imageMsgReceived(Clients.Caller.userId, sessionId, mediaId, timestamp);
 
+                Clients.Caller.msgAckReceived(sessionId, timestamp);
+
                 await POIProxyToWxApi.imageMsgReceived(Clients.Caller.userId, sessionId, mediaId);
 
                 //Send push notification
                 await POIProxyPushNotifier.imageMsgReceived(sessionId);
+            }
+            else
+            {
+                //Message duplicate: send back the ack
+                Clients.Caller.msgAckReceived(sessionId, timestamp);
             }
         }
 
@@ -233,10 +248,17 @@ namespace POIProxy
                 Clients.Group("session_" + sessionId, Context.ConnectionId).
                     voiceMsgReceived(Clients.Caller.userId, sessionId, mediaId, timestamp);
 
+                Clients.Caller.msgAckReceived(sessionId, timestamp);
+
                 await POIProxyToWxApi.voiceMsgReceived(Clients.Caller.userId, sessionId, mediaId);
 
                 //Send push notification
                 await POIProxyPushNotifier.voiceMsgReceived(sessionId);
+            }
+            else
+            {
+                //Message duplicate: send back the ack
+                Clients.Caller.msgAckReceived(sessionId, timestamp);
             }
         }
 
@@ -249,10 +271,17 @@ namespace POIProxy
                 Clients.Group("session_" + sessionId, Context.ConnectionId).
                     illustrationMsgReceived(Clients.Caller.userId, sessionId, mediaId, timestamp);
 
+                Clients.Caller.msgAckReceived(sessionId, timestamp);
+
                 await POIProxyToWxApi.illustrationMsgReceived(Clients.Caller.userId, sessionId, mediaId);
 
                 //Send push notification
                 await POIProxyPushNotifier.illustrationMsgReceived(sessionId);
+            }
+            else
+            {
+                //Message duplicate: send back the ack
+                Clients.Caller.msgAckReceived(sessionId, timestamp);
             }
         }
 
@@ -282,7 +311,9 @@ namespace POIProxy
 
         public async Task joinInteractiveSession(string sessionId)
         {
-            if (interMsgHandler.checkSessionOpen(sessionId))
+            int joinStatus = interMsgHandler.checkSessionOpen(sessionId);
+
+            if (joinStatus == 0)
             {
                 POIGlobalVar.POIDebugLog("Session is open, joined!");
 
@@ -313,8 +344,15 @@ namespace POIProxy
                 //Send push notification
                 await POIProxyPushNotifier.sessionJoined(sessionId);
             }
-            else
+            else if(joinStatus == 1)
             {
+                POIGlobalVar.POIDebugLog("Cannot join the session, not passing time limit");
+            }
+            else if (joinStatus == 2)
+            {
+                POIGlobalVar.POIDebugLog("Cannot join the session, taken by others");
+                
+                //Notify the weixin user about the join failed
                 Clients.Caller.interactiveSessionJoinFailed(sessionId);
             }
         }
@@ -383,6 +421,8 @@ namespace POIProxy
 
             //Make the session open after everything is ready
             interMsgHandler.updateSessionStatus(newSessionId, "open");
+
+            await POIProxyPushNotifier.sessionCreated(newSessionId);
         }
 
         //Timestamp is the timestamp of the latest event received by the client

@@ -159,6 +159,7 @@ namespace POIProxy
 
         public static async Task sessionCreated(string sessionId)
         {
+            POIGlobalVar.POIDebugLog("Session created broadcasted!");
             await broadcastNotification(sessionId, "有题了，快来抢！");
         }
     }
