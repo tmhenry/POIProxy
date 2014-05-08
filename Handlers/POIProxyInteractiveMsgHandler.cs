@@ -48,7 +48,6 @@ namespace POIProxy.Handlers
             return receipients;
         }
 
-
         public bool checkIsTutor(string userId)
         {
             bool isTutor = false;
@@ -68,66 +67,6 @@ namespace POIProxy.Handlers
             }
 
             return isTutor;
-        }
-
-        public bool checkTutorIdle(string tutorId)
-        {
-            bool isIdle = false;
-
-            Dictionary<string, object> conditions = new Dictionary<string, object>();
-            conditions["uid"] = tutorId;
-            conditions["status"] = "idle";
-
-            DataTable result = dbManager.selectFromTable("tutor_status", null, conditions);
-            if (result.Rows.Count > 0)
-            {
-                isIdle = true;
-            }
-
-            return isIdle;
-        }
-
-        public void setTutorStatus(string tutorId, string status)
-        {
-            Dictionary<string, object> conditions = new Dictionary<string, object>();
-            Dictionary<string, object> values = new Dictionary<string, object>();
-
-            conditions["uid"] = tutorId;
-            values["uid"] = tutorId;
-            values["status"] = status;
-
-            DataTable result = dbManager.selectFromTable("tutor_status", null, conditions);
-            if (result.Rows.Count > 0)
-            {
-                dbManager.updateTable("tutor_status", values, conditions);
-            }
-            else
-            {
-                dbManager.insertIntoTable("tutor_status", values);
-            }
-        }
-
-        public void setTutorIdle(string tutorId)
-        {
-            setTutorStatus(tutorId, "idle");
-        }
-
-        public void setTutorUnavailable(string tutorId)
-        {
-            setTutorStatus(tutorId, "unavailable");
-        }
-
-        public void resetTutorRelatedAssignment(string tutorId)
-        {
-            //remove talker relationship
-            Dictionary<string, object> conditions = new Dictionary<string, object>();
-            conditions["uid"] = tutorId;
-            dbManager.deleteFromTable("user_match", conditions);
-
-            //remove receipient relationship
-            conditions.Clear();
-            conditions["matched_uid"] = tutorId;
-            dbManager.deleteFromTable("user_match", conditions);
         }
 
         public bool checkUserExists(string userId)
@@ -413,6 +352,20 @@ namespace POIProxy.Handlers
             return session.joinSessionIfOpen();
         }
 
+        public bool checkSessionTutor(string userId, string sessionId)
+        {
+            var session = getArchiveBySessionId(sessionId);
+
+            if (session.Info["tutor_id"] == userId)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
         public bool checkSessionServing(string sessionId)
         {
             return checkSessionState(sessionId, "serving");
@@ -690,7 +643,7 @@ namespace POIProxy.Handlers
             }
         }
 
-        public void reraiseInteractiveSession(string userId, string sessionId, string newSessionId, double timestamp)
+        public async Task reraiseInteractiveSession(string userId, string sessionId, string newSessionId, double timestamp)
         {
             //Set the status to cancelled for the initial session
             updateSessionStatus(sessionId, "cancelled");
@@ -701,6 +654,20 @@ namespace POIProxy.Handlers
                 POIGlobalVar.POIDebugLog("Found archive in reraise session");
                 POIInteractiveSessionArchive archive;
                 sessionArchives.TryRemove(sessionId, out archive);
+
+                //Upload the session archive to the qiniu cdn
+                string mediaId = await POIContentServerHelper.uploadJsonStrToQiniuCDN(
+                    jsonHandler.Serialize(archive)
+                );
+
+                //Update the database given the media id
+                Dictionary<string, object> conditions = new Dictionary<string, object>();
+                conditions["id"] = sessionId;
+
+                Dictionary<string, object> values = new Dictionary<string, object>();
+                values["media_id"] = mediaId;
+
+                dbManager.updateTable("session", values, conditions);
 
                 //Initialize the archive for the new session
                 archive.Info["session_id"] = newSessionId;
@@ -801,7 +768,7 @@ namespace POIProxy.Handlers
             sessionArchives[sessionId].Info["cover"] = mediaId;
         }
 
-        public void cancelInteractiveSession(string userId, string sessionId)
+        public async Task cancelInteractiveSession(string userId, string sessionId)
         {
             //Set the status to cancelled
             updateSessionStatus(sessionId, "cancelled");
@@ -811,6 +778,20 @@ namespace POIProxy.Handlers
             {
                 POIInteractiveSessionArchive archive;
                 sessionArchives.TryRemove(sessionId, out archive);
+
+                //Upload the session archive to the qiniu cdn
+                string mediaId = await POIContentServerHelper.uploadJsonStrToQiniuCDN(
+                    jsonHandler.Serialize(archive)
+                );
+
+                //Update the database given the media id
+                Dictionary<string, object> conditions = new Dictionary<string, object>();
+                conditions["id"] = sessionId;
+
+                Dictionary<string, object> values = new Dictionary<string, object>();
+                values["media_id"] = mediaId;
+
+                dbManager.updateTable("session", values, conditions);
             }
         }
 

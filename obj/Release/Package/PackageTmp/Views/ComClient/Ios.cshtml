@@ -30,6 +30,7 @@
             
             poiProxy.client.interactiveSessionCreated = interactiveSessionCreated;
             poiProxy.client.interactiveSessionJoined = interactiveSessionJoined;
+            poiProxy.client.interactiveSessionJoinBeforeStarted = interactiveSessionJoinBeforeStarted;
             poiProxy.client.interactiveSessionJoinFailed = interactiveSessionJoinFailed;
             poiProxy.client.interactiveSessionNewUserJoined = interactiveSessionNewUserJoined;
                           
@@ -115,6 +116,11 @@
         function interactiveSessionJoined(sessionId, archive, timestamp)
         {
             window.location = "poi:function:interactiveSessionJoined?sessionId=" + sessionId + "&timestamp=" + timestamp + "&archive=" + archive;
+        }
+
+        function interactiveSessionJoinBeforeStarted(sessionId)
+        {
+            window.location = "poi:function:interactiveSessionJoinBeforeStarted?sessionId=" + sessionId;
         }
 
         function interactiveSessionJoinFailed(sessionId)

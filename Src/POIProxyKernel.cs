@@ -11,7 +11,8 @@ using System.Web.Configuration;
 using POILibCommunication;
 using System.Threading;
 using POIProxy.Handlers;
-
+using log4net.Config;
+using Qiniu.Conf;
 
 namespace POIProxy
 {
@@ -32,11 +33,16 @@ namespace POIProxy
 
         public void Start()
         {
+            
             //Load the config file into the global definition
             loadConfigFile();
 
             //Register a log handler to enable web logging
+            XmlConfigurator.Configure();
             POIGlobalVar.logDelegate = new POIProxyLogHandler();
+
+            //Configure the qiniu storage
+            //Qiniu.Conf.Config.Init();
 
             //Set the system kernel to connect with POI Communication lib
             POIGlobalVar.SystemKernel = this;

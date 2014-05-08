@@ -347,13 +347,32 @@ namespace POIProxy
             else if(joinStatus == 1)
             {
                 POIGlobalVar.POIDebugLog("Cannot join the session, not passing time limit");
+                Clients.Caller.interactiveSessionJoinBeforeStarted(sessionId);
             }
             else if (joinStatus == 2)
             {
-                POIGlobalVar.POIDebugLog("Cannot join the session, taken by others");
-                
-                //Notify the weixin user about the join failed
-                Clients.Caller.interactiveSessionJoinFailed(sessionId);
+                //Check if the user is the current tutor
+                if (interMsgHandler.checkSessionTutor(Clients.Caller.userId, sessionId))
+                {
+                    POIGlobalVar.POIDebugLog("Session already joined");
+
+                    //Get the session archive
+                    POIInteractiveSessionArchive archive = interMsgHandler.getArchiveBySessionId(sessionId);
+                    double timestamp = POITimestamp.ConvertToUnixTimestamp(DateTime.Now);
+                    string archiveJson = jsonHandler.Serialize(archive);
+
+                    POIGlobalVar.POIDebugLog(archiveJson);
+
+                    //Send the archive to the user
+                    Clients.Caller.interactiveSessionJoined(sessionId, archiveJson, timestamp);               
+                }
+                else
+                {
+                    POIGlobalVar.POIDebugLog("Cannot join the session, taken by others");
+
+                    //Notify the weixin user about the join failed
+                    Clients.Caller.interactiveSessionJoinFailed(sessionId);
+                }
             }
         }
 
@@ -404,7 +423,7 @@ namespace POIProxy
         {
             double timestamp = POITimestamp.ConvertToUnixTimestamp(DateTime.Now);
             string newSessionId = interMsgHandler.duplicateInteractiveSession(sessionId, timestamp);
-            interMsgHandler.reraiseInteractiveSession(Clients.Caller.userId, sessionId, newSessionId, timestamp);
+            await interMsgHandler.reraiseInteractiveSession(Clients.Caller.userId, sessionId, newSessionId, timestamp);
 
             //Add the student to the session group
             await Groups.Add(Context.ConnectionId, "session_" + newSessionId);

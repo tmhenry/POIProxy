@@ -140,7 +140,7 @@ namespace POIProxy.Controllers
                         sessionId = msgInfo["sessionId"];
                         POIGlobalVar.POIDebugLog("Here" + " " + sessionId);
                         //userId = msgInfo["userId"];
-                        interMsgHandler.cancelInteractiveSession("", sessionId);
+                        await interMsgHandler.cancelInteractiveSession("", sessionId);
 
                         break;
 
@@ -295,7 +295,7 @@ namespace POIProxy.Controllers
         {
             double timestamp = POITimestamp.ConvertToUnixTimestamp(DateTime.Now);
             string newSessionId = interMsgHandler.duplicateInteractiveSession(sessionId, timestamp);
-            interMsgHandler.reraiseInteractiveSession(userId, sessionId, newSessionId, timestamp);
+            await interMsgHandler.reraiseInteractiveSession(userId, sessionId, newSessionId, timestamp);
 
             //Notify the student about interactive session reraised
             await POIProxyToWxApi.interactiveSessionReraised(userId, sessionId, newSessionId);

@@ -11,7 +11,6 @@ C:\Users\HenryXia\Desktop\POIProxy\bin\System.Web.Razor.dll
 C:\Users\HenryXia\Desktop\POIProxy\bin\System.Web.WebPages.Deployment.dll
 C:\Users\HenryXia\Desktop\POIProxy\bin\System.Web.WebPages.dll
 C:\Users\HenryXia\Desktop\POIProxy\bin\System.Web.WebPages.Razor.dll
-C:\Users\HenryXia\Desktop\POIProxy\bin\Newtonsoft.Json.xml
 C:\Users\HenryXia\Desktop\POIProxy\bin\POILibCommunication.pdb
 C:\Users\HenryXia\Desktop\POIProxy\bin\Microsoft.Web.Infrastructure.xml
 C:\Users\HenryXia\Desktop\POIProxy\bin\System.Net.Http.Formatting.xml
@@ -37,3 +36,6 @@ C:\Users\HenryXia\Desktop\POIProxy\bin\Parse.dll
 C:\Users\HenryXia\Desktop\POIProxy\bin\Parse.NetFx45.dll
 C:\Users\HenryXia\Desktop\POIProxy\bin\Parse.xml
 C:\Users\HenryXia\Desktop\POIProxy\bin\Parse.NetFx45.xml
+C:\Users\HenryXia\Desktop\POIProxy\bin\log4net.dll
+C:\Users\HenryXia\Desktop\POIProxy\bin\log4net.xml
+C:\Users\HenryXia\Desktop\POIProxy\bin\Qiniu.dll
