@@ -42,7 +42,9 @@ namespace POIProxy
             POIGlobalVar.logDelegate = new POIProxyLogHandler();
 
             //Configure the qiniu storage
-            //Qiniu.Conf.Config.Init();
+            Qiniu.Conf.Config.Init();
+            //Qiniu.Conf.Config.ACCESS_KEY = "ZI7Gvy2levL4jcJPC_WXyMFDsuTnjHE12B5zDQ_W";
+            //Qiniu.Conf.Config.SECRET_KEY = "E9TDNgPY_uGpGtnSVDwTdPZPgVr_9IBlUlbMBbXA";
 
             //Set the system kernel to connect with POI Communication lib
             POIGlobalVar.SystemKernel = this;

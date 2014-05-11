@@ -232,6 +232,7 @@
     <Compile Include="site.cs">
       <DependentUpon>POIEntities.tt</DependentUpon>
     </Compile>
+    <Compile Include="Src\POICdnHelper.cs" />
     <Compile Include="Src\POIInteractiveSessionArchive.cs" />
     <Compile Include="Src\POIOfflineSessionCache.cs" />
     <Compile Include="Src\POIProxyDbManager.cs" />

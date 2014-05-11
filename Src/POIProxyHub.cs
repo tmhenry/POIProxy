@@ -450,7 +450,7 @@ namespace POIProxy
             DataRow record = interMsgHandler.getSessionState(sessionId);
             string sessionState = record["status"] as string;
 
-            POIGlobalVar.POIDebugLog("In sync timestamp is: " + timestamp);
+            //POIGlobalVar.POIDebugLog("In sync timestamp is: " + timestamp);
 
             switch (sessionState)
             {

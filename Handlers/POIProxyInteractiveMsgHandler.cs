@@ -515,7 +515,7 @@ namespace POIProxy.Handlers
                 info["tutor_name"] = tutorRecord["username"] as string;
             }
 
-            POIGlobalVar.POIDebugLog(jsonHandler.Serialize(info));
+            //POIGlobalVar.POIDebugLog(jsonHandler.Serialize(info));
             
             return info;
         }
@@ -535,6 +535,8 @@ namespace POIProxy.Handlers
                 string mediaId = await POIContentServerHelper.uploadJsonStrToQiniuCDN(
                     jsonHandler.Serialize(session)
                 );
+
+                POICdnHelper.uploadSessionArchiveToQiniuCDN(sessionId, jsonHandler.Serialize(session));
 
                 //Update the database given the media id
                 Dictionary<string, object> conditions = new Dictionary<string, object>();
@@ -744,7 +746,7 @@ namespace POIProxy.Handlers
                 POIGlobalVar.POIDebugLog("Cannot find archive, read from db");
             }
 
-            POIGlobalVar.POIDebugLog(jsonHandler.Serialize(sessionArchives[sessionId]));
+            //POIGlobalVar.POIDebugLog(jsonHandler.Serialize(sessionArchives[sessionId]));
 
             return sessionArchives[sessionId];
         }
@@ -882,7 +884,7 @@ namespace POIProxy.Handlers
                 }
             }
 
-            POIGlobalVar.POIDebugLog(jsonHandler.Serialize(missedEvents));
+            //POIGlobalVar.POIDebugLog(jsonHandler.Serialize(missedEvents));
 
             return missedEvents;
         }
