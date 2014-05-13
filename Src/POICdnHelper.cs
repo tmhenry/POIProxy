@@ -13,11 +13,9 @@ namespace POIProxy
 {
     public class POICdnHelper
     {
-        public static string uploadSessionArchiveToQiniuCDN(string sessionId, string archiveStr)
+        public static string generateCdnKeyForSessionArchive(string sessionId)
         {
-            string cdnFileKey = "session_" + sessionId + "_" + POITimestamp.ConvertToUnixTimestamp(DateTime.Now);
-
-            return uploadStrToQiniuCDN(cdnFileKey, archiveStr);
+            return "session_" + sessionId + "_" + POITimestamp.ConvertToUnixTimestamp(DateTime.Now);
         }
 
         public static string uploadStrToQiniuCDN(string key, string str)

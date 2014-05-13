@@ -206,10 +206,10 @@ namespace POIProxy
 
                 //Send push notification
                 await POIProxyPushNotifier.textMsgReceived(sessionId);
-
             }
             else
             {
+                POIGlobalVar.POIDebugLog("Message duplicate: timestamp is " + timestamp);
                 //Message duplicate: send back the ack
                 Clients.Caller.msgAckReceived(sessionId, timestamp);
             }
@@ -234,6 +234,7 @@ namespace POIProxy
             }
             else
             {
+                POIGlobalVar.POIDebugLog("Message duplicate: timestamp is " + timestamp);
                 //Message duplicate: send back the ack
                 Clients.Caller.msgAckReceived(sessionId, timestamp);
             }
@@ -257,6 +258,7 @@ namespace POIProxy
             }
             else
             {
+                POIGlobalVar.POIDebugLog("Message duplicate: timestamp is " + timestamp);
                 //Message duplicate: send back the ack
                 Clients.Caller.msgAckReceived(sessionId, timestamp);
             }
@@ -280,6 +282,7 @@ namespace POIProxy
             }
             else
             {
+                POIGlobalVar.POIDebugLog("Message duplicate: timestamp is " + timestamp);
                 //Message duplicate: send back the ack
                 Clients.Caller.msgAckReceived(sessionId, timestamp);
             }
@@ -360,6 +363,8 @@ namespace POIProxy
                     POIInteractiveSessionArchive archive = interMsgHandler.getArchiveBySessionId(sessionId);
                     double timestamp = POITimestamp.ConvertToUnixTimestamp(DateTime.Now);
                     string archiveJson = jsonHandler.Serialize(archive);
+
+                    await Groups.Add(Context.ConnectionId, "session_" + sessionId);
 
                     POIGlobalVar.POIDebugLog(archiveJson);
 

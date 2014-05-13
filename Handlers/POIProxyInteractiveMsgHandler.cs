@@ -532,11 +532,12 @@ namespace POIProxy.Handlers
                 var session = getArchiveBySessionId(sessionId);
 
                 //Prepare the archive and upload to the cloud
-                string mediaId = await POIContentServerHelper.uploadJsonStrToQiniuCDN(
-                    jsonHandler.Serialize(session)
-                );
+                //string mediaId = await POIContentServerHelper.uploadJsonStrToQiniuCDN(
+                //    jsonHandler.Serialize(session)
+                //);
 
-                POICdnHelper.uploadSessionArchiveToQiniuCDN(sessionId, jsonHandler.Serialize(session));
+                string mediaId = POICdnHelper.generateCdnKeyForSessionArchive(sessionId);
+                POICdnHelper.uploadStrToQiniuCDN(mediaId, jsonHandler.Serialize(session));
 
                 //Update the database given the media id
                 Dictionary<string, object> conditions = new Dictionary<string, object>();
@@ -782,9 +783,12 @@ namespace POIProxy.Handlers
                 sessionArchives.TryRemove(sessionId, out archive);
 
                 //Upload the session archive to the qiniu cdn
-                string mediaId = await POIContentServerHelper.uploadJsonStrToQiniuCDN(
-                    jsonHandler.Serialize(archive)
-                );
+                string mediaId = POICdnHelper.generateCdnKeyForSessionArchive(sessionId);
+                //string mediaId = await POIContentServerHelper.uploadJsonStrToQiniuCDN(
+                //    jsonHandler.Serialize(archive)
+                //);
+
+                POICdnHelper.uploadStrToQiniuCDN(mediaId, jsonHandler.Serialize(archive));
 
                 //Update the database given the media id
                 Dictionary<string, object> conditions = new Dictionary<string, object>();
