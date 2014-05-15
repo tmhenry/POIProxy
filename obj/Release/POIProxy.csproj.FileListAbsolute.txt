@@ -39,3 +39,14 @@ C:\Users\HenryXia\Desktop\POIProxy\bin\Parse.NetFx45.xml
 C:\Users\HenryXia\Desktop\POIProxy\bin\log4net.dll
 C:\Users\HenryXia\Desktop\POIProxy\bin\log4net.xml
 C:\Users\HenryXia\Desktop\POIProxy\bin\Qiniu.dll
+C:\Users\HenryXia\Desktop\POIProxy\bin\Microsoft.AspNet.SignalR.Core.dll
+C:\Users\HenryXia\Desktop\POIProxy\bin\Microsoft.AspNet.SignalR.SystemWeb.dll
+C:\Users\HenryXia\Desktop\POIProxy\bin\Microsoft.Owin.dll
+C:\Users\HenryXia\Desktop\POIProxy\bin\Microsoft.Owin.Host.SystemWeb.dll
+C:\Users\HenryXia\Desktop\POIProxy\bin\Microsoft.Owin.Security.dll
+C:\Users\HenryXia\Desktop\POIProxy\bin\Microsoft.AspNet.SignalR.Core.xml
+C:\Users\HenryXia\Desktop\POIProxy\bin\Microsoft.AspNet.SignalR.SystemWeb.xml
+C:\Users\HenryXia\Desktop\POIProxy\bin\Microsoft.Owin.xml
+C:\Users\HenryXia\Desktop\POIProxy\bin\Microsoft.Owin.Host.SystemWeb.xml
+C:\Users\HenryXia\Desktop\POIProxy\bin\Microsoft.Owin.Security.xml
+C:\Users\HenryXia\Desktop\POIProxy\bin\Newtonsoft.Json.xml

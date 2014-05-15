@@ -15,11 +15,11 @@ namespace POIProxy
         {
             routes.IgnoreRoute("{resource}.axd/{*pathInfo}");
 
-            //Register signalr hubs
-            RouteTable.Routes.MapHubs(new HubConfiguration { 
-                EnableCrossDomain = true,
-                EnableDetailedErrors = true
-            });
+            ////Register signalr hubs
+            //RouteTable.Routes.MapHubs(new HubConfiguration { 
+            //    EnableCrossDomain = true,
+            //    EnableDetailedErrors = true
+            //});
             //RouteTable.Routes.MapHubs(new HubConfiguration());
 
             routes.MapRoute(
