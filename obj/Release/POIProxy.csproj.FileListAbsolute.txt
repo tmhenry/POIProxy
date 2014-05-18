@@ -50,3 +50,11 @@ C:\Users\HenryXia\Desktop\POIProxy\bin\Microsoft.Owin.xml
 C:\Users\HenryXia\Desktop\POIProxy\bin\Microsoft.Owin.Host.SystemWeb.xml
 C:\Users\HenryXia\Desktop\POIProxy\bin\Microsoft.Owin.Security.xml
 C:\Users\HenryXia\Desktop\POIProxy\bin\Newtonsoft.Json.xml
+C:\Users\HenryXia\Desktop\POIProxy\bin\ServiceStack.Common.dll
+C:\Users\HenryXia\Desktop\POIProxy\bin\ServiceStack.Interfaces.dll
+C:\Users\HenryXia\Desktop\POIProxy\bin\ServiceStack.Redis.dll
+C:\Users\HenryXia\Desktop\POIProxy\bin\ServiceStack.Text.dll
+C:\Users\HenryXia\Desktop\POIProxy\bin\ServiceStack.Common.xml
+C:\Users\HenryXia\Desktop\POIProxy\bin\ServiceStack.Interfaces.xml
+C:\Users\HenryXia\Desktop\POIProxy\bin\ServiceStack.Redis.xml
+C:\Users\HenryXia\Desktop\POIProxy\bin\ServiceStack.Text.xml

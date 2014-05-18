@@ -28,6 +28,17 @@ namespace POIProxy
         public void Log(string msg)
         {
             POIGlobalVar.POIDebugLog(msg);
+
+            try
+            {
+                Clients.Caller.logMsg("hi hi");
+                POIGlobalVar.POIDebugLog("Call completed");
+            }
+            catch (Exception e)
+            {
+                POIGlobalVar.POIDebugLog(e.Message);
+            }
+            
         }
 
         public void updateConfigFile(string configString)
@@ -290,6 +301,8 @@ namespace POIProxy
 
         public async Task createInteractiveSession(string mediaId, string description)
         {
+            POIGlobalVar.POIDebugLog("Creator id is : " + Clients.Caller.userId);
+
             //Create the session
             Tuple<string,string> result = interMsgHandler.
                 createInteractiveSession(Clients.Caller.userId, mediaId, description);
@@ -512,9 +525,13 @@ namespace POIProxy
             //Retrieve the user information from the query string
             var info = Context.QueryString;
 
+            //POIGlobalVar.POIDebugLog(info["service"]);
+
             String service = info["service"];
+
             if (service == null || service == "live")
             {
+                POIGlobalVar.POIDebugLog("Service is null or live");
                 #region handling live service
                 POIGlobalVar.POIDebugLog(info["userid"]);
                 String userId = info["userid"];
@@ -574,7 +591,7 @@ namespace POIProxy
                                 Groups.Add(Context.ConnectionId, "session_" + sessionId);
                             }
                         }
-                        catch(Exception e)
+                        catch (Exception e)
                         {
                             POIGlobalVar.POIDebugLog(e.Message);
                         }
@@ -583,10 +600,11 @@ namespace POIProxy
                     //Call reconnect on the client
                     Clients.Caller.clientReconnected();
                 }
+                else
+                {
+                    POIGlobalVar.POIDebugLog("Not reconnecting, do nothing!");
+                }
                 
-                
-                //Add the connection id to the queried groups
-                POIGlobalVar.POIDebugLog(info["sessions"]);
             }
             else if(service == "log")
             {
