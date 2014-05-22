@@ -41,162 +41,162 @@ namespace POIProxy
             
         }
 
-        public void updateConfigFile(string configString)
-        {
-            JavaScriptSerializer js = new JavaScriptSerializer();
-            Dictionary<string, string> configFields = js.Deserialize<Dictionary<string, string>>(configString);
-            POIProxyGlobalVar.Kernel.updateConfig(configFields);
+        //public void updateConfigFile(string configString)
+        //{
+        //    JavaScriptSerializer js = new JavaScriptSerializer();
+        //    Dictionary<string, string> configFields = js.Deserialize<Dictionary<string, string>>(configString);
+        //    POIProxyGlobalVar.Kernel.updateConfig(configFields);
 
-            POIGlobalVar.POIDebugLog(@"Update config file!");
-        }
+        //    POIGlobalVar.POIDebugLog(@"Update config file!");
+        //}
 
-        public void HandleCommentMsgOnServer(string msg)
-        {
-            //Get the current user
-            POIUser curUser = POIGlobalVar.WebConUserMap[Context.ConnectionId];
-            if (curUser != null)
-            {
-                webWBHandler.handleStringComment(msg, curUser);
-            }
-            else
-            {
-                POIGlobalVar.POIDebugLog("Cannot find the user associated with the connection");
-            }
-        }
+        //public void HandleCommentMsgOnServer(string msg)
+        //{
+        //    //Get the current user
+        //    POIUser curUser = POIGlobalVar.WebConUserMap[Context.ConnectionId];
+        //    if (curUser != null)
+        //    {
+        //        webWBHandler.handleStringComment(msg, curUser);
+        //    }
+        //    else
+        //    {
+        //        POIGlobalVar.POIDebugLog("Cannot find the user associated with the connection");
+        //    }
+        //}
 
         
-        //For live session or offline session
-        public async Task JoinSession(int contentId, int sessionId)
-        {
-            //Get the session
-            var manager = POIProxyGlobalVar.Kernel.mySessionManager;
-            var registery = POIProxyGlobalVar.Kernel.mySessionManager.Registery;
-            var session = registery.GetSessionById(sessionId);
+        ////For live session or offline session
+        //public async Task JoinSession(int contentId, int sessionId)
+        //{
+        //    //Get the session
+        //    var manager = POIProxyGlobalVar.Kernel.mySessionManager;
+        //    var registery = POIProxyGlobalVar.Kernel.mySessionManager.Registery;
+        //    var session = registery.GetSessionById(sessionId);
 
-            if (session != null)
-            {
-                //Use the current user to enter the session registery
-                POIUser curUser = POIGlobalVar.WebConUserMap[Context.ConnectionId];
-                if (curUser == null)
-                {
-                    POIGlobalVar.POIDebugLog("wrong connection!");
-                    POIGlobalVar.POIDebugLog("Cannot find the web user associated with connection");
-                    return;
-                }
+        //    if (session != null)
+        //    {
+        //        //Use the current user to enter the session registery
+        //        POIUser curUser = POIGlobalVar.WebConUserMap[Context.ConnectionId];
+        //        if (curUser == null)
+        //        {
+        //            POIGlobalVar.POIDebugLog("wrong connection!");
+        //            POIGlobalVar.POIDebugLog("Cannot find the web user associated with connection");
+        //            return;
+        //        }
 
-                //Join the session
-                manager.JoinSession(curUser, contentId, sessionId);
-                await Groups.Add(Context.ConnectionId, sessionId.ToString());
+        //        //Join the session
+        //        manager.JoinSession(curUser, contentId, sessionId);
+        //        await Groups.Add(Context.ConnectionId, sessionId.ToString());
 
-                //Get the presentation file and send to the user
-                POIPresentation curPres = session.PresController.CurPres;
-                JavaScriptSerializer js = new JavaScriptSerializer();
+        //        //Get the presentation file and send to the user
+        //        POIPresentation curPres = session.PresController.CurPres;
+        //        JavaScriptSerializer js = new JavaScriptSerializer();
 
-                try
-                {
-                    Clients.Caller.handlePresInfo(js.Serialize(curPres));
-                    //Clients[Context.ConnectionId].handlePresInfo(js.Serialize(curPres));
-                }
-                catch (Exception e)
-                {
-                    POIGlobalVar.POIDebugLog(e);
-                }
+        //        try
+        //        {
+        //            Clients.Caller.handlePresInfo(js.Serialize(curPres));
+        //            //Clients[Context.ConnectionId].handlePresInfo(js.Serialize(curPres));
+        //        }
+        //        catch (Exception e)
+        //        {
+        //            POIGlobalVar.POIDebugLog(e);
+        //        }
 
-                Clients.Caller.setAudioSyncReference(session.MdArchive.AudioTimeReference);
-                Clients.Caller.startPresentation();
-            }
-            else
-            {
-                await StartOfflineSession(contentId, sessionId);
-            }
-        }
+        //        Clients.Caller.setAudioSyncReference(session.MdArchive.AudioTimeReference);
+        //        Clients.Caller.startPresentation();
+        //    }
+        //    else
+        //    {
+        //        await StartOfflineSession(contentId, sessionId);
+        //    }
+        //}
 
-        public async Task StartOfflineSession(int contentId, int sessionId)
-        {
-            POIPresentation presInfo;
-            POIMetadataArchive archiveInfo;
+        //public async Task StartOfflineSession(int contentId, int sessionId)
+        //{
+        //    POIPresentation presInfo;
+        //    POIMetadataArchive archiveInfo;
 
 
-            POIOfflineSessionCache cache = POIProxyGlobalVar.Kernel.mySessionManager.Cache;
-            Tuple<POIPresentation, POIMetadataArchive> cacheResult = cache.SearchSessionInfoInCache(contentId, sessionId);
+        //    POIOfflineSessionCache cache = POIProxyGlobalVar.Kernel.mySessionManager.Cache;
+        //    Tuple<POIPresentation, POIMetadataArchive> cacheResult = cache.SearchSessionInfoInCache(contentId, sessionId);
 
-            cacheResult = null;
+        //    cacheResult = null;
 
-            if (cacheResult == null)
-            {
-                //Read the presentation info
-                presInfo = await POIPresentation.LoadPresFromContentServer(contentId);
+        //    if (cacheResult == null)
+        //    {
+        //        //Read the presentation info
+        //        presInfo = await POIPresentation.LoadPresFromContentServer(contentId);
 
-                //Read the metadata archive from the content server
-                archiveInfo = new POIMetadataArchive(contentId, sessionId);
-                await archiveInfo.ReadArchive();
+        //        //Read the metadata archive from the content server
+        //        archiveInfo = new POIMetadataArchive(contentId, sessionId);
+        //        await archiveInfo.ReadArchive();
 
-                cache.AddRecordToSessionCache(contentId, sessionId, presInfo, archiveInfo);
-            }
-            else
-            {
-                presInfo = cacheResult.Item1;
-                archiveInfo = cacheResult.Item2;
-            }
+        //        cache.AddRecordToSessionCache(contentId, sessionId, presInfo, archiveInfo);
+        //    }
+        //    else
+        //    {
+        //        presInfo = cacheResult.Item1;
+        //        archiveInfo = cacheResult.Item2;
+        //    }
 
-            JavaScriptSerializer js = new JavaScriptSerializer();
+        //    JavaScriptSerializer js = new JavaScriptSerializer();
 
-            /*
-            //Upload the json data to the content server
-            try
-            {
-                String poiFnJson = Path.Combine(POIArchive.ArchiveHome, contentId + ".POI.json");
-                String archiveFnJson = Path.Combine(POIArchive.ArchiveHome, contentId + "_" + sessionId + ".meta.json");
+        //    /*
+        //    //Upload the json data to the content server
+        //    try
+        //    {
+        //        String poiFnJson = Path.Combine(POIArchive.ArchiveHome, contentId + ".POI.json");
+        //        String archiveFnJson = Path.Combine(POIArchive.ArchiveHome, contentId + "_" + sessionId + ".meta.json");
 
-                using (StreamWriter writer = new StreamWriter(archiveFnJson))
-                {
-                    writer.Write(js.Serialize(archiveInfo));
-                }
+        //        using (StreamWriter writer = new StreamWriter(archiveFnJson))
+        //        {
+        //            writer.Write(js.Serialize(archiveInfo));
+        //        }
 
-                using (StreamWriter writer = new StreamWriter(poiFnJson))
-                {
-                    writer.Write(js.Serialize(presInfo));
-                }
+        //        using (StreamWriter writer = new StreamWriter(poiFnJson))
+        //        {
+        //            writer.Write(js.Serialize(presInfo));
+        //        }
 
-                //Upload the .json to the content server
-                await POIContentServerHelper.uploadContent(contentId, archiveFnJson);
-                await POIContentServerHelper.uploadContent(contentId, poiFnJson);
-            }
-            catch (Exception e)
-            {
-                POIGlobalVar.POIDebugLog("In writing json in signalr: " + e.Message);
-            }
-            */
+        //        //Upload the .json to the content server
+        //        await POIContentServerHelper.uploadContent(contentId, archiveFnJson);
+        //        await POIContentServerHelper.uploadContent(contentId, poiFnJson);
+        //    }
+        //    catch (Exception e)
+        //    {
+        //        POIGlobalVar.POIDebugLog("In writing json in signalr: " + e.Message);
+        //    }
+        //    */
 
-            try
-            {
-                Clients.Caller.handlePresInfo(js.Serialize(presInfo));
-                Clients.Caller.handleMetadataArchive(js.Serialize(archiveInfo));
-                Clients.Caller.startPresentation();
+        //    try
+        //    {
+        //        Clients.Caller.handlePresInfo(js.Serialize(presInfo));
+        //        Clients.Caller.handleMetadataArchive(js.Serialize(archiveInfo));
+        //        Clients.Caller.startPresentation();
 
-                //Disconnect the client for better performance
-                Clients.Caller.disconnectFromProxy();
-            }
-            catch (Exception e)
-            {
-                POIGlobalVar.POIDebugLog(e);
-            }
-        }
+        //        //Disconnect the client for better performance
+        //        Clients.Caller.disconnectFromProxy();
+        //    }
+        //    catch (Exception e)
+        //    {
+        //        POIGlobalVar.POIDebugLog(e);
+        //    }
+        //}
 
-        public void LeaveSession(int sessionId)
-        {
-            Clients.Group(sessionId.ToString()).leave(Context.ConnectionId);
+        //public void LeaveSession(int sessionId)
+        //{
+        //    Clients.Group(sessionId.ToString()).leave(Context.ConnectionId);
             
-            //Get the session
-            var registery = POIProxyGlobalVar.Kernel.mySessionManager.Registery;
-            var session = registery.GetSessionById(sessionId);
-            POIUser curUser = POIGlobalVar.WebConUserMap[Context.ConnectionId];
+        //    //Get the session
+        //    var registery = POIProxyGlobalVar.Kernel.mySessionManager.Registery;
+        //    var session = registery.GetSessionById(sessionId);
+        //    POIUser curUser = POIGlobalVar.WebConUserMap[Context.ConnectionId];
 
-            if (session != null && curUser != null)
-            {
-                session.LeaveAsViewer(curUser);
-            }
-        }
+        //    if (session != null && curUser != null)
+        //    {
+        //        session.LeaveAsViewer(curUser);
+        //    }
+        //}
 
         //Functions for receiving interactive messages
         public async Task textMsgReceived(string sessionId, string message, double timestamp)
@@ -799,8 +799,6 @@ namespace POIProxy
             {
                 POIGlobalVar.POIDebugLog("Service type not recognized");
             }
-
-            interMsgHandler.getArchiveBySessionId("8083");
 
             return base.OnConnected();
         }

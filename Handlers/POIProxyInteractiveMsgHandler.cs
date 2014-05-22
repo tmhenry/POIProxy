@@ -763,39 +763,34 @@ namespace POIProxy.Handlers
 
         public POIInteractiveSessionArchive getArchiveBySessionId(string sessionId)
         {
-            POIGlobalVar.POIDebugLog("Getting archive by id in handler");
-            var session = POIProxySessionManager.getArchiveBySessionId(sessionId);
+            //var session = POIProxySessionManager.getArchiveBySessionId(sessionId);
 
-            try
-            {
-                if (session == null)
-                {
-                    POIGlobalVar.POIDebugLog("Session is null");
-                    session = POIProxySessionManager.initSessionArchive(getArchiveInfoFromDb(sessionId));
-                }
-                else
-                {
-                    POIGlobalVar.POIDebugLog("Session is not null");
-                    POIGlobalVar.POIDebugLog(jsonHandler.Serialize(session));
-                }
-            }
-            catch (Exception e)
-            {
-                POIGlobalVar.POIDebugLog(e.Message);
-            }
-
-            return session;
-            
-
-            //if (!sessionArchives.ContainsKey(sessionId))
+            //try
             //{
-            //    initSessionArchive(getArchiveInfoFromDb(sessionId));
-            //    POIGlobalVar.POIDebugLog("Cannot find archive, read from db");
+            //    if (session == null)
+            //    {
+            //        POIGlobalVar.POIDebugLog("Session is null");
+            //        session = POIProxySessionManager.initSessionArchive(getArchiveInfoFromDb(sessionId));
+            //    }
+            //}
+            //catch (Exception e)
+            //{
+                
+            //    POIGlobalVar.POIDebugLog(e.Message);
             //}
 
-            ////POIGlobalVar.POIDebugLog(jsonHandler.Serialize(sessionArchives[sessionId]));
+            //return session;
 
-            //return sessionArchives[sessionId];
+
+            if (!sessionArchives.ContainsKey(sessionId))
+            {
+                initSessionArchive(getArchiveInfoFromDb(sessionId));
+                POIGlobalVar.POIDebugLog("Cannot find archive, read from db");
+            }
+
+            //POIGlobalVar.POIDebugLog(jsonHandler.Serialize(sessionArchives[sessionId]));
+
+            return sessionArchives[sessionId];
         }
 
         public void archiveSessionJoinedEvent(string userId, string sessionId)
@@ -930,14 +925,17 @@ namespace POIProxy.Handlers
                 var eventList = session.EventList;
 
                 //Get all event with timestamp larger than the given timestamp
-                for (int i = 0; i < eventList.Count; i++)
+                if (eventList != null)
                 {
-                    if (eventList[i].Timestamp > timestamp)
+                    for (int i = 0; i < eventList.Count; i++)
                     {
-                        missedEvents.Add(eventList[i]);
+                        if (eventList[i].Timestamp > timestamp)
+                        {
+                            missedEvents.Add(eventList[i]);
+                        }
                     }
                 }
-
+                
                 POIGlobalVar.POIDebugLog(jsonHandler.Serialize(missedEvents));
             }
             catch (Exception e)

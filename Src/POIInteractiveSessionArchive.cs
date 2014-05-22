@@ -12,14 +12,20 @@ namespace POIProxy
         public string SessionId { get; set; }
         public Dictionary<string, string> Info { get; set; }
         public List<string> UserList { get; set; }
-        public List<POIInteractiveEvent> EventList { get; set; }
+        
+        public List<POIInteractiveEvent> EventList { 
+            get 
+            {
+                return POIProxySessionManager.getSessionEventList(SessionId);
+            }
+        }
 
         //For checking duplicate messages
-        private List<double> EventTimestamps;
+        //private List<double> EventTimestamps { get; set; }
 
         //For checking session state
         private readonly object statusLock = new object();
-        private string Status;
+        private string Status { get; set; }
 
         public POIInteractiveSessionArchive(Dictionary<string, string> info)
         {
@@ -27,8 +33,8 @@ namespace POIProxy
             Info = info;
 
             UserList = new List<string>();
-            EventList = new List<POIInteractiveEvent>();
-            EventTimestamps = new List<double>();
+            //EventList = new List<POIInteractiveEvent>();
+            //EventTimestamps = new List<double>();
 
             //Update the archive status
             lock (statusLock)
@@ -94,7 +100,8 @@ namespace POIProxy
 
         public bool checkEventExists(double eventTimestamp)
         {
-            return EventTimestamps.Contains(eventTimestamp);
+            //return EventTimestamps.Contains(eventTimestamp);
+            return POIProxySessionManager.checkEventExists(SessionId, eventTimestamp);
         }
 
         public void archiveTextEvent(string userId, string message, double timestamp)
@@ -111,8 +118,9 @@ namespace POIProxy
 
             //POIGlobalVar.POIDebugLog("In archive text, event array count is " + EventList.Count);
 
-            EventList.Add(poiEvent);
-            EventTimestamps.Add(timestamp);
+            //EventList.Add(poiEvent);
+            //EventTimestamps.Add(timestamp);
+            POIProxySessionManager.archiveSessionEvent(SessionId, poiEvent, timestamp);
         }
 
         public void archiveImageEvent(string userId, string mediaId, double timestamp)
@@ -142,8 +150,10 @@ namespace POIProxy
                 Message = ""
             };
 
-            EventList.Add(poiEvent);
-            EventTimestamps.Add(timestamp);
+            //EventList.Add(poiEvent);
+            //EventTimestamps.Add(timestamp);
+
+            POIProxySessionManager.archiveSessionEvent(SessionId, poiEvent, timestamp);
         }
 
         private void archiveSessionEvent(string userId, string type, double timestamp)
@@ -158,8 +168,10 @@ namespace POIProxy
                 Message = ""
             };
 
-            EventList.Add(poiEvent);
-            EventTimestamps.Add(timestamp);
+            //EventList.Add(poiEvent);
+            //EventTimestamps.Add(timestamp);
+
+            POIProxySessionManager.archiveSessionEvent(SessionId, poiEvent, timestamp);
         }
 
         public void archiveSessionCreatedEvent(string userId, double timestamp)
