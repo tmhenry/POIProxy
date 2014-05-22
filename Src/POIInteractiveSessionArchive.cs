@@ -9,10 +9,10 @@ namespace POIProxy
 {
     public class POIInteractiveSessionArchive
     {
-        public string SessionId;
-        public Dictionary<string,string> Info;
-        public List<string> UserList;
-        public List<POIInteractiveEvent> EventList;
+        public string SessionId { get; set; }
+        public Dictionary<string, string> Info { get; set; }
+        public List<string> UserList { get; set; }
+        public List<POIInteractiveEvent> EventList { get; set; }
 
         //For checking duplicate messages
         private List<double> EventTimestamps;
@@ -40,13 +40,13 @@ namespace POIProxy
             if (info["student_id"] != null)
             {
                 addUserToUserList(info["student_id"]);
-                archiveSessionCreatedEvent(info["student_id"]);
+                archiveSessionCreatedEvent(info["student_id"], double.Parse(info["create_at"]));
             }
 
             if (info["tutor_id"] != null)
             {
                 addUserToUserList(info["tutor_id"]);
-                archiveSessionJoinedEvent(info["tutor_id"]);
+                archiveSessionJoinedEvent(info["tutor_id"], double.Parse(info["start_at"]));
             }
         }
 
@@ -162,15 +162,13 @@ namespace POIProxy
             EventTimestamps.Add(timestamp);
         }
 
-        public void archiveSessionCreatedEvent(string userId)
+        public void archiveSessionCreatedEvent(string userId, double timestamp)
         {
-            double timestamp = POITimestamp.ConvertToUnixTimestamp(DateTime.Now);
             archiveSessionEvent(userId, "session_created", timestamp);
         }
 
-        public void archiveSessionJoinedEvent(string userId)
+        public void archiveSessionJoinedEvent(string userId, double timestamp)
         {
-            double timestamp = POITimestamp.ConvertToUnixTimestamp(DateTime.Now);
             archiveSessionEvent(userId, "session_joined", timestamp);
         }
     }
@@ -184,4 +182,6 @@ namespace POIProxy
         public string UserId { get; set; }
         public double Timestamp { get; set; }
     }
+
+  
 }

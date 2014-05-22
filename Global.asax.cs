@@ -10,6 +10,7 @@ using System.Threading;
 using Parse;
 
 using System.Web.Configuration;
+using Microsoft.AspNet.SignalR;
 
 namespace POIProxy
 {
@@ -30,6 +31,9 @@ namespace POIProxy
 
             ParseClient.Initialize(WebConfigurationManager.AppSettings["ParseAppId"], 
                 WebConfigurationManager.AppSettings["ParseAppKey"]);
+
+            GlobalHost.Configuration.ConnectionTimeout = TimeSpan.FromMinutes(20);
+            GlobalHost.Configuration.DisconnectTimeout = TimeSpan.FromMinutes(20);
         }
 
         private void StartKernelThread()

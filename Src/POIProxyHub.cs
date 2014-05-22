@@ -212,6 +212,8 @@ namespace POIProxy
 
                 Clients.Caller.msgAckReceived(sessionId, timestamp);
 
+                
+
                 //Notify the weixin server
                 await POIProxyToWxApi.textMsgReceived(Clients.Caller.userId, sessionId, message);
 
@@ -313,10 +315,12 @@ namespace POIProxy
 
             POIGlobalVar.POIDebugLog("Session created!: " + sessionId);
 
+            double timestamp = POITimestamp.ConvertToUnixTimestamp(DateTime.Now);
+
+            POIProxySessionManager.subscribeSession(sessionId, Clients.Caller.userId);
             await Groups.Add(Context.ConnectionId, "session_" + sessionId);
 
             //Notify the user the connection has been created
-            double timestamp = POITimestamp.ConvertToUnixTimestamp(DateTime.Now);
             Clients.Caller.interactiveSessionCreated(presId, sessionId, timestamp);
 
             //Make the session open after everything is ready
@@ -332,19 +336,20 @@ namespace POIProxy
             if (joinStatus == 0)
             {
                 POIGlobalVar.POIDebugLog("Session is open, joined!");
+                double timestamp = POITimestamp.ConvertToUnixTimestamp(DateTime.Now);
 
                 //Add the current connection into the session
                 POIInteractiveSessionArchive archive = 
-                    interMsgHandler.joinInteractiveSession(Clients.Caller.userId, sessionId);
+                    interMsgHandler.joinInteractiveSession(Clients.Caller.userId, sessionId, timestamp);
 
                 Dictionary<string, object> userInfo = interMsgHandler.getUserInfoById(Clients.Caller.userId);
 
                 string archiveJson = jsonHandler.Serialize(archive);
                 string userInfoJson = jsonHandler.Serialize(userInfo);
+                
 
+                POIProxySessionManager.subscribeSession(sessionId, Clients.Caller.userId);
                 await Groups.Add(Context.ConnectionId, "session_" + sessionId);
-
-                double timestamp = POITimestamp.ConvertToUnixTimestamp(DateTime.Now);
 
                 POIGlobalVar.POIDebugLog(archiveJson);
 
@@ -462,6 +467,65 @@ namespace POIProxy
             await POIProxyPushNotifier.sessionCreated(newSessionId);
         }
 
+        public async Task syncClient(string sessionListJson)
+        {
+            string userId = Clients.Caller.userId;
+            POIGlobalVar.POIDebugLog("sync client " + userId);
+
+            Dictionary<string, double> sessionList = jsonHandler.Deserialize<Dictionary<string, double>>(sessionListJson);
+
+            try
+            {
+                foreach (string sid in sessionList.Keys)
+                {
+                    //Update sync time reference
+                    POIProxySessionManager.updateSyncReference(sid, userId, sessionList[sid]);
+                }
+            }
+            catch (Exception e)
+            {
+                POIGlobalVar.POIDebugLog(e.Message);
+            }
+
+            try
+            {
+                var serverState = POIProxySessionManager.getSessionsByUserId(userId);
+
+                foreach (string sessionId in serverState.Keys)
+                {
+                    
+                    //Add connection to the multicast group
+                    await Groups.Add(Context.ConnectionId, "session_" + sessionId);
+
+                    
+                    //Get the time reference
+                    POIGlobalVar.POIDebugLog("session sync ref: " + sessionId + " " + double.Parse(serverState[sessionId]));
+
+                    
+                    //Send sync events to the user
+                    Clients.Caller.interactiveSessionSynced
+                    (
+                        sessionId,
+                        interMsgHandler.getMissedEventsInSession(sessionId, double.Parse(serverState[sessionId]))
+                    );
+                }
+            }
+            catch (Exception e)
+            {
+                POIGlobalVar.POIDebugLog("In second try: " + e.Message);
+            }
+            
+        }
+
+        public void unsubscribeSession(string sessionId)
+        {
+            //Deregister connection id from the session group
+            Groups.Remove(Context.ConnectionId, "session_" + sessionId);
+
+            //Remove server state
+            POIProxySessionManager.unsubscribeSession(sessionId, Clients.Caller.userId);
+        }
+
         //Timestamp is the timestamp of the latest event received by the client
         public void syncClientMessageWithSession(string sessionId, double timestamp)
         {
@@ -520,93 +584,212 @@ namespace POIProxy
 
         #region Handle connection status change
         //When the client is joining the system for the first time
+        //public override System.Threading.Tasks.Task OnConnected()
+        //{
+        //    //Retrieve the user information from the query string
+        //    var info = Context.QueryString;
+
+        //    //POIGlobalVar.POIDebugLog(info["service"]);
+
+        //    String service = info["service"];
+
+        //    if (service == null || service == "live")
+        //    {
+        //        POIGlobalVar.POIDebugLog("Service is null or live");
+        //        #region handling live service
+        //        POIGlobalVar.POIDebugLog(info["userid"]);
+        //        String userId = info["userid"];
+        //        POIUser user = null;
+
+        //        if (userId == @"serverLog")
+        //        {
+        //            Groups.Add(Context.ConnectionId, "serverLog");
+        //        }
+        //        else
+        //        {
+        //            //Check if the user exists
+        //            if (POIGlobalVar.WebUserProfiles.ContainsKey(userId))
+        //            {
+        //                //Set the connectionId to user mapping
+        //                user = POIGlobalVar.WebUserProfiles[userId];
+        //            }
+        //            else
+        //            {
+        //                //Create the user and set the mapping
+        //                user = new POIUser(UserType.WEB);
+        //                user.UserID = userId;
+
+        //                POIGlobalVar.WebUserProfiles[userId] = user;
+        //            }
+
+        //            //Set the connection to user mapping
+        //            POIGlobalVar.WebConUserMap[Context.ConnectionId] = user;
+
+        //            //Let the user know the authentication is done
+        //            Clients.Caller.handleUserAuthenticated();
+        //        }
+        //        #endregion
+        //    }
+        //    else if (service == "interactive")
+        //    {
+        //        POIGlobalVar.POIDebugLog("Interactive service");
+
+        //        ////Add the connection id to the user group
+        //        //Groups.Add(Context.ConnectionId, info["userId"]);
+
+        //        //Add the connection id to the groups
+        //        POIGlobalVar.POIDebugLog("user id is : " + info["userId"]);
+
+        //        try
+        //        {
+        //            var sessions = POIProxySessionManager.getSessionsByUserId(info["userId"]);
+        //            foreach (string sessionId in sessions.Keys)
+        //            {
+        //                POIGlobalVar.POIDebugLog("session list contains: " + sessionId);
+        //            }
+        //        }
+        //        catch (Exception e)
+        //        {
+        //            POIGlobalVar.POIDebugLog(e.Message);
+        //        }
+                
+                
+
+        //        if (info["isReconnect"] == "1")
+        //        {
+        //            POIGlobalVar.POIDebugLog("Reconnecting from onconnected!");
+
+        //            //Let the new connection enter the broadcast group
+        //            if (info["sessions"] != "")
+        //            {
+        //                List<string> sessionList = jsonHandler.Deserialize<List<string>>(info["sessions"]);
+        //                POIGlobalVar.POIDebugLog(info["sessions"]);
+        //                POIGlobalVar.POIDebugLog("Total sessions is :" + sessionList.Count);
+
+        //                try
+        //                {
+        //                    foreach (string sessionId in sessionList)
+        //                    {
+        //                        Groups.Add(Context.ConnectionId, "session_" + sessionId);
+        //                    }
+        //                }
+        //                catch (Exception e)
+        //                {
+        //                    POIGlobalVar.POIDebugLog(e.Message);
+        //                }
+        //            }
+
+        //            //Call reconnect on the client
+        //            //Clients.Caller.clientReconnected();
+        //        }
+        //        else
+        //        {
+        //            POIGlobalVar.POIDebugLog("Not reconnecting, do nothing!");
+        //        }
+                
+        //    }
+        //    else if(service == "log")
+        //    {
+        //        //For receiving server error log
+        //        Groups.Add(Context.ConnectionId, "serverLog");
+        //        POIGlobalVar.POIDebugLog("Server log connected!");
+        //    }
+        //    else
+        //    {
+        //        POIGlobalVar.POIDebugLog("Service type not recognized");
+        //    }
+
+        //    return base.OnConnected();
+        //}
+
+
+
+        //public override System.Threading.Tasks.Task OnDisconnected()
+        //{
+        //    var info = Context.QueryString;
+        //    String service = info["service"];
+
+        //    if (service == "interactive")
+        //    {
+        //        try
+        //        {
+        //            //Handling user reconnecting
+        //            POIGlobalVar.POIDebugLog("Client " + info["userId"] + " disconnected");
+        //        }
+        //        catch (Exception e)
+        //        {
+        //            POIGlobalVar.POIDebugLog(e.Message);
+        //        }
+
+        //    }
+            
+        //    //Remove the user from the profile
+        //    POIUser user = null;
+        //    if (POIGlobalVar.WebConUserMap.ContainsKey(Context.ConnectionId))
+        //    {
+        //        user = POIGlobalVar.WebConUserMap[Context.ConnectionId];
+        //    }
+      
+        //    if (user != null)
+        //    {
+        //        try
+        //        {
+        //            //Remove the user from the profiles
+        //            POIGlobalVar.WebUserProfiles.Remove(user.UserID);
+        //            POIGlobalVar.WebConUserMap.Remove(Context.ConnectionId);
+        //        }
+        //        catch (Exception e)
+        //        {
+        //            POIGlobalVar.POIDebugLog(e);
+        //        }
+        //    }
+
+        //    return base.OnDisconnected();
+        //}
+
+        //public override System.Threading.Tasks.Task OnReconnected()
+        //{
+
+        //    var info = Context.QueryString;
+        //    String service = info["service"];
+
+        //    if (service == "interactive")
+        //    {
+        //        try
+        //        {
+        //            //Handling user reconnecting
+        //            POIGlobalVar.POIDebugLog("Client " + info["userId"] + " reconnected");
+        //        }
+        //        catch (Exception e)
+        //        {
+        //            POIGlobalVar.POIDebugLog(e.Message);
+        //        }
+                
+        //    }
+
+        //    //Notify the client about the reconnection, the client handles the session syncing
+        //    Clients.Caller.clientReconnected();
+
+        //    return base.OnReconnected();
+        //}
+
+        #endregion
+
+        #region new connection handling function
+
+        //When the client is joining the system for the first time
         public override System.Threading.Tasks.Task OnConnected()
         {
             //Retrieve the user information from the query string
             var info = Context.QueryString;
 
-            //POIGlobalVar.POIDebugLog(info["service"]);
-
             String service = info["service"];
 
-            if (service == null || service == "live")
+            if (service == "interactive")
             {
-                POIGlobalVar.POIDebugLog("Service is null or live");
-                #region handling live service
-                POIGlobalVar.POIDebugLog(info["userid"]);
-                String userId = info["userid"];
-                POIUser user = null;
-
-                if (userId == @"serverLog")
-                {
-                    Groups.Add(Context.ConnectionId, "serverLog");
-                }
-                else
-                {
-                    //Check if the user exists
-                    if (POIGlobalVar.WebUserProfiles.ContainsKey(userId))
-                    {
-                        //Set the connectionId to user mapping
-                        user = POIGlobalVar.WebUserProfiles[userId];
-                    }
-                    else
-                    {
-                        //Create the user and set the mapping
-                        user = new POIUser(UserType.WEB);
-                        user.UserID = userId;
-
-                        POIGlobalVar.WebUserProfiles[userId] = user;
-                    }
-
-                    //Set the connection to user mapping
-                    POIGlobalVar.WebConUserMap[Context.ConnectionId] = user;
-
-                    //Let the user know the authentication is done
-                    Clients.Caller.handleUserAuthenticated();
-                }
-                #endregion
+                POIGlobalVar.POIDebugLog("Client connected to interactive service");
             }
-            else if (service == "interactive")
-            {
-                POIGlobalVar.POIDebugLog("Interactive service");
-
-                //Add the connection id to the user group
-                Groups.Add(Context.ConnectionId, info["userId"]);
-
-                if (info["isReconnect"] == "1")
-                {
-                    POIGlobalVar.POIDebugLog("Reconnecting from onconnected!");
-
-                    //Let the new connection enter the broadcast group
-                    if (info["sessions"] != "")
-                    {
-                        List<string> sessionList = jsonHandler.Deserialize<List<string>>(info["sessions"]);
-                        POIGlobalVar.POIDebugLog(info["sessions"]);
-                        POIGlobalVar.POIDebugLog("Total sessions is :" + sessionList.Count);
-
-                        try
-                        {
-                            foreach (string sessionId in sessionList)
-                            {
-                                Groups.Add(Context.ConnectionId, "session_" + sessionId);
-                            }
-                        }
-                        catch (Exception e)
-                        {
-                            POIGlobalVar.POIDebugLog(e.Message);
-                        }
-                    }
-
-                    //Call reconnect on the client
-                    Clients.Caller.clientReconnected();
-                }
-                else
-                {
-                    POIGlobalVar.POIDebugLog("Not reconnecting, do nothing!");
-                }
-                
-            }
-            else if(service == "log")
+            else if (service == "log")
             {
                 //For receiving server error log
                 Groups.Add(Context.ConnectionId, "serverLog");
@@ -616,6 +799,8 @@ namespace POIProxy
             {
                 POIGlobalVar.POIDebugLog("Service type not recognized");
             }
+
+            interMsgHandler.getArchiveBySessionId("8083");
 
             return base.OnConnected();
         }
@@ -629,7 +814,7 @@ namespace POIProxy
             {
                 try
                 {
-                    //Handling user reconnecting
+                    //Handling user disconnected
                     POIGlobalVar.POIDebugLog("Client " + info["userId"] + " disconnected");
                 }
                 catch (Exception e)
@@ -638,34 +823,12 @@ namespace POIProxy
                 }
 
             }
-            
-            //Remove the user from the profile
-            POIUser user = null;
-            if (POIGlobalVar.WebConUserMap.ContainsKey(Context.ConnectionId))
-            {
-                user = POIGlobalVar.WebConUserMap[Context.ConnectionId];
-            }
-      
-            if (user != null)
-            {
-                try
-                {
-                    //Remove the user from the profiles
-                    POIGlobalVar.WebUserProfiles.Remove(user.UserID);
-                    POIGlobalVar.WebConUserMap.Remove(Context.ConnectionId);
-                }
-                catch (Exception e)
-                {
-                    POIGlobalVar.POIDebugLog(e);
-                }
-            }
 
             return base.OnDisconnected();
         }
 
         public override System.Threading.Tasks.Task OnReconnected()
         {
-
             var info = Context.QueryString;
             String service = info["service"];
 
@@ -680,11 +843,8 @@ namespace POIProxy
                 {
                     POIGlobalVar.POIDebugLog(e.Message);
                 }
-                
-            }
 
-            //Notify the client about the reconnection, the client handles the session syncing
-            Clients.Caller.clientReconnected();
+            }
 
             return base.OnReconnected();
         }

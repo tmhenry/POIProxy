@@ -258,13 +258,12 @@ namespace POIProxy.Controllers
             if (joinStatus == 0)
             {
                 POIGlobalVar.POIDebugLog("Session is open, joined!");
-
-                interMsgHandler.joinInteractiveSession(userId, sessionId);
-                Dictionary<string, object> userInfo = interMsgHandler.getUserInfoById(userId);
-
-                string userInfoJson = jsonHandler.Serialize(userInfo);
-
                 double timestamp = POITimestamp.ConvertToUnixTimestamp(DateTime.Now);
+
+                interMsgHandler.joinInteractiveSession(userId, sessionId, timestamp);
+
+                Dictionary<string, object> userInfo = interMsgHandler.getUserInfoById(userId);
+                string userInfoJson = jsonHandler.Serialize(userInfo);
 
                 hubContext.Clients.Group("session_" + sessionId).
                     interactiveSessionNewUserJoined(userId, sessionId, userInfoJson, timestamp);

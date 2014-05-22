@@ -487,7 +487,8 @@ namespace POIProxy.Handlers
             Dictionary<string, string> info = new Dictionary<string, string>
             {
                 {"session_id", sessionId},
-                {"create_at", timestamp.ToString()},
+                {"create_at", sessionRecord["create_at"].ToString()},
+                {"start_at", sessionRecord["start_at"].ToString()},
                 {"student_id", userId},
                 {"tutor_id",  tutorId},
                 {"cover", presRecord["media_id"] as string},
@@ -696,7 +697,7 @@ namespace POIProxy.Handlers
             }
         }
 
-        public POIInteractiveSessionArchive joinInteractiveSession(string userId, string sessionId)
+        public POIInteractiveSessionArchive joinInteractiveSession(string userId, string sessionId, double timestamp)
         {
             //add the current user into the session table
             addUserToSessionRecord(userId, sessionId);
@@ -704,33 +705,54 @@ namespace POIProxy.Handlers
             //Turn the session to serving status
             updateSessionStatusWithTutorJoin(userId, sessionId);
 
-            POIInteractiveSessionArchive session = null;
+            
+            //POIInteractiveSessionArchive session = null;
 
-            if (sessionArchives.ContainsKey(sessionId))
-            {
-                //Archive the session join event
-                session = sessionArchives[sessionId];
-                session.archiveSessionJoinedEvent(userId);
+            //if (sessionArchives.ContainsKey(sessionId))
+            //{
+            //    //Archive the session join event
+            //    session = sessionArchives[sessionId];
+            //    session.archiveSessionJoinedEvent(userId, timestamp);
 
-                //Get the tutor information and insert into archive info
-                if (userId != null)
-                {
-                    Dictionary<string, object> conditions = new Dictionary<string, object>
-                    {
-                        {"id", userId}
-                    };
+            //    //Get the tutor information and insert into archive info
+            //    if (userId != null)
+            //    {
+            //        Dictionary<string, object> conditions = new Dictionary<string, object>
+            //        {
+            //            {"id", userId}
+            //        };
            
-                    var tutorRecord = dbManager.selectSingleRowFromTable("users", null, conditions);
+            //        var tutorRecord = dbManager.selectSingleRowFromTable("users", null, conditions);
 
-                    session.Info["tutor_id"] = userId;
-                    session.Info["tutor_avatar"] = tutorRecord["avatar"] as string;
-                    session.Info["tutor_name"] = tutorRecord["username"] as string;
-                }
-            }
-            else
+            //        session.Info["tutor_id"] = userId;
+            //        session.Info["tutor_avatar"] = tutorRecord["avatar"] as string;
+            //        session.Info["tutor_name"] = tutorRecord["username"] as string;
+            //        session.Info["start_at"] = timestamp.ToString();
+            //    }
+            //}
+            //else
+            //{
+            //    //Initialize the session archive
+            //    session = new POIInteractiveSessionArchive(getArchiveInfoFromDb(sessionId));
+            //}
+
+            var session = getArchiveBySessionId(sessionId);
+            session.archiveSessionJoinedEvent(userId, timestamp);
+
+            //Get the tutor information and insert into archive info
+            if (userId != null)
             {
-                //Initialize the session archive
-                session = new POIInteractiveSessionArchive(getArchiveInfoFromDb(sessionId));
+                Dictionary<string, object> conditions = new Dictionary<string, object>
+                {
+                    {"id", userId}
+                };
+
+                var tutorRecord = dbManager.selectSingleRowFromTable("users", null, conditions);
+
+                session.Info["tutor_id"] = userId;
+                session.Info["tutor_avatar"] = tutorRecord["avatar"] as string;
+                session.Info["tutor_name"] = tutorRecord["username"] as string;
+                session.Info["start_at"] = timestamp.ToString();
             }
 
             //Add the activity record
@@ -741,22 +763,46 @@ namespace POIProxy.Handlers
 
         public POIInteractiveSessionArchive getArchiveBySessionId(string sessionId)
         {
-            if (!sessionArchives.ContainsKey(sessionId))
+            POIGlobalVar.POIDebugLog("Getting archive by id in handler");
+            var session = POIProxySessionManager.getArchiveBySessionId(sessionId);
+
+            try
             {
-                initSessionArchive(getArchiveInfoFromDb(sessionId));
-                POIGlobalVar.POIDebugLog("Cannot find archive, read from db");
+                if (session == null)
+                {
+                    POIGlobalVar.POIDebugLog("Session is null");
+                    session = POIProxySessionManager.initSessionArchive(getArchiveInfoFromDb(sessionId));
+                }
+                else
+                {
+                    POIGlobalVar.POIDebugLog("Session is not null");
+                    POIGlobalVar.POIDebugLog(jsonHandler.Serialize(session));
+                }
+            }
+            catch (Exception e)
+            {
+                POIGlobalVar.POIDebugLog(e.Message);
             }
 
-            //POIGlobalVar.POIDebugLog(jsonHandler.Serialize(sessionArchives[sessionId]));
+            return session;
+            
 
-            return sessionArchives[sessionId];
+            //if (!sessionArchives.ContainsKey(sessionId))
+            //{
+            //    initSessionArchive(getArchiveInfoFromDb(sessionId));
+            //    POIGlobalVar.POIDebugLog("Cannot find archive, read from db");
+            //}
+
+            ////POIGlobalVar.POIDebugLog(jsonHandler.Serialize(sessionArchives[sessionId]));
+
+            //return sessionArchives[sessionId];
         }
 
         public void archiveSessionJoinedEvent(string userId, string sessionId)
         {
-            var session = getArchiveBySessionId(sessionId);
-            session.archiveSessionJoinedEvent(userId);
-            session.updateSessionStatusServing();
+            //var session = getArchiveBySessionId(sessionId);
+            //session.archiveSessionJoinedEvent(userId);
+            //session.updateSessionStatusServing();
         }
 
         public void updateQuestionDescription(string sessionId, string description)
@@ -875,20 +921,30 @@ namespace POIProxy.Handlers
 
         public List<POIInteractiveEvent> getMissedEventsInSession(string sessionId, double timestamp)
         {
-            var session = getArchiveBySessionId(sessionId);
+            POIGlobalVar.POIDebugLog("Getting missed event for session : " + sessionId);
             var missedEvents = new List<POIInteractiveEvent>();
-            var eventList = session.EventList;
 
-            //Get all event with timestamp larger than the given timestamp
-            for (int i = 0; i < eventList.Count; i++)
+            try
             {
-                if (eventList[i].Timestamp > timestamp)
-                {
-                    missedEvents.Add(eventList[i]);
-                }
-            }
+                var session = getArchiveBySessionId(sessionId);
+                var eventList = session.EventList;
 
-            //POIGlobalVar.POIDebugLog(jsonHandler.Serialize(missedEvents));
+                //Get all event with timestamp larger than the given timestamp
+                for (int i = 0; i < eventList.Count; i++)
+                {
+                    if (eventList[i].Timestamp > timestamp)
+                    {
+                        missedEvents.Add(eventList[i]);
+                    }
+                }
+
+                POIGlobalVar.POIDebugLog(jsonHandler.Serialize(missedEvents));
+            }
+            catch (Exception e)
+            {
+                POIGlobalVar.POIDebugLog(e.Message);
+            }
+           
 
             return missedEvents;
         }
