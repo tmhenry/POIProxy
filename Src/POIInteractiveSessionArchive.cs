@@ -4,11 +4,14 @@ using System.Linq;
 using System.Web;
 
 using POILibCommunication;
+using POIProxy.Handlers;
 
 namespace POIProxy
 {
     public class POIInteractiveSessionArchive
     {
+        static POIProxyInteractiveMsgHandler interMsgHandler = POIProxyGlobalVar.Kernel.myInterMsgHandler;
+
         public string SessionId { get; set; }
         public Dictionary<string, string> Info { get; set; }
         public List<string> UserList { get; set; }
@@ -108,7 +111,7 @@ namespace POIProxy
         {
             POIInteractiveEvent poiEvent = new POIInteractiveEvent
             {
-                EventIndex = EventList.Count,
+                //EventIndex = EventList.Count,
                 EventType = "text",
                 MediaId = "",
                 UserId = userId,
@@ -142,7 +145,7 @@ namespace POIProxy
         {
             POIInteractiveEvent poiEvent = new POIInteractiveEvent
             {
-                EventIndex = EventList.Count,
+                //EventIndex = EventList.Count,
                 EventType = type,
                 MediaId = mediaId,
                 UserId = userId,
@@ -156,16 +159,17 @@ namespace POIProxy
             POIProxySessionManager.archiveSessionEvent(SessionId, poiEvent, timestamp);
         }
 
-        private void archiveSessionEvent(string userId, string type, double timestamp)
+        private void archiveSessionEvent(string userId, string type, Dictionary<string, string> eventData, double timestamp)
         {
             POIInteractiveEvent poiEvent = new POIInteractiveEvent
             {
-                EventIndex = EventList.Count,
+                //EventIndex = EventList.Count,
                 EventType = type,
                 MediaId = "",
                 UserId = userId,
                 Timestamp = timestamp,
-                Message = ""
+                Message = "",
+                Data = eventData
             };
 
             //EventList.Add(poiEvent);
@@ -176,12 +180,12 @@ namespace POIProxy
 
         public void archiveSessionCreatedEvent(string userId, double timestamp)
         {
-            archiveSessionEvent(userId, "session_created", timestamp);
+            archiveSessionEvent(userId, "session_created", Info, timestamp);
         }
 
         public void archiveSessionJoinedEvent(string userId, double timestamp)
         {
-            archiveSessionEvent(userId, "session_joined", timestamp);
+            archiveSessionEvent(userId, "session_joined", interMsgHandler.getUserInfoById(userId), timestamp);
         }
     }
 
@@ -193,6 +197,9 @@ namespace POIProxy
         public string Message { get; set; }
         public string UserId { get; set; }
         public double Timestamp { get; set; }
+
+        //Additional data for special events
+        public Dictionary<string,string> Data { get; set; }
     }
 
   

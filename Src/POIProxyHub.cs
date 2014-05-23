@@ -22,7 +22,7 @@ namespace POIProxy
     public class POIProxyHub : Hub
     {
         POIProxyWBCtrlHandler webWBHandler = POIProxyGlobalVar.Kernel.myWBCtrlHandler;
-        POIProxyInteractiveMsgHandler interMsgHandler = POIProxyGlobalVar.Kernel.myInterMsgHandler;
+        static POIProxyInteractiveMsgHandler interMsgHandler = POIProxyGlobalVar.Kernel.myInterMsgHandler;
         JavaScriptSerializer jsonHandler = new JavaScriptSerializer();
         
         public void Log(string msg)
@@ -199,6 +199,7 @@ namespace POIProxy
         //}
 
         //Functions for receiving interactive messages
+
         public async Task textMsgReceived(string sessionId, string message, double timestamp)
         {
             POIGlobalVar.POIDebugLog("Text received: " + message + " , session is :" + sessionId + " ," + timestamp);
@@ -331,6 +332,68 @@ namespace POIProxy
 
         public async Task joinInteractiveSession(string sessionId)
         {
+            POIInteractiveSessionArchive archive = interMsgHandler.getArchiveBySessionId(sessionId);
+
+            if (double.Parse(archive.Info["create_at"])
+                < POITimestamp.ConvertToUnixTimestamp(DateTime.Now.AddSeconds(-60)))
+            {
+                if (POIProxySessionManager.acquireSessionToken(sessionId, 1))
+                {
+                    POIGlobalVar.POIDebugLog("Session is open, joined!");
+                    double timestamp = POITimestamp.ConvertToUnixTimestamp(DateTime.Now);
+                    var userInfo = interMsgHandler.getUserInfoById(Clients.Caller.userId);
+
+                    string archiveJson = jsonHandler.Serialize(archive);
+                    string userInfoJson = jsonHandler.Serialize(userInfo);
+
+                    POIProxySessionManager.subscribeSession(sessionId, Clients.Caller.userId);
+                    await Groups.Add(Context.ConnectionId, "session_" + sessionId);
+
+                    POIGlobalVar.POIDebugLog(archiveJson);
+
+                    //Notify the user the join operation has been completed
+                    Clients.Caller.interactiveSessionJoined(sessionId, archiveJson, timestamp);
+
+                    Clients.Group("session_" + sessionId, Context.ConnectionId).
+                        interactiveSessionNewUserJoined(Clients.Caller.userId, sessionId, userInfoJson, timestamp);
+
+                    //Notify the wexin server about the join operation
+                    await POIProxyToWxApi.interactiveSessionNewUserJoined(Clients.Caller.userId, sessionId, userInfoJson);
+
+                    //Send push notification
+                    await POIProxyPushNotifier.sessionJoined(sessionId);
+                }
+                else
+                {
+                    //Check if the user is the current tutor
+                    if (interMsgHandler.checkSessionTutor(Clients.Caller.userId, sessionId))
+                    {
+                        POIGlobalVar.POIDebugLog("Session already joined");
+
+                        double timestamp = POITimestamp.ConvertToUnixTimestamp(DateTime.Now);
+                        string archiveJson = jsonHandler.Serialize(archive);
+
+                        await Groups.Add(Context.ConnectionId, "session_" + sessionId);
+
+                        POIGlobalVar.POIDebugLog(archiveJson);
+
+                        //Send the archive to the user
+                        Clients.Caller.interactiveSessionJoined(sessionId, archiveJson, timestamp);
+                    }
+                    else
+                    {
+                        POIGlobalVar.POIDebugLog("Cannot join the session, taken by others");
+                        Clients.Caller.interactiveSessionJoinFailed(sessionId);
+                    }
+                }
+            }
+            else
+            {
+                POIGlobalVar.POIDebugLog("Cannot join the session, not passing time limit");
+                Clients.Caller.interactiveSessionJoinBeforeStarted(sessionId);
+            }
+
+            /*
             int joinStatus = interMsgHandler.checkSessionOpen(sessionId);
 
             if (joinStatus == 0)
@@ -342,7 +405,7 @@ namespace POIProxy
                 POIInteractiveSessionArchive archive = 
                     interMsgHandler.joinInteractiveSession(Clients.Caller.userId, sessionId, timestamp);
 
-                Dictionary<string, object> userInfo = interMsgHandler.getUserInfoById(Clients.Caller.userId);
+                var userInfo = interMsgHandler.getUserInfoById(Clients.Caller.userId);
 
                 string archiveJson = jsonHandler.Serialize(archive);
                 string userInfoJson = jsonHandler.Serialize(userInfo);
@@ -396,7 +459,7 @@ namespace POIProxy
                     //Notify the weixin user about the join failed
                     Clients.Caller.interactiveSessionJoinFailed(sessionId);
                 }
-            }
+            }*/
         }
 
         public async Task endInteractiveSession(string sessionId)
@@ -472,7 +535,10 @@ namespace POIProxy
             string userId = Clients.Caller.userId;
             POIGlobalVar.POIDebugLog("sync client " + userId);
 
-            Dictionary<string, double> sessionList = jsonHandler.Deserialize<Dictionary<string, double>>(sessionListJson);
+            POIGlobalVar.POIDebugLog("session list from client is :" + sessionListJson);
+
+            Dictionary<string, double> sessionList = jsonHandler.
+                Deserialize<Dictionary<string, double>>(sessionListJson);
 
             try
             {
@@ -501,18 +567,23 @@ namespace POIProxy
                     //Get the time reference
                     POIGlobalVar.POIDebugLog("session sync ref: " + sessionId + " " + double.Parse(serverState[sessionId]));
 
+                    var missedEvents = interMsgHandler.getMissedEventsInSession(sessionId, double.Parse(serverState[sessionId]));
                     
-                    //Send sync events to the user
-                    Clients.Caller.interactiveSessionSynced
-                    (
-                        sessionId,
-                        interMsgHandler.getMissedEventsInSession(sessionId, double.Parse(serverState[sessionId]))
-                    );
+                    if(missedEvents.Count != 0)
+                    {
+                        //Send sync events to the user
+                        Clients.Caller.interactiveSessionSynced
+                        (
+                            sessionId,
+                            missedEvents
+                        );
+                    }
+                    
                 }
             }
             catch (Exception e)
             {
-                POIGlobalVar.POIDebugLog("In second try: " + e.Message);
+                POIGlobalVar.POIDebugLog("In sync session group information: " + e.Message);
             }
             
         }
@@ -524,6 +595,9 @@ namespace POIProxy
 
             //Remove server state
             POIProxySessionManager.unsubscribeSession(sessionId, Clients.Caller.userId);
+
+            //Release the session token
+            POIProxySessionManager.releaseSessionToken(sessionId);
         }
 
         //Timestamp is the timestamp of the latest event received by the client

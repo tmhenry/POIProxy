@@ -17,6 +17,30 @@ namespace POIProxy
 
         #region Functions communicating with redis server
 
+        public static bool acquireSessionToken(string sessionId, int maxNumUsers)
+        {
+            using (var redisClient = redisManager.GetClient())
+            {
+                if (redisClient.Increment("session_user_count:" + sessionId, 1) <= maxNumUsers)
+                {
+                    return true;
+                }
+                else
+                {
+                    redisClient.Decrement("session_user_count:" + sessionId, 1);
+                    return false;
+                }
+            }
+        }
+
+        public static void releaseSessionToken(string sessionId)
+        {
+            using (var redisClient = redisManager.GetClient())
+            {
+                redisClient.Decrement("session_user_count:" + sessionId, 1);
+            }
+        }
+
         public static void subscribeSession(string sessionId, string userId)
         {
             using (var redisClient = redisManager.GetClient())
@@ -66,6 +90,7 @@ namespace POIProxy
             }
         }
 
+        /*
         public static POIInteractiveSessionArchive getArchiveBySessionId(string sessionId)
         {
             using (var redisClient = redisManager.GetClient())
@@ -87,7 +112,7 @@ namespace POIProxy
                 POIInteractiveSessionArchive archive = new POIInteractiveSessionArchive(info);
                 return redis.GetAndSetValue("archive:" + archive.SessionId, archive);
             }
-        }
+        }*/
 
         public static void archiveSessionEvent(string sessionId, POIInteractiveEvent poiEvent, double timestamp)
         {

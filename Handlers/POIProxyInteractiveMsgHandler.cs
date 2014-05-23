@@ -350,6 +350,8 @@ namespace POIProxy.Handlers
         {
             var session = getArchiveBySessionId(sessionId);
             return session.joinSessionIfOpen();
+
+           
         }
 
         public bool checkSessionTutor(string userId, string sessionId)
@@ -430,6 +432,7 @@ namespace POIProxy.Handlers
             //Get the information about the activity
             Dictionary<string, string> infoDict = new Dictionary<string, string>();
             infoDict["session_id"] = sessionId;
+            infoDict["pres_id"] = presId;
             infoDict["create_at"] =  timestamp.ToString();
             infoDict["student_id"] = userId;
             infoDict["description"] = desc;
@@ -487,6 +490,7 @@ namespace POIProxy.Handlers
             Dictionary<string, string> info = new Dictionary<string, string>
             {
                 {"session_id", sessionId},
+                {"presId", presId.ToString()},
                 {"create_at", sessionRecord["create_at"].ToString()},
                 {"start_at", sessionRecord["start_at"].ToString()},
                 {"student_id", userId},
@@ -561,9 +565,9 @@ namespace POIProxy.Handlers
             }
         }
 
-        public Dictionary<string, object> getUserInfoById(string userId)
+        public Dictionary<string, string> getUserInfoById(string userId)
         {
-            Dictionary<string, object> userInfo = new Dictionary<string, object>();
+            Dictionary<string, string> userInfo = new Dictionary<string, string>();
 
             Dictionary<string, object> conditions = new Dictionary<string, object>();
             List<string> cols = new List<string>();
@@ -575,8 +579,8 @@ namespace POIProxy.Handlers
             DataRow user = dbManager.selectSingleRowFromTable("users", cols, conditions);
             if(user != null)
             {
-                userInfo["username"] = user["username"];
-                userInfo["avatar"] = user["avatar"];
+                userInfo["username"] = user["username"] as string;
+                userInfo["avatar"] = user["avatar"] as string;
 
                 //Find the user profile 
                 conditions.Clear();
@@ -589,7 +593,7 @@ namespace POIProxy.Handlers
                 DataRow profile = dbManager.selectSingleRowFromTable("user_profile", cols, conditions);
                 if(profile != null)
                 {
-                    userInfo["rating"] = profile["rating"];
+                    userInfo["rating"] = profile["rating"] as string;
                     POIGlobalVar.POIDebugLog("School is " + profile["school"]);
                     POIGlobalVar.POIDebugLog("Dept is " + profile["department"]);
 
@@ -602,7 +606,7 @@ namespace POIProxy.Handlers
 
                     if (school != null)
                     {
-                        userInfo["school"] = school["name"];
+                        userInfo["school"] = school["name"] as string;
                     }
 
                     conditions.Clear();
@@ -614,7 +618,7 @@ namespace POIProxy.Handlers
 
                     if (dept != null)
                     {
-                        userInfo["department"] = dept["name"];
+                        userInfo["department"] = dept["name"] as string;
                     }
                }
             }
@@ -924,6 +928,8 @@ namespace POIProxy.Handlers
                 var session = getArchiveBySessionId(sessionId);
                 var eventList = session.EventList;
 
+                //POIGlobalVar.POIDebugLog(jsonHandler.Serialize(eventList));
+
                 //Get all event with timestamp larger than the given timestamp
                 if (eventList != null)
                 {
@@ -936,7 +942,7 @@ namespace POIProxy.Handlers
                     }
                 }
                 
-                POIGlobalVar.POIDebugLog(jsonHandler.Serialize(missedEvents));
+                POIGlobalVar.POIDebugLog("Missed events is " + jsonHandler.Serialize(missedEvents));
             }
             catch (Exception e)
             {

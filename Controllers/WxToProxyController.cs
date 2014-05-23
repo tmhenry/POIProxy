@@ -262,7 +262,7 @@ namespace POIProxy.Controllers
 
                 interMsgHandler.joinInteractiveSession(userId, sessionId, timestamp);
 
-                Dictionary<string, object> userInfo = interMsgHandler.getUserInfoById(userId);
+                Dictionary<string, string> userInfo = interMsgHandler.getUserInfoById(userId);
                 string userInfoJson = jsonHandler.Serialize(userInfo);
 
                 hubContext.Clients.Group("session_" + sessionId).
