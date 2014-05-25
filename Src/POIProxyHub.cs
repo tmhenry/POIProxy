@@ -341,6 +341,8 @@ namespace POIProxy
                 {
                     POIGlobalVar.POIDebugLog("Session is open, joined!");
                     double timestamp = POITimestamp.ConvertToUnixTimestamp(DateTime.Now);
+
+                    interMsgHandler.joinInteractiveSession(Clients.Caller.userId, sessionId, timestamp);
                     var userInfo = interMsgHandler.getUserInfoById(Clients.Caller.userId);
 
                     string archiveJson = jsonHandler.Serialize(archive);
@@ -563,7 +565,6 @@ namespace POIProxy
                     //Add connection to the multicast group
                     await Groups.Add(Context.ConnectionId, "session_" + sessionId);
 
-                    
                     //Get the time reference
                     POIGlobalVar.POIDebugLog("session sync ref: " + sessionId + " " + double.Parse(serverState[sessionId]));
 
