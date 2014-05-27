@@ -116,11 +116,11 @@ namespace POIProxy.Controllers
                         sessionId = msgInfo["sessionId"];
                         userId = msgInfo["userId"];
                         rating = Convert.ToInt32(msgInfo["rating"]);
-                        await interMsgHandler.rateInteractiveSession(userId, sessionId, rating);
+                        interMsgHandler.rateInteractiveSession(userId, sessionId, rating);
 
                         //Send notification to all clients in the session
                         hubContext.Clients.Group("session_" + sessionId)
-                            .interactiveSessionRatedAndEnded(sessionId, rating);
+                            .interactiveSessionRatedAndEnded(userId, sessionId, rating);
 
                         await POIProxyPushNotifier.sessionRated(sessionId, rating);
 
@@ -140,7 +140,7 @@ namespace POIProxy.Controllers
                         sessionId = msgInfo["sessionId"];
                         POIGlobalVar.POIDebugLog("Here" + " " + sessionId);
                         //userId = msgInfo["userId"];
-                        await interMsgHandler.cancelInteractiveSession("", sessionId);
+                        interMsgHandler.cancelInteractiveSession("", sessionId);
 
                         break;
 
@@ -163,10 +163,10 @@ namespace POIProxy.Controllers
                         sessionId = msgInfo["sessionId"];
                         POIGlobalVar.POIDebugLog("Session ended: " + sessionId);
                         userId = msgInfo["userId"];
-                        await interMsgHandler.endInteractiveSession(userId, sessionId);
+                        interMsgHandler.endInteractiveSession(userId, sessionId);
 
                         hubContext.Clients.Group("session_" + sessionId)
-                            .interactiveSessionEnded(sessionId);
+                            .interactiveSessionEnded(userId, sessionId);
 
                         await POIProxyPushNotifier.sessionEnded(sessionId);
 
@@ -252,41 +252,52 @@ namespace POIProxy.Controllers
 
         private async Task wxJoinInteractiveSession(string userId, string sessionId)
         {
-            int joinStatus = interMsgHandler.checkSessionOpen(sessionId);
-            POIGlobalVar.POIDebugLog("here join status is " + joinStatus);
+            POIInteractiveSessionArchive archive = interMsgHandler.getArchiveBySessionId(sessionId);
 
-            if (joinStatus == 0)
+            if (double.Parse(archive.Info["create_at"])
+                < POITimestamp.ConvertToUnixTimestamp(DateTime.Now.AddSeconds(-60)))
             {
-                POIGlobalVar.POIDebugLog("Session is open, joined!");
-                double timestamp = POITimestamp.ConvertToUnixTimestamp(DateTime.Now);
 
-                interMsgHandler.joinInteractiveSession(userId, sessionId, timestamp);
+                if (POIProxySessionManager.acquireSessionToken(sessionId, 10))
+                {
+                    POIGlobalVar.POIDebugLog("Session is open, joined!");
+                    double timestamp = POITimestamp.ConvertToUnixTimestamp(DateTime.Now);
 
-                Dictionary<string, string> userInfo = interMsgHandler.getUserInfoById(userId);
-                string userInfoJson = jsonHandler.Serialize(userInfo);
+                    interMsgHandler.joinInteractiveSession(userId, sessionId, timestamp);
+                    //var userInfo = interMsgHandler.getUserInfoById(Clients.Caller.userId);
+                    var userInfo = POIProxySessionManager.getUserInfo(userId);
 
-                hubContext.Clients.Group("session_" + sessionId).
-                    interactiveSessionNewUserJoined(userId, sessionId, userInfoJson, timestamp);
+                    string archiveJson = jsonHandler.Serialize(archive);
+                    string userInfoJson = jsonHandler.Serialize(userInfo);
 
-                //Notify the weixin users about the join operation
-                await POIProxyToWxApi.interactiveSessionNewUserJoined(userId, sessionId, userInfoJson);
-                //Notify the weixin tutor about the join operation
-                await POIProxyToWxApi.interactiveSessionJoined(userId, sessionId);
+                    POIProxySessionManager.subscribeSession(sessionId, userId);
 
-                //Send push notification
-                await POIProxyPushNotifier.sessionJoined(sessionId);
+                    POIGlobalVar.POIDebugLog(archiveJson);
+
+                    //Notify the weixin users about the join operation
+                    await POIProxyToWxApi.interactiveSessionNewUserJoined(userId, sessionId, userInfoJson);
+
+                    hubContext.Clients.Group("session_" + sessionId).
+                        interactiveSessionNewUserJoined(userId, sessionId, userInfoJson, timestamp);
+
+                    //Notify the wexin server about the join operation
+                    await POIProxyToWxApi.interactiveSessionNewUserJoined(userId, sessionId, userInfoJson);
+
+                    //Send push notification
+                    await POIProxyPushNotifier.sessionJoined(sessionId);
+                }
+                else
+                {
+                    POIGlobalVar.POIDebugLog("Cannot join the session, taken by others");
+                    //Notify the weixin user about the join failed
+                    await POIProxyToWxApi.interactiveSessionJoinFailed(userId, sessionId);
+                }
             }
-            else if(joinStatus == 1)
+            else
             {
                 POIGlobalVar.POIDebugLog("Cannot join the session, not passing time limit");
                 //Notify the weixin user about the join failed
                 await POIProxyToWxApi.interactiveSessionJoinBeforeTimeLimit(userId, sessionId);
-            }
-            else if (joinStatus == 2)
-            {
-                POIGlobalVar.POIDebugLog("Cannot join the session, taken by others");
-                //Notify the weixin user about the join failed
-                await POIProxyToWxApi.interactiveSessionJoinFailed(userId, sessionId);
             }
         }
 

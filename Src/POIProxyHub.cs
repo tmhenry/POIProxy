@@ -337,13 +337,15 @@ namespace POIProxy
             if (double.Parse(archive.Info["create_at"])
                 < POITimestamp.ConvertToUnixTimestamp(DateTime.Now.AddSeconds(-60)))
             {
-                if (POIProxySessionManager.acquireSessionToken(sessionId, 1))
+
+                if (POIProxySessionManager.acquireSessionToken(sessionId, 10))
                 {
                     POIGlobalVar.POIDebugLog("Session is open, joined!");
                     double timestamp = POITimestamp.ConvertToUnixTimestamp(DateTime.Now);
 
                     interMsgHandler.joinInteractiveSession(Clients.Caller.userId, sessionId, timestamp);
-                    var userInfo = interMsgHandler.getUserInfoById(Clients.Caller.userId);
+                    //var userInfo = interMsgHandler.getUserInfoById(Clients.Caller.userId);
+                    var userInfo = POIProxySessionManager.getUserInfo(Clients.Caller.userId);
 
                     string archiveJson = jsonHandler.Serialize(archive);
                     string userInfoJson = jsonHandler.Serialize(userInfo);
@@ -469,11 +471,11 @@ namespace POIProxy
             if (interMsgHandler.checkSessionServing(sessionId))
             {
                 //Update the database
-                await interMsgHandler.endInteractiveSession(Clients.Caller.userId, sessionId);
+                interMsgHandler.endInteractiveSession(Clients.Caller.userId, sessionId);
 
                 //Send notification to all clients in the session
                 Clients.Group("session_" + sessionId, Context.ConnectionId)
-                    .interactiveSessionEnded(sessionId);
+                    .interactiveSessionEnded(Clients.Caller.userId, sessionId);
 
                 //Notify the weixin server about the ending operation
                 await POIProxyToWxApi.interactiveSessionEnded(Clients.Caller.userId, sessionId);
@@ -497,11 +499,11 @@ namespace POIProxy
         public async Task rateAndEndInteractiveSession(string sessionId, int rating)
         {
             //Update the database
-            await interMsgHandler.rateInteractiveSession(Clients.Caller.userId, sessionId, rating);
+            interMsgHandler.rateInteractiveSession(Clients.Caller.userId, sessionId, rating);
 
             //Send notification to all clients in the session
             Clients.Group("session_" + sessionId, Context.ConnectionId)
-                .interactiveSessionRatedAndEnded(sessionId, rating);
+                .interactiveSessionRatedAndEnded(Clients.Caller.userId, sessionId, rating);
 
             //Send push notification
             await POIProxyPushNotifier.sessionRated(sessionId, rating);
@@ -869,6 +871,17 @@ namespace POIProxy
                 //For receiving server error log
                 Groups.Add(Context.ConnectionId, "serverLog");
                 POIGlobalVar.POIDebugLog("Server log connected!");
+
+                try
+                {
+                    POIGlobalVar.POIDebugLog(jsonHandler.Serialize(POIProxySessionManager.getSessionInfo("5581")));
+                    POIGlobalVar.POIDebugLog(jsonHandler.Serialize(POIProxySessionManager.getUserInfo("53da689ad054476281c7f7da8ef3d164")));
+                }
+                catch (Exception e)
+                {
+                    POIGlobalVar.POIDebugLog(e.Message);
+                }
+                
             }
             else
             {

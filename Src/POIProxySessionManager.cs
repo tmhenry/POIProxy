@@ -7,6 +7,7 @@ using ServiceStack.Redis;
 using ServiceStack.Redis.Generic;
 using ServiceStack.Text;
 
+using System.Data;
 using POILibCommunication;
 
 namespace POIProxy
@@ -14,8 +15,17 @@ namespace POIProxy
     public class POIProxySessionManager
     {
         private static PooledRedisClientManager redisManager = new PooledRedisClientManager("localhost:6379");
+        private static POIProxyDbManager dbManager = POIProxyDbManager.Instance;
 
-        #region Functions communicating with redis server
+        public static void refreshSessionTokenPool(string sessionId)
+        {
+            using (var redisClient = redisManager.GetClient())
+            {
+                var users = redisClient.Sets["user_by_session:" + sessionId];
+                redisClient["session_user_count:" + sessionId] = users.Count.ToString();
+            }
+        }
+
 
         public static bool acquireSessionToken(string sessionId, int maxNumUsers)
         {
@@ -73,11 +83,19 @@ namespace POIProxy
             }
         }
 
-        public static IRedisSet getUsersBySessionId(string sessionId)
+        public static List<string> getUsersBySessionId(string sessionId)
         {
             using (var redisClient = redisManager.GetClient())
             {
-                return redisClient.Sets["user_by_session:" + sessionId];
+                return redisClient.Sets["user_by_session:" + sessionId].ToList();
+            }
+        }
+
+        public static bool checkUserInSession(string sessionId, string userId)
+        {
+            using (var redisClient = redisManager.GetClient())
+            {
+                return redisClient.Sets["user_by_session:" + sessionId].Contains(userId);
             }
         }
 
@@ -89,30 +107,6 @@ namespace POIProxy
                 sessions[sessionId] = timestamp.ToString();
             }
         }
-
-        /*
-        public static POIInteractiveSessionArchive getArchiveBySessionId(string sessionId)
-        {
-            using (var redisClient = redisManager.GetClient())
-            {
-                POIGlobalVar.POIDebugLog("get archive by session id");
-
-                var redis = redisClient.As<POIInteractiveSessionArchive>();
-                return redis["archive:" + sessionId];
-            }
-        }
-
-        public static POIInteractiveSessionArchive initSessionArchive(Dictionary<string, string> info)
-        {
-            using (var redisClient = redisManager.GetClient())
-            {
-                POIGlobalVar.POIDebugLog("Init session archive");
-
-                var redis = redisClient.As<POIInteractiveSessionArchive>();
-                POIInteractiveSessionArchive archive = new POIInteractiveSessionArchive(info);
-                return redis.GetAndSetValue("archive:" + archive.SessionId, archive);
-            }
-        }*/
 
         public static void archiveSessionEvent(string sessionId, POIInteractiveEvent poiEvent, double timestamp)
         {
@@ -148,6 +142,121 @@ namespace POIProxy
             }
         }
 
-        #endregion
+        public static Dictionary<string,string> getUserInfo(string userId)
+        {
+            using (var redisClient = redisManager.GetClient())
+            {
+                var userInfo = redisClient.Hashes["user:" + userId];
+
+                if (userInfo.Count == 0)
+                {
+                    //Read user info from db and save into redis
+                    userInfo["user_id"] = userId;
+
+                    Dictionary<string, object> conditions = new Dictionary<string, object>();
+                    List<string> cols = new List<string>();
+
+                    conditions["id"] = userId;
+                    cols.Add("username");
+                    cols.Add("avatar");
+
+                    DataRow user = dbManager.selectSingleRowFromTable("users", cols, conditions);
+                    if (user != null)
+                    {
+                        userInfo["username"] = user["username"] as string;
+                        userInfo["avatar"] = user["avatar"] as string;
+
+                        //Find the user profile 
+                        conditions.Clear();
+                        cols.Clear();
+                        conditions["user_id"] = userId;
+                        cols.Add("school");
+                        cols.Add("department");
+                        cols.Add("rating");
+
+                        DataRow profile = dbManager.selectSingleRowFromTable("user_profile", cols, conditions);
+                        if (profile != null)
+                        {
+                            userInfo["rating"] = profile["rating"] as string;
+                            POIGlobalVar.POIDebugLog("School is " + profile["school"]);
+                            POIGlobalVar.POIDebugLog("Dept is " + profile["department"]);
+
+                            conditions.Clear();
+                            cols.Clear();
+
+                            conditions["sid"] = profile["school"];
+                            cols.Add("name");
+                            DataRow school = dbManager.selectSingleRowFromTable("school", cols, conditions);
+
+                            if (school != null)
+                            {
+                                userInfo["school"] = school["name"] as string;
+                            }
+                            else
+                            {
+                                userInfo["school"] = "";
+                            }
+
+                            conditions.Clear();
+                            cols.Clear();
+
+                            conditions["did"] = profile["department"];
+                            cols.Add("name");
+                            DataRow dept = dbManager.selectSingleRowFromTable("department", cols, conditions);
+
+                            if (dept != null)
+                            {
+                                userInfo["department"] = dept["name"] as string;
+                            }
+                            else
+                            {
+                                userInfo["department"] = "";
+                            }
+                        }
+                    }
+                }
+
+                return redisClient.GetAllEntriesFromHash("user:" + userId);
+            }
+        }
+
+        public static IRedisHash getSessionInfo(string sessionId)
+        {
+            using (var redisClient = redisManager.GetClient())
+            {
+                var sessionInfo = redisClient.Hashes["session:" + sessionId];
+
+                if (sessionInfo.Count == 0)
+                {
+                    //Read session info from db
+                    //Get the pres id from session table
+                    Dictionary<string, object> conditions = new Dictionary<string, object> 
+                    { 
+                        {"id", sessionId}
+                    };
+
+                    var sessionRecord = dbManager.selectSingleRowFromTable("session", null, conditions);
+                    var presId = sessionRecord["presId"];
+                    var timestamp = sessionRecord["create_at"];
+                    string userId = sessionRecord["creator"] as string;
+                    string tutorId = sessionRecord["tutor"] as string;
+
+                    conditions.Clear();
+                    conditions["pid"] = presId;
+                    var presRecord = dbManager.selectSingleRowFromTable("presentation", null, conditions);
+
+                    sessionInfo["session_id"] = sessionId;
+                    sessionInfo["presId"] = presId.ToString();
+                    sessionInfo["create_at"] = sessionRecord["create_at"].ToString();
+                    sessionInfo["start_at"] = sessionRecord["start_at"].ToString();
+                    sessionInfo["student_id"] = userId;
+                    sessionInfo["tutor_id"] = tutorId;
+                    sessionInfo["cover"] = presRecord["media_id"] as string;
+                    sessionInfo["description"] = presRecord["description"] as string;
+                }
+
+                return sessionInfo;
+            }
+        }
     }
 }

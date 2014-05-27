@@ -208,7 +208,7 @@ namespace POIProxy
             }
             catch(Exception e)
             {
-                POIGlobalVar.POIDebugLog("Error in db update: " + e.Message);
+                POIGlobalVar.POIDebugLog("Error in db select: " + e.Message);
             }
 
             return ds.Tables[0];

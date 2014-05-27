@@ -14,91 +14,30 @@ namespace POIProxy
 
         public string SessionId { get; set; }
         public Dictionary<string, string> Info { get; set; }
-        public List<string> UserList { get; set; }
-        
-        public List<POIInteractiveEvent> EventList { 
-            get 
-            {
-                return POIProxySessionManager.getSessionEventList(SessionId);
-            }
-        }
-
-        //For checking duplicate messages
-        //private List<double> EventTimestamps { get; set; }
-
-        //For checking session state
-        private readonly object statusLock = new object();
-        private string Status { get; set; }
 
         public POIInteractiveSessionArchive(Dictionary<string, string> info)
         {
             SessionId = info["session_id"];
             Info = info;
 
-            UserList = new List<string>();
-            //EventList = new List<POIInteractiveEvent>();
-            //EventTimestamps = new List<double>();
-
-            //Update the archive status
-            lock (statusLock)
-            {
-                Status = info["status"];
-            }
-
             //Add the users to the session user list and archive the correponding events
             if (info["student_id"] != null)
             {
-                addUserToUserList(info["student_id"]);
                 archiveSessionCreatedEvent(info["student_id"], double.Parse(info["create_at"]));
             }
 
             if (info["tutor_id"] != null)
             {
-                addUserToUserList(info["tutor_id"]);
                 archiveSessionJoinedEvent(info["tutor_id"], double.Parse(info["start_at"]));
             }
+
+            //Refresh the token count
+            POIProxySessionManager.refreshSessionTokenPool(SessionId);
         }
 
-        public int joinSessionIfOpen()
+        public bool checkUserInSession(string userId)
         {
-            lock (statusLock)
-            {
-                if (Status == "open")
-                {
-                    double createTime = double.Parse(Info["create_at"]);
-                    POIGlobalVar.POIDebugLog("In join, create time is a " + createTime + 
-                        " and threshold is" + POITimestamp.ConvertToUnixTimestamp(DateTime.Now.AddSeconds(-60)));
-                    if (createTime < POITimestamp.ConvertToUnixTimestamp(DateTime.Now.AddSeconds(-60)))
-                    {
-                        POIGlobalVar.POIDebugLog("Session is open!");
-                        Status = "serving";
-                        return 0;
-                    }
-                    else
-                    {
-                        POIGlobalVar.POIDebugLog("Session is counting for open!");
-                        return 1;
-                    }
-                }
-                else
-                {
-                    POIGlobalVar.POIDebugLog("In join, session is not open");
-                    return 2;
-                }
-            }
-        }
-
-        public void updateSessionStatusServing()
-        {
-            lock (statusLock)
-            {
-                Status = "serving";
-            }
-        }
-
-        public void addUserToUserList(string userId)
-        {
-            UserList.Add(userId);
+            return POIProxySessionManager.checkUserInSession(SessionId, userId);
         }
 
         public bool checkEventExists(double eventTimestamp)
@@ -180,12 +119,33 @@ namespace POIProxy
 
         public void archiveSessionCreatedEvent(string userId, double timestamp)
         {
+            var userInfo = POIProxySessionManager.getUserInfo(userId);
+
+            if (!Info.ContainsKey("student_id"))
+            {
+                Info["student_id"] = userInfo["user_id"];
+                Info["student_avatar"] = userInfo["avatar"];
+                Info["student_name"] = userInfo["username"];
+                Info["create_at"] = timestamp.ToString();
+            }
+            
             archiveSessionEvent(userId, "session_created", Info, timestamp);
         }
 
         public void archiveSessionJoinedEvent(string userId, double timestamp)
         {
-            archiveSessionEvent(userId, "session_joined", interMsgHandler.getUserInfoById(userId), timestamp);
+            var userInfo = POIProxySessionManager.getUserInfo(userId);
+            
+            if (!Info.ContainsKey("tutor_id"))
+            {
+                //Update session info dictionary
+                Info["tutor_id"] = userInfo["user_id"];
+                Info["tutor_avatar"] = userInfo["avatar"];
+                Info["tutor_name"] = userInfo["username"];
+                Info["start_at"] = timestamp.ToString();
+            }
+
+            archiveSessionEvent(userId, "session_joined", userInfo, timestamp);
         }
     }
 

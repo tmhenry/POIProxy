@@ -346,12 +346,9 @@ namespace POIProxy.Handlers
             dbManager.updateTable("session", values, conditions);
         }
 
-        public int checkSessionOpen(string sessionId)
+        public bool checkSessionOpen(string sessionId)
         {
-            var session = getArchiveBySessionId(sessionId);
-            return session.joinSessionIfOpen();
-
-           
+            return checkSessionState(sessionId, "open");
         }
 
         public bool checkSessionTutor(string userId, string sessionId)
@@ -525,7 +522,7 @@ namespace POIProxy.Handlers
             return info;
         }
 
-        public async Task<bool> checkAndProcessArchiveDuringSessionEnd(string sessionId)
+        public bool checkAndProcessArchiveDuringSessionEnd(string sessionId)
         {
             POIGlobalVar.POIDebugLog("Session id is " + sessionId);
 
@@ -709,55 +706,8 @@ namespace POIProxy.Handlers
             //Turn the session to serving status
             updateSessionStatusWithTutorJoin(userId, sessionId);
 
-            
-            //POIInteractiveSessionArchive session = null;
-
-            //if (sessionArchives.ContainsKey(sessionId))
-            //{
-            //    //Archive the session join event
-            //    session = sessionArchives[sessionId];
-            //    session.archiveSessionJoinedEvent(userId, timestamp);
-
-            //    //Get the tutor information and insert into archive info
-            //    if (userId != null)
-            //    {
-            //        Dictionary<string, object> conditions = new Dictionary<string, object>
-            //        {
-            //            {"id", userId}
-            //        };
-           
-            //        var tutorRecord = dbManager.selectSingleRowFromTable("users", null, conditions);
-
-            //        session.Info["tutor_id"] = userId;
-            //        session.Info["tutor_avatar"] = tutorRecord["avatar"] as string;
-            //        session.Info["tutor_name"] = tutorRecord["username"] as string;
-            //        session.Info["start_at"] = timestamp.ToString();
-            //    }
-            //}
-            //else
-            //{
-            //    //Initialize the session archive
-            //    session = new POIInteractiveSessionArchive(getArchiveInfoFromDb(sessionId));
-            //}
-
             var session = getArchiveBySessionId(sessionId);
             session.archiveSessionJoinedEvent(userId, timestamp);
-
-            //Get the tutor information and insert into archive info
-            if (userId != null)
-            {
-                Dictionary<string, object> conditions = new Dictionary<string, object>
-                {
-                    {"id", userId}
-                };
-
-                var tutorRecord = dbManager.selectSingleRowFromTable("users", null, conditions);
-
-                session.Info["tutor_id"] = userId;
-                session.Info["tutor_avatar"] = tutorRecord["avatar"] as string;
-                session.Info["tutor_name"] = tutorRecord["username"] as string;
-                session.Info["start_at"] = timestamp.ToString();
-            }
 
             //Add the activity record
             addAnswerActivity(userId, sessionId, jsonHandler.Serialize(session.Info));
@@ -816,7 +766,7 @@ namespace POIProxy.Handlers
             sessionArchives[sessionId].Info["cover"] = mediaId;
         }
 
-        public async Task cancelInteractiveSession(string userId, string sessionId)
+        public void cancelInteractiveSession(string userId, string sessionId)
         {
             //Set the status to cancelled
             updateSessionStatus(sessionId, "cancelled");
@@ -846,19 +796,19 @@ namespace POIProxy.Handlers
             }
         }
 
-        public async Task endInteractiveSession(string userId, string sessionId)
+        public void endInteractiveSession(string userId, string sessionId)
         {
             //Check if the archive needs to be processed
-            await checkAndProcessArchiveDuringSessionEnd(sessionId);
+            checkAndProcessArchiveDuringSessionEnd(sessionId);
 
             //Turn the session to waiting status for user rating
             updateSessionStatusWithEnding(sessionId);
         }
 
-        public async Task rateInteractiveSession(string userId, string sessionId, int rating)
+        public void rateInteractiveSession(string userId, string sessionId, int rating)
         {
             //Check if the archive needs to be processed
-            bool archiveProcessed = await checkAndProcessArchiveDuringSessionEnd(sessionId);
+            bool archiveProcessed = checkAndProcessArchiveDuringSessionEnd(sessionId);
 
             //Turn the session to closed status and update the rating
             //Check if archive is processed by this event (if yes, session end is triggered by rating)
@@ -925,8 +875,7 @@ namespace POIProxy.Handlers
 
             try
             {
-                var session = getArchiveBySessionId(sessionId);
-                var eventList = session.EventList;
+                var eventList = POIProxySessionManager.getSessionEventList(sessionId);
 
                 //POIGlobalVar.POIDebugLog(jsonHandler.Serialize(eventList));
 
