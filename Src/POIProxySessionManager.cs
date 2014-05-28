@@ -150,6 +150,8 @@ namespace POIProxy
 
                 if (userInfo.Count == 0)
                 {
+                    POIGlobalVar.POIDebugLog("Read user info from db");
+
                     //Read user info from db and save into redis
                     userInfo["user_id"] = userId;
 
@@ -177,9 +179,7 @@ namespace POIProxy
                         DataRow profile = dbManager.selectSingleRowFromTable("user_profile", cols, conditions);
                         if (profile != null)
                         {
-                            userInfo["rating"] = profile["rating"] as string;
-                            POIGlobalVar.POIDebugLog("School is " + profile["school"]);
-                            POIGlobalVar.POIDebugLog("Dept is " + profile["department"]);
+                            userInfo["rating"] = profile["rating"].ToString();
 
                             conditions.Clear();
                             cols.Clear();

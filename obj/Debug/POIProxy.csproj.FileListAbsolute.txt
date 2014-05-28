@@ -137,7 +137,6 @@ C:\Users\HenryXia\Desktop\POIProxy\bin\Parse.dll
 C:\Users\HenryXia\Desktop\POIProxy\bin\Parse.NetFx45.dll
 C:\Users\HenryXia\Desktop\POIProxy\bin\Parse.xml
 C:\Users\HenryXia\Desktop\POIProxy\bin\Parse.NetFx45.xml
-C:\Users\HenryXia\Desktop\POIProxy\obj\Debug\POIProxy.csprojResolveAssemblyReference.cache
 C:\Users\HenryXia\Desktop\POIProxy\bin\log4net.dll
 C:\Users\HenryXia\Desktop\POIProxy\bin\Microsoft.AspNet.SignalR.Core.dll
 C:\Users\HenryXia\Desktop\POIProxy\bin\Microsoft.AspNet.SignalR.SystemWeb.dll
@@ -159,3 +158,5 @@ C:\Users\HenryXia\Desktop\POIProxy\bin\ServiceStack.Common.xml
 C:\Users\HenryXia\Desktop\POIProxy\bin\ServiceStack.Interfaces.xml
 C:\Users\HenryXia\Desktop\POIProxy\bin\ServiceStack.Redis.xml
 C:\Users\HenryXia\Desktop\POIProxy\bin\ServiceStack.Text.xml
+C:\Users\HenryXia\Desktop\POIProxy\bin\POIProxy.dll.CodeAnalysisLog.xml
+C:\Users\HenryXia\Desktop\POIProxy\bin\POIProxy.dll.lastcodeanalysissucceeded

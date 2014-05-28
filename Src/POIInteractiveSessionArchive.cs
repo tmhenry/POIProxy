@@ -10,10 +10,13 @@ namespace POIProxy
 {
     public class POIInteractiveSessionArchive
     {
-        static POIProxyInteractiveMsgHandler interMsgHandler = POIProxyGlobalVar.Kernel.myInterMsgHandler;
-
         public string SessionId { get; set; }
         public Dictionary<string, string> Info { get; set; }
+        public List<POIInteractiveEvent> EventList { 
+            get { 
+                return POIProxySessionManager.getSessionEventList(SessionId); 
+            } 
+        }
 
         public POIInteractiveSessionArchive(Dictionary<string, string> info)
         {
