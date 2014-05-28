@@ -4,7 +4,6 @@ using System.Linq;
 using System.Web;
 using System.IO;
 
-using POILibCommunication;
 using Qiniu.IO;
 using Qiniu.RS;
 using System.Web.Configuration;

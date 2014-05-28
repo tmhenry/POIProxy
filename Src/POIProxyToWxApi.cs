@@ -8,7 +8,6 @@ using System.Net;
 using System.Threading.Tasks;
 //using System.Net.Http;
 
-using POILibCommunication;
 using System.Web.Configuration;
 
 namespace POIProxy

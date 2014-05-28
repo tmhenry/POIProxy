@@ -38,8 +38,8 @@ namespace POIProxy
 
         private void StartKernelThread()
         {
-            POIProxyGlobalVar.Kernel = new POIProxyKernel();
-            POIProxyGlobalVar.Kernel.Start();
+            POIGlobalVar.Kernel = new POIProxyKernel();
+            POIGlobalVar.Kernel.Start();
         }
     }
 }

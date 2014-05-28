@@ -88,10 +88,6 @@
     <Reference Include="Parse.NetFx45">
       <HintPath>packages\parse.1.2.14\lib\net45\Parse.NetFx45.dll</HintPath>
     </Reference>
-    <Reference Include="POILibCommunication, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\POILibCommunication\POILibCommunication\bin\Debug\POILibCommunication.dll</HintPath>
-    </Reference>
     <Reference Include="Qiniu">
       <HintPath>packages\Qiniu.6.1.1\lib\Net20\Qiniu.dll</HintPath>
     </Reference>
@@ -181,7 +177,6 @@
     <Compile Include="content.cs">
       <DependentUpon>POIEntities.tt</DependentUpon>
     </Compile>
-    <Compile Include="Controllers\AudioUploadController.cs" />
     <Compile Include="Controllers\ComClientController.cs" />
     <Compile Include="Controllers\HomeController.cs" />
     <Compile Include="Controllers\ProxyStatusController.cs" />
@@ -198,13 +193,7 @@
     <Compile Include="group.cs">
       <DependentUpon>POIEntities.tt</DependentUpon>
     </Compile>
-    <Compile Include="Handlers\POIProxyAudioContentHandler.cs" />
-    <Compile Include="Handlers\POIProxyInteractiveMsgHandler.cs" />
-    <Compile Include="Handlers\POIProxyLogHandler.cs" />
-    <Compile Include="Handlers\POIProxyPresCtrlHandler.cs" />
-    <Compile Include="Handlers\POIProxyPtrCtrlHandler.cs" />
-    <Compile Include="Handlers\POIProxyDataHandler.cs" />
-    <Compile Include="Handlers\POIProxyWBCtrlHandler.cs" />
+    <Compile Include="Src\POIProxyInteractiveMsgHandler.cs" />
     <Compile Include="keyword.cs">
       <DependentUpon>POIEntities.tt</DependentUpon>
     </Compile>
@@ -251,20 +240,15 @@
       <DependentUpon>POIEntities.tt</DependentUpon>
     </Compile>
     <Compile Include="Src\POICdnHelper.cs" />
+    <Compile Include="Src\POIGlobalVar.cs" />
     <Compile Include="Src\POIInteractiveSessionArchive.cs" />
-    <Compile Include="Src\POIOfflineSessionCache.cs" />
     <Compile Include="Src\POIProxyDbManager.cs" />
-    <Compile Include="Src\POIProxyGlobalVar.cs" />
     <Compile Include="Src\POIProxyHub.cs" />
     <Compile Include="Src\POIProxyKernel.cs" />
     <Compile Include="Src\POIProxyPushNotifier.cs" />
     <Compile Include="Src\POIProxySessionManager.cs" />
     <Compile Include="Src\POIProxyToWxApi.cs" />
-    <Compile Include="Src\POISession.cs" />
-    <Compile Include="Src\POISessionManager.cs" />
-    <Compile Include="Src\POISessionPresController.cs" />
-    <Compile Include="Src\POISessionRegistery.cs" />
-    <Compile Include="Src\POISessionScheduler.cs" />
+    <Compile Include="Src\POITimestamp.cs" />
     <Compile Include="Startup.cs" />
     <Compile Include="tag.cs">
       <DependentUpon>POIEntities.tt</DependentUpon>
@@ -362,6 +346,7 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
+    <Folder Include="Handlers\" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="packages.config" />

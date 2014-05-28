@@ -5,7 +5,6 @@ using System.Web;
 using System.Web.Mvc;
 
 using POIProxy.Models;
-using POILibCommunication;
 
 namespace POIProxy.Controllers
 {

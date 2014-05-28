@@ -5,7 +5,6 @@ using System.Linq;
 using System.Web;
 
 using System.Net;
-using POILibCommunication;
 using System.Web.Script.Serialization;
 
 using System.Threading.Tasks;

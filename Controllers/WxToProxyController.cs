@@ -5,10 +5,8 @@ using System.Net;
 using System.Net.Http;
 using System.Web.Http;
 
-using POIProxy.Handlers;
 using Microsoft.AspNet.SignalR;
 
-using POILibCommunication;
 using System.Web.Script.Serialization;
 using System.Threading.Tasks;
 
@@ -17,7 +15,7 @@ namespace POIProxy.Controllers
 
     public class WxToProxyController : ApiController
     {
-        POIProxyInteractiveMsgHandler interMsgHandler = POIProxyGlobalVar.Kernel.myInterMsgHandler;
+        POIProxyInteractiveMsgHandler interMsgHandler = POIGlobalVar.Kernel.myInterMsgHandler;
         IHubContext hubContext = GlobalHost.ConnectionManager.GetHubContext<POIProxyHub>();
         JavaScriptSerializer jsonHandler = new JavaScriptSerializer();
 
@@ -100,17 +98,6 @@ namespace POIProxy.Controllers
             {
                 switch (type)
                 {
-                    case "sessionCreated":
-                        //Initialize the session archive
-                        sessionId = msgInfo["sessionId"];
-                        userId = msgInfo["userId"];
-                        infoStr = msgInfo["info"];
-                        interMsgHandler.initSessionArchive(jsonHandler.Deserialize<Dictionary<string, string>>(infoStr));
-
-                        await POIProxyPushNotifier.sessionCreated(sessionId);
-
-                        break;
-
                     case "ratingReceived":
                         //Update the database
                         sessionId = msgInfo["sessionId"];
@@ -144,21 +131,6 @@ namespace POIProxy.Controllers
 
                         break;
 
-                    case "sessionJoined":
-                        sessionId = msgInfo["sessionId"];
-                        POIGlobalVar.POIDebugLog("Session joined: " + sessionId);
-                        userId = msgInfo["userId"];
-                        userInfo = msgInfo["userInfo"];
-                        POIGlobalVar.POIDebugLog("user id is: " + userId);
-                        interMsgHandler.archiveSessionJoinedEvent(userId, sessionId);
-
-                        hubContext.Clients.Group("session_" + sessionId)
-                            .interactiveSessionNewUserJoined(userId, sessionId, userInfo, POITimestamp.ConvertToUnixTimestamp(DateTime.Now));
-
-                        await POIProxyPushNotifier.sessionJoined(sessionId);
-
-                        break;
-
                     case "sessionEnded":
                         sessionId = msgInfo["sessionId"];
                         POIGlobalVar.POIDebugLog("Session ended: " + sessionId);
@@ -171,30 +143,6 @@ namespace POIProxy.Controllers
                         await POIProxyPushNotifier.sessionEnded(sessionId);
 
                         break;
-
-                    //case "sessionReraised":
-                    //    sessionId = msgInfo["sessionId"];
-                    //    POIGlobalVar.POIDebugLog("Session reraised " + sessionId);
-                    //    newSessionId = msgInfo["newSessionId"];
-                    //    userId = msgInfo["userId"];
-                    //    POIGlobalVar.POIDebugLog("New session is " + newSessionId);
-
-                    //    interMsgHandler.reraiseInteractiveSession(userId, sessionId, newSessionId);
-
-                    //    hubContext.Clients.Group("session_" + sessionId)
-                    //        .textMsgReceived(userId, sessionId, "志愿者你好，同学已经取消了这次提问，取消的提问不会影响你的积分",
-                    //        POITimestamp.ConvertToUnixTimestamp(DateTime.Now));
-
-                    //    //Notify the tutor about the cancelling operation
-                    //    hubContext.Clients.Group("session_" + sessionId)
-                    //        .interactiveSessionCancelled(sessionId);
-
-                    //    //Make the session open after everything is ready
-                    //    interMsgHandler.updateSessionStatus(newSessionId, "open");
-
-                    //    await POIProxyPushNotifier.sessionCreated(newSessionId);
-
-                    //    break;
 
                     //Join and create operation received from weixin 
                     case "joinSession":

@@ -6,8 +6,6 @@ using System;
 using System.Collections.Generic;
 
 using System.Data;
-
-using POILibCommunication;
 using System.Web.Configuration;
 
 namespace POIProxy

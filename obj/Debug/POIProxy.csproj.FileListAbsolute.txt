@@ -103,7 +103,6 @@ C:\Users\HenryXia\Desktop\POIProxy\obj\Debug\POIProxy.dll
 C:\Users\HenryXia\Desktop\POIProxy\bin\POIProxy.dll
 C:\Users\HenryXia\Desktop\POIProxy\bin\POIProxy.pdb
 C:\Users\HenryXia\Desktop\POIProxy\bin\Microsoft.Web.Infrastructure.dll
-C:\Users\HenryXia\Desktop\POIProxy\bin\POILibCommunication.dll
 C:\Users\HenryXia\Desktop\POIProxy\bin\System.Net.Http.Formatting.dll
 C:\Users\HenryXia\Desktop\POIProxy\bin\System.Web.Helpers.dll
 C:\Users\HenryXia\Desktop\POIProxy\bin\System.Web.Http.dll
@@ -114,7 +113,6 @@ C:\Users\HenryXia\Desktop\POIProxy\bin\System.Web.WebPages.Deployment.dll
 C:\Users\HenryXia\Desktop\POIProxy\bin\System.Web.WebPages.dll
 C:\Users\HenryXia\Desktop\POIProxy\bin\System.Web.WebPages.Razor.dll
 C:\Users\HenryXia\Desktop\POIProxy\bin\Newtonsoft.Json.xml
-C:\Users\HenryXia\Desktop\POIProxy\bin\POILibCommunication.pdb
 C:\Users\HenryXia\Desktop\POIProxy\bin\Microsoft.Web.Infrastructure.xml
 C:\Users\HenryXia\Desktop\POIProxy\bin\System.Net.Http.Formatting.xml
 C:\Users\HenryXia\Desktop\POIProxy\bin\System.Web.Helpers.xml
@@ -158,5 +156,4 @@ C:\Users\HenryXia\Desktop\POIProxy\bin\ServiceStack.Common.xml
 C:\Users\HenryXia\Desktop\POIProxy\bin\ServiceStack.Interfaces.xml
 C:\Users\HenryXia\Desktop\POIProxy\bin\ServiceStack.Redis.xml
 C:\Users\HenryXia\Desktop\POIProxy\bin\ServiceStack.Text.xml
-C:\Users\HenryXia\Desktop\POIProxy\bin\POIProxy.dll.CodeAnalysisLog.xml
-C:\Users\HenryXia\Desktop\POIProxy\bin\POIProxy.dll.lastcodeanalysissucceeded
+C:\Users\HenryXia\Desktop\POIProxy\obj\Debug\POIProxy.csprojResolveAssemblyReference.cache

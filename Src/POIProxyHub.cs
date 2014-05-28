@@ -8,8 +8,6 @@ using Microsoft.AspNet.SignalR;
 using Microsoft.AspNet.SignalR.Hubs;
 using Owin;
 
-using POILibCommunication;
-using POIProxy.Handlers;
 using System.Web.Script.Serialization;
 
 using System.Threading.Tasks;
@@ -21,7 +19,7 @@ namespace POIProxy
     [HubName("poiProxy")]
     public class POIProxyHub : Hub
     {
-        static POIProxyInteractiveMsgHandler interMsgHandler = POIProxyGlobalVar.Kernel.myInterMsgHandler;
+        static POIProxyInteractiveMsgHandler interMsgHandler = POIGlobalVar.Kernel.myInterMsgHandler;
         JavaScriptSerializer jsonHandler = new JavaScriptSerializer();
         
         public void Log(string msg)

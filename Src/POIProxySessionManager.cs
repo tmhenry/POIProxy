@@ -8,7 +8,6 @@ using ServiceStack.Redis.Generic;
 using ServiceStack.Text;
 
 using System.Data;
-using POILibCommunication;
 
 namespace POIProxy
 {
