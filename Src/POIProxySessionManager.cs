@@ -26,10 +26,12 @@ namespace POIProxy
         }
 
 
-        public static bool acquireSessionToken(string sessionId, int maxNumUsers)
+        public static bool acquireSessionToken(string sessionId)
         {
             using (var redisClient = redisManager.GetClient())
             {
+                int maxNumUsers = checkPrivateTutoring(sessionId) ? 1 : 10;
+                
                 if (redisClient.Increment("session_user_count:" + sessionId, 1) <= maxNumUsers)
                 {
                     return true;
@@ -72,6 +74,8 @@ namespace POIProxy
                 sessions.Remove(sessionId);
                 users.Remove(userId);
             }
+
+            releaseSessionToken(sessionId);
         }
 
         public static IRedisHash getSessionsByUserId(string userId)
@@ -87,6 +91,22 @@ namespace POIProxy
             using (var redisClient = redisManager.GetClient())
             {
                 return redisClient.Sets["user_by_session:" + sessionId].ToList();
+            }
+        }
+
+        public static List<Dictionary<string, string>> getUserListDetailsBySessionId(string sessionId)
+        {
+            using (var redisClient = redisManager.GetClient())
+            {
+                var userList = redisClient.Sets["user_by_session:" + sessionId];
+
+                var detailList = new List<Dictionary<string, string>>();
+                foreach (string userId in userList)
+                {
+                    detailList.Add(getUserInfo(userId));
+                }
+
+                return detailList;
             }
         }
 
@@ -219,7 +239,7 @@ namespace POIProxy
             }
         }
 
-        public static IRedisHash getSessionInfo(string sessionId)
+        public static Dictionary<string,string> getSessionInfo(string sessionId)
         {
             using (var redisClient = redisManager.GetClient())
             {
@@ -235,27 +255,65 @@ namespace POIProxy
                     };
 
                     var sessionRecord = dbManager.selectSingleRowFromTable("session", null, conditions);
-                    var presId = sessionRecord["presId"];
-                    var timestamp = sessionRecord["create_at"];
-                    string userId = sessionRecord["creator"] as string;
-                    string tutorId = sessionRecord["tutor"] as string;
-
+                    
                     conditions.Clear();
-                    conditions["pid"] = presId;
+                    conditions["pid"] = sessionRecord["presId"];
                     var presRecord = dbManager.selectSingleRowFromTable("presentation", null, conditions);
 
                     sessionInfo["session_id"] = sessionId;
-                    sessionInfo["presId"] = presId.ToString();
                     sessionInfo["create_at"] = sessionRecord["create_at"].ToString();
-                    sessionInfo["start_at"] = sessionRecord["start_at"].ToString();
-                    sessionInfo["student_id"] = userId;
-                    sessionInfo["tutor_id"] = tutorId;
+                    sessionInfo["creator"] = sessionRecord["creator"] as string;
                     sessionInfo["cover"] = presRecord["media_id"] as string;
                     sessionInfo["description"] = presRecord["description"] as string;
                 }
 
-                return sessionInfo;
+                return redisClient.GetAllEntriesFromHash("session:" + sessionId);
             }
         }
+
+        public static void updateSessionInfo(string sessionId, Dictionary<string, string> update)
+        {
+            using (var redisClient = redisManager.GetClient())
+            {
+                var sessionInfo = redisClient.Hashes["session:" + sessionId];
+
+                foreach (string key in update.Keys)
+                {
+                    sessionInfo[key] = update[key];
+                }
+            }
+        }
+
+        public static POISessionArchive getSessionArchive(string sessionId)
+        {
+            using (var redisClient = redisManager.GetClient())
+            {
+                return new POISessionArchive
+                {
+                    SessionId = sessionId,
+                    UserList = getUserListDetailsBySessionId(sessionId),
+                    EventList = getSessionEventList(sessionId),
+                    Info = getSessionInfo(sessionId)
+                };
+            }
+        }
+
+        public static bool checkPrivateTutoring(string sessionId)
+        {
+            using (var redisClient = redisManager.GetClient())
+            {
+                var sessionInfo = redisClient.Hashes["sessionId:" + sessionId];
+
+                if (sessionInfo["access_type"] == "group")
+                {
+                    return false;
+                }
+                else
+                {
+                    return true;
+                }
+            }
+        }
+
     }
 }

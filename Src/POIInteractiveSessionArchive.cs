@@ -111,9 +111,6 @@ namespace POIProxy
                 Data = eventData
             };
 
-            //EventList.Add(poiEvent);
-            //EventTimestamps.Add(timestamp);
-
             POIProxySessionManager.archiveSessionEvent(SessionId, poiEvent, timestamp);
         }
 
@@ -148,19 +145,4 @@ namespace POIProxy
             archiveSessionEvent(userId, "session_joined", userInfo, timestamp);
         }
     }
-
-    public class POIInteractiveEvent
-    {
-        public int EventIndex { get; set; }
-        public string EventType { get; set; }
-        public string MediaId { get; set; }
-        public string Message { get; set; }
-        public string UserId { get; set; }
-        public double Timestamp { get; set; }
-
-        //Additional data for special events
-        public Dictionary<string,string> Data { get; set; }
-    }
-
-  
 }

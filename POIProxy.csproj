@@ -193,6 +193,7 @@
     <Compile Include="group.cs">
       <DependentUpon>POIEntities.tt</DependentUpon>
     </Compile>
+    <Compile Include="Src\POIInteractiveEvent.cs" />
     <Compile Include="Src\POIProxyInteractiveMsgHandler.cs" />
     <Compile Include="keyword.cs">
       <DependentUpon>POIEntities.tt</DependentUpon>
@@ -241,13 +242,13 @@
     </Compile>
     <Compile Include="Src\POICdnHelper.cs" />
     <Compile Include="Src\POIGlobalVar.cs" />
-    <Compile Include="Src\POIInteractiveSessionArchive.cs" />
     <Compile Include="Src\POIProxyDbManager.cs" />
     <Compile Include="Src\POIProxyHub.cs" />
     <Compile Include="Src\POIProxyKernel.cs" />
     <Compile Include="Src\POIProxyPushNotifier.cs" />
     <Compile Include="Src\POIProxySessionManager.cs" />
     <Compile Include="Src\POIProxyToWxApi.cs" />
+    <Compile Include="Src\POISessionArchive.cs" />
     <Compile Include="Src\POITimestamp.cs" />
     <Compile Include="Startup.cs" />
     <Compile Include="tag.cs">

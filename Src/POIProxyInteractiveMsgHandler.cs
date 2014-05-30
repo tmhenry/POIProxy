@@ -19,9 +19,6 @@ namespace POIProxy
         POIProxyDbManager dbManager = POIProxyDbManager.Instance;
         JavaScriptSerializer jsonHandler = new JavaScriptSerializer();
 
-        ConcurrentDictionary<string, POIInteractiveSessionArchive> sessionArchives = 
-            new ConcurrentDictionary<string, POIInteractiveSessionArchive>();
-
         
         public void addUserToSessionRecord(string userId, string sessionId)
         {
@@ -35,25 +32,46 @@ namespace POIProxy
             dbManager.insertIntoTable("user_right", values);
         }
 
-        public void addQuestionActivity(string userId, string sessionId, string info)
+        public void addQuestionActivity(string userId, string sessionId)
         {
+            var studentInfo = POIProxySessionManager.getUserInfo(userId);
+            var sessionInfo = POIProxySessionManager.getSessionInfo(sessionId);
+
             Dictionary<string, object> values = new Dictionary<string, object>();
             values["user_id"] = userId;
             values["type"] = "int_session_question";
             values["content_id"] = sessionId;
             values["create_at"] = POITimestamp.ConvertToUnixTimestamp(DateTime.Now);
-            values["data"] = info;
+            values["data"] = jsonHandler.Serialize(
+                new Dictionary<string, object>
+                {
+                    {"session", sessionInfo},
+                    {"student", studentInfo},
+                }
+            );
 
             dbManager.insertIntoTable("activity", values);
         }
 
-        public void addAnswerActivity(string userId, string sessionId, string info)
+        public void addAnswerActivity(string userId, string sessionId)
         {
+            var sessionInfo = POIProxySessionManager.getSessionInfo(sessionId);
+            var studentInfo = POIProxySessionManager.getUserInfo(sessionInfo["creator"]);
+            var tutorInfo = POIProxySessionManager.getUserInfo(userId);
+
             Dictionary<string, object> values = new Dictionary<string, object>();
             values["user_id"] = userId;
             values["type"] = "int_session_answer";
             values["content_id"] = sessionId;
-            values["data"] = info;
+            values["data"] = jsonHandler.Serialize(
+                new Dictionary<string, object>
+                {
+                    {"session", sessionInfo},
+                    {"student", studentInfo},
+                    {"tutor", tutorInfo}
+                }
+            );
+            
             values["create_at"] = POITimestamp.ConvertToUnixTimestamp(DateTime.Now);
 
             dbManager.insertIntoTable("activity", values);
@@ -65,26 +83,21 @@ namespace POIProxy
             conditions["content_id"] = sessionId;
             conditions["type"] = "int_session_answer";
 
-            List<string> cols = new List<string>();
-            cols.Add("data");
+            var sessionInfo = POIProxySessionManager.getSessionInfo(sessionId);
+            var studentInfo = POIProxySessionManager.getUserInfo(sessionInfo["creator"]);
+            var tutorInfo = POIProxySessionManager.getUserInfo(userId);
 
-            DataTable result = dbManager.selectFromTable("activity", cols, conditions);
-            if (result.Rows.Count >= 1)
-            {
-                string infoStr = result.Rows[0]["data"] as string;
-                Dictionary<string, string> infoDict = jsonHandler.Deserialize<Dictionary<string, string>>(infoStr);
-                infoDict["rating"] = rating.ToString();
-                infoStr = jsonHandler.Serialize(infoDict);
+            Dictionary<string, object> values = new Dictionary<string, object>();
+            values["data"] = jsonHandler.Serialize(
+                new Dictionary<string, object>
+                {
+                    {"session", sessionInfo},
+                    {"student", studentInfo},
+                    {"tutor", tutorInfo}
+                }
+            );
 
-                Dictionary<string, object> values = new Dictionary<string, object>();
-                values["data"] = infoStr;
-
-                dbManager.updateTable("activity", values, conditions);
-            }
-            else
-            {
-                POIGlobalVar.POIDebugLog("Cannot find related answer activity!");
-            }
+            dbManager.updateTable("activity", values, conditions);
         }
 
         public void updateSessionStatus(string sessionId, string status)
@@ -152,20 +165,6 @@ namespace POIProxy
             return checkSessionState(sessionId, "open");
         }
 
-        public bool checkSessionTutor(string userId, string sessionId)
-        {
-            var session = getArchiveBySessionId(sessionId);
-
-            if (session.Info["tutor_id"] == userId)
-            {
-                return true;
-            }
-            else
-            {
-                return false;
-            }
-        }
-
         public bool checkSessionServing(string sessionId)
         {
             return checkSessionState(sessionId, "serving");
@@ -200,7 +199,8 @@ namespace POIProxy
             return dbManager.selectSingleRowFromTable("session", null, conditions);
         }
 
-        public Tuple<string,string> createInteractiveSession(string userId, string mediaId, string desc)
+        public Tuple<string,string> createInteractiveSession(string userId, string mediaId, 
+            string desc, string accessType = "private")
         {
             double timestamp = POITimestamp.ConvertToUnixTimestamp(DateTime.Now);
 
@@ -232,95 +232,159 @@ namespace POIProxy
             infoDict["session_id"] = sessionId;
             infoDict["pres_id"] = presId;
             infoDict["create_at"] =  timestamp.ToString();
-            infoDict["student_id"] = userId;
+            infoDict["creator"] = userId;
             infoDict["description"] = desc;
             infoDict["cover"] = mediaId;
-            infoDict["status"] = "open";
-            infoDict["tutor_id"] = null;
-            infoDict["tutor_avatar"] = null;
-            infoDict["tutor_name"] = null;
+            infoDict["access_type"] = accessType;
 
-            //Search for user name of the student
-            Dictionary<string, object> condition = new Dictionary<string, object>();
-            condition["id"] = userId;
-            DataTable result = dbManager.selectFromTable("users", null, condition);
-            if (result.Rows.Count == 1)
+            POIProxySessionManager.updateSessionInfo(sessionId, infoDict);
+
+            //Archive the session created event
+            POIInteractiveEvent poiEvent = new POIInteractiveEvent
             {
-                DataRow row = result.Rows[0];
-                infoDict["student_avatar"] = row["avatar"] as string;
-                infoDict["student_name"] = row["username"] as string;
-            }
+                //EventIndex = EventList.Count,
+                EventType = "session_created",
+                MediaId = "",
+                UserId = userId,
+                Timestamp = timestamp,
+                Message = "",
+                Data = infoDict
+            };
 
+            POIProxySessionManager.archiveSessionEvent(sessionId, poiEvent, timestamp);
+
+            //Subscribe the user to the session
+            POIProxySessionManager.subscribeSession(sessionId, userId);
+            
             //Insert the question activity into the activity table
-            addQuestionActivity(userId, sessionId, jsonHandler.Serialize(infoDict));
-
-            //Create session archive and add the currrent user to the user list
-            initSessionArchive(infoDict);
+            addQuestionActivity(userId, sessionId);
 
             return new Tuple<string,string>(presId, sessionId);
         }
 
-        public void initSessionArchive(Dictionary<string,string> info)
+        public void joinInteractiveSession(string userId, string sessionId, double timestamp)
         {
-            //Create session archive and add the currrent user to the user list
-            POIInteractiveSessionArchive archive = new POIInteractiveSessionArchive(info);
-            sessionArchives[archive.SessionId] = archive;
+            //add the current user into the session table
+            addUserToSessionRecord(userId, sessionId);
+
+            //Turn the session to serving status
+            updateSessionStatusWithTutorJoin(userId, sessionId);
+
+            //Archive the session join information
+            POIInteractiveEvent poiEvent = new POIInteractiveEvent
+            {
+                EventType = "session_joined",
+                MediaId = "",
+                UserId = userId,
+                Timestamp = timestamp,
+                Message = "",
+                Data = POIProxySessionManager.getUserInfo(userId)
+            };
+
+            POIProxySessionManager.archiveSessionEvent(sessionId, poiEvent, timestamp);
+
+            //Subscribe the user to the session
+            POIProxySessionManager.subscribeSession(sessionId, userId);
+
+            //Add the activity record
+            addAnswerActivity(userId, sessionId);
         }
 
-        private Dictionary<string, string> getArchiveInfoFromDb(string sessionId)
+        public void cancelInteractiveSession(string userId, string sessionId)
         {
-            //Get the pres id from session table
-            Dictionary<string, object> conditions = new Dictionary<string, object> 
-            { 
-                {"id", sessionId}
+            double timestamp = POITimestamp.ConvertToUnixTimestamp(DateTime.Now);
+
+            //Set the status to cancelled
+            updateSessionStatus(sessionId, "cancelled");
+
+            //Upload the session archive to the qiniu cdn
+            string mediaId = POICdnHelper.generateCdnKeyForSessionArchive(sessionId);
+            POICdnHelper.uploadStrToQiniuCDN(mediaId, "");
+
+            //Update the database given the media id
+            Dictionary<string, object> conditions = new Dictionary<string, object>();
+            conditions["id"] = sessionId;
+
+            Dictionary<string, object> values = new Dictionary<string, object>();
+            values["media_id"] = mediaId;
+
+            dbManager.updateTable("session", values, conditions);
+
+            //Unsubscribe the old session
+            POIProxySessionManager.unsubscribeSession(sessionId, userId);
+
+            //Archive the cancel event
+            POIInteractiveEvent cancelEvent = new POIInteractiveEvent
+            {
+                EventType = "session_cancelled",
+                UserId = userId,
+                Timestamp = timestamp,
             };
 
-            var sessionRecord = dbManager.selectSingleRowFromTable("session", null, conditions);
-            var presId = sessionRecord["presId"];
-            var timestamp = sessionRecord["create_at"];
-            string userId = sessionRecord["creator"] as string;
-            string tutorId = sessionRecord["tutor"] as string;
+            POIProxySessionManager.archiveSessionEvent(sessionId, cancelEvent, timestamp);
+        }
 
-            conditions.Clear();
-            conditions["pid"] = presId;
-            var presRecord = dbManager.selectSingleRowFromTable("presentation", null, conditions);
+        public void reraiseInteractiveSession(string userId, string sessionId, string newSessionId, double timestamp)
+        {
+            //Set the status to cancelled for the initial session
+            updateSessionStatus(sessionId, "cancelled");
 
-            Dictionary<string, string> info = new Dictionary<string, string>
+            //Unsubscribe the old session
+            POIProxySessionManager.unsubscribeSession(sessionId, userId);
+
+            //Archive the cancel event
+            POIInteractiveEvent cancelEvent = new POIInteractiveEvent
             {
-                {"session_id", sessionId},
-                {"presId", presId.ToString()},
-                {"create_at", sessionRecord["create_at"].ToString()},
-                {"start_at", sessionRecord["start_at"].ToString()},
-                {"student_id", userId},
-                {"tutor_id",  tutorId},
-                {"cover", presRecord["media_id"] as string},
-                {"description", presRecord["description"] as string},
-                {"status", sessionRecord["status"] as string}
+                EventType = "session_cancelled",
+                UserId = userId,
+                Timestamp = timestamp,
             };
 
-            if (userId != null)
+            POIProxySessionManager.archiveSessionEvent(sessionId, cancelEvent, timestamp);
+
+            Dictionary<string, string> info = POIProxySessionManager.getSessionInfo(sessionId);
+
+            //Upload the session archive
+            string mediaId = POICdnHelper.generateCdnKeyForSessionArchive(sessionId);
+            POICdnHelper.uploadStrToQiniuCDN(mediaId, jsonHandler.Serialize(""));
+
+            //Update the database given the media id
+            Dictionary<string, object> conditions = new Dictionary<string, object>();
+            conditions["id"] = sessionId;
+
+            Dictionary<string, object> values = new Dictionary<string, object>();
+            values["media_id"] = mediaId;
+
+            dbManager.updateTable("session", values, conditions);
+
+            //Update the new session info
+            POIProxySessionManager.updateSessionInfo(sessionId,
+                new Dictionary<string, string>
+                {
+                    {"session_id", newSessionId},
+                    {"create_at", timestamp.ToString()},
+                    {"creator", userId},
+                    {"cover", info["cover"]},
+                    {"description", info["description"]}
+                }
+            );
+
+            //Subscribe the user to the session
+            POIProxySessionManager.subscribeSession(newSessionId, userId);
+
+            //Archive the create event
+            POIInteractiveEvent createEvent = new POIInteractiveEvent
             {
-                conditions.Clear();
-                conditions["id"] = userId;
-                var userRecord = dbManager.selectSingleRowFromTable("users", null, conditions);
+                //EventIndex = EventList.Count,
+                EventType = "session_created",
+                MediaId = "",
+                UserId = userId,
+                Timestamp = timestamp,
+                Message = "",
+                Data = POIProxySessionManager.getSessionInfo(newSessionId)
+            };
 
-                info["student_avatar"] = userRecord["avatar"] as string;
-                info["student_name"] = userRecord["username"] as string;
-            }
-
-            if (tutorId != null)
-            {
-                conditions.Clear();
-                conditions["id"] = tutorId;
-                var tutorRecord = dbManager.selectSingleRowFromTable("users", null, conditions);
-
-                info["tutor_avatar"] = tutorRecord["avatar"] as string;
-                info["tutor_name"] = tutorRecord["username"] as string;
-            }
-
-            //POIGlobalVar.POIDebugLog(jsonHandler.Serialize(info));
-            
-            return info;
+            POIProxySessionManager.archiveSessionEvent(newSessionId, createEvent, timestamp);
         }
 
         public bool checkAndProcessArchiveDuringSessionEnd(string sessionId)
@@ -332,15 +396,8 @@ namespace POIProxy
             {
                 POIGlobalVar.POIDebugLog("Uploading session archive!");
 
-                var session = getArchiveBySessionId(sessionId);
-
-                //Prepare the archive and upload to the cloud
-                //string mediaId = await POIContentServerHelper.uploadJsonStrToQiniuCDN(
-                //    jsonHandler.Serialize(session)
-                //);
-
                 string mediaId = POICdnHelper.generateCdnKeyForSessionArchive(sessionId);
-                POICdnHelper.uploadStrToQiniuCDN(mediaId, jsonHandler.Serialize(session));
+                POICdnHelper.uploadStrToQiniuCDN(mediaId, jsonHandler.Serialize(""));
 
                 //Update the database given the media id
                 Dictionary<string, object> conditions = new Dictionary<string, object>();
@@ -351,10 +408,6 @@ namespace POIProxy
 
                 dbManager.updateTable("session", values, conditions);
 
-                //Remove the session archive in the memory
-                POIInteractiveSessionArchive archive;
-                sessionArchives.TryRemove(sessionId, out archive);
-
                 return true;
             }
             else
@@ -363,65 +416,23 @@ namespace POIProxy
             }
         }
 
-        public Dictionary<string, string> getUserInfoById(string userId)
+        public void uploadSessionArchive(string sessionId)
         {
-            Dictionary<string, string> userInfo = new Dictionary<string, string>();
+            POIGlobalVar.POIDebugLog("Uploading session archive!");
 
+            string mediaId = POICdnHelper.generateCdnKeyForSessionArchive(sessionId);
+            POICdnHelper.uploadStrToQiniuCDN(mediaId, 
+                jsonHandler.Serialize(POIProxySessionManager.getSessionArchive(sessionId))
+            );
+
+            //Update the database given the media id
             Dictionary<string, object> conditions = new Dictionary<string, object>();
-            List<string> cols = new List<string>();
+            conditions["id"] = sessionId;
 
-            conditions["id"] = userId;
-            cols.Add("username");
-            cols.Add("avatar");
+            Dictionary<string, object> values = new Dictionary<string, object>();
+            values["media_id"] = mediaId;
 
-            DataRow user = dbManager.selectSingleRowFromTable("users", cols, conditions);
-            if(user != null)
-            {
-                userInfo["username"] = user["username"] as string;
-                userInfo["avatar"] = user["avatar"] as string;
-
-                //Find the user profile 
-                conditions.Clear();
-                cols.Clear();
-                conditions["user_id"] = userId;
-                cols.Add("school");
-                cols.Add("department");
-                cols.Add("rating");
-
-                DataRow profile = dbManager.selectSingleRowFromTable("user_profile", cols, conditions);
-                if(profile != null)
-                {
-                    userInfo["rating"] = profile["rating"].ToString();
-                    POIGlobalVar.POIDebugLog("School is " + profile["school"]);
-                    POIGlobalVar.POIDebugLog("Dept is " + profile["department"]);
-
-                    conditions.Clear();
-                    cols.Clear();
-
-                    conditions["sid"] = profile["school"];
-                    cols.Add("name");
-                    DataRow school = dbManager.selectSingleRowFromTable("school", cols, conditions);
-
-                    if (school != null)
-                    {
-                        userInfo["school"] = school["name"] as string;
-                    }
-
-                    conditions.Clear();
-                    cols.Clear();
-
-                    conditions["did"] = profile["department"];
-                    cols.Add("name");
-                    DataRow dept = dbManager.selectSingleRowFromTable("department", cols, conditions);
-
-                    if (dept != null)
-                    {
-                        userInfo["department"] = dept["name"] as string;
-                    }
-               }
-            }
-            
-            return userInfo;
+            dbManager.updateTable("session", values, conditions);
         }
 
         public string duplicateInteractiveSession(string sessionId, double timestamp)
@@ -449,196 +460,154 @@ namespace POIProxy
             }
         }
 
-        public async Task reraiseInteractiveSession(string userId, string sessionId, string newSessionId, double timestamp)
-        {
-            //Set the status to cancelled for the initial session
-            updateSessionStatus(sessionId, "cancelled");
-
-            //Remove the initial session archive and insert the new archive
-            if (sessionArchives.ContainsKey(sessionId))
-            {
-                POIGlobalVar.POIDebugLog("Found archive in reraise session");
-                POIInteractiveSessionArchive archive;
-                sessionArchives.TryRemove(sessionId, out archive);
-
-                string mediaId = POICdnHelper.generateCdnKeyForSessionArchive(sessionId);
-                POICdnHelper.uploadStrToQiniuCDN(mediaId, jsonHandler.Serialize(archive));
-
-                //Update the database given the media id
-                Dictionary<string, object> conditions = new Dictionary<string, object>();
-                conditions["id"] = sessionId;
-
-                Dictionary<string, object> values = new Dictionary<string, object>();
-                values["media_id"] = mediaId;
-
-                dbManager.updateTable("session", values, conditions);
-
-                //Initialize the archive for the new session
-                archive.Info["session_id"] = newSessionId;
-                archive.Info["create_at"] = timestamp.ToString();
-                archive.Info["status"] = "open";
-                archive.Info["tutor_id"] = null;
-                archive.Info["tutor_name"] = null;
-                archive.Info["tutor_avatar"] = null;
-                initSessionArchive(archive.Info);
-            }
-            else
-            {
-                POIGlobalVar.POIDebugLog("Cannot find archive in reraise session");
-                //No archive exists in memory, read it from database
-                Dictionary<string,string> archiveInfo = getArchiveInfoFromDb(sessionId);
-                archiveInfo["session_id"] = newSessionId;
-                archiveInfo["create_at"] = timestamp.ToString();
-                archiveInfo["status"] = "open";
-                archiveInfo["tutor_id"] = null;
-                archiveInfo["tutor_name"] = null;
-                archiveInfo["tutor_avatar"] = null;
-                initSessionArchive(archiveInfo);
-            }
-        }
-
-        public POIInteractiveSessionArchive joinInteractiveSession(string userId, string sessionId, double timestamp)
-        {
-            //add the current user into the session table
-            addUserToSessionRecord(userId, sessionId);
-
-            //Turn the session to serving status
-            updateSessionStatusWithTutorJoin(userId, sessionId);
-
-            var session = getArchiveBySessionId(sessionId);
-            session.archiveSessionJoinedEvent(userId, timestamp);
-
-            //Add the activity record
-            addAnswerActivity(userId, sessionId, jsonHandler.Serialize(session.Info));
-
-            return session;
-        }
-
-        public POIInteractiveSessionArchive getArchiveBySessionId(string sessionId)
-        {
-            if (!sessionArchives.ContainsKey(sessionId))
-            {
-                initSessionArchive(getArchiveInfoFromDb(sessionId));
-                POIGlobalVar.POIDebugLog("Cannot find archive, read from db");
-            }
-
-            //POIGlobalVar.POIDebugLog(jsonHandler.Serialize(sessionArchives[sessionId]));
-
-            return sessionArchives[sessionId];
-        }
+        
 
         public void updateQuestionDescription(string sessionId, string description)
         {
-            var session = getArchiveBySessionId(sessionId);
-            sessionArchives[sessionId].Info["description"] = description;
+            POIProxySessionManager.updateSessionInfo(sessionId,
+                new Dictionary<string,string>{ { "description", description } }
+            );
         }
 
         public void updateQuestionMediaId(string sessionId, string mediaId)
         {
-            var session = getArchiveBySessionId(sessionId);
-            sessionArchives[sessionId].Info["cover"] = mediaId;
+            POIProxySessionManager.updateSessionInfo(sessionId,
+                new Dictionary<string, string> { { "cover", mediaId } }
+            );
         }
 
-        public void cancelInteractiveSession(string userId, string sessionId)
-        {
-            //Set the status to cancelled
-            updateSessionStatus(sessionId, "cancelled");
-
-            //Remove the session archive
-            if (sessionArchives.ContainsKey(sessionId))
-            {
-                POIInteractiveSessionArchive archive;
-                sessionArchives.TryRemove(sessionId, out archive);
-
-                //Upload the session archive to the qiniu cdn
-                string mediaId = POICdnHelper.generateCdnKeyForSessionArchive(sessionId);
-                //string mediaId = await POIContentServerHelper.uploadJsonStrToQiniuCDN(
-                //    jsonHandler.Serialize(archive)
-                //);
-
-                POICdnHelper.uploadStrToQiniuCDN(mediaId, jsonHandler.Serialize(archive));
-
-                //Update the database given the media id
-                Dictionary<string, object> conditions = new Dictionary<string, object>();
-                conditions["id"] = sessionId;
-
-                Dictionary<string, object> values = new Dictionary<string, object>();
-                values["media_id"] = mediaId;
-
-                dbManager.updateTable("session", values, conditions);
-            }
-        }
+        
 
         public void endInteractiveSession(string userId, string sessionId)
         {
-            //Check if the archive needs to be processed
-            checkAndProcessArchiveDuringSessionEnd(sessionId);
+            if (POIProxySessionManager.checkPrivateTutoring(sessionId))
+            {
+                //Upload the session archive
+                uploadSessionArchive(sessionId);
 
-            //Turn the session to waiting status for user rating
-            updateSessionStatusWithEnding(sessionId);
+                //Turn the session to waiting status for user rating
+                updateSessionStatusWithEnding(sessionId);
+            }
+            
+
+            //Archive the session end event
+            double timestamp = POITimestamp.ConvertToUnixTimestamp(DateTime.Now);
+            POIInteractiveEvent endEvent = new POIInteractiveEvent
+            {
+                //EventIndex = EventList.Count,
+                EventType = "session_ended",
+                UserId = userId,
+                Timestamp = timestamp
+            };
+
+            POIProxySessionManager.archiveSessionEvent(sessionId, endEvent, timestamp);
         }
 
         public void rateInteractiveSession(string userId, string sessionId, int rating)
         {
-            //Check if the archive needs to be processed
-            bool archiveProcessed = checkAndProcessArchiveDuringSessionEnd(sessionId);
-
-            //Turn the session to closed status and update the rating
-            //Check if archive is processed by this event (if yes, session end is triggered by rating)
-            if (archiveProcessed)
+            if (POIProxySessionManager.checkPrivateTutoring(sessionId))
             {
-                //Session end initated by rating event
-                updateSessionStatusWithRating(sessionId, rating, true);
+                //Check if the session is in serving status
+                if (checkSessionServing(sessionId))
+                {
+                    //Session end initated by rating event
+                    updateSessionStatusWithRating(sessionId, rating, true);
+                }
+                else
+                {
+                    //Session end initiated by end event
+                    updateSessionStatusWithRating(sessionId, rating, false);
+                }
             }
             else
             {
-                //Session end initiated by end event
-                updateSessionStatusWithRating(sessionId, rating, false);
+                //In group session, there is no session end waiting, so end is initiated by rating
+                updateSessionStatusWithRating(sessionId, rating, true);
             }
+
+            //Archive the session rating event
+            double timestamp = POITimestamp.ConvertToUnixTimestamp(DateTime.Now);
+            POIInteractiveEvent endEvent = new POIInteractiveEvent
+            {
+                EventType = "session_rateed",
+                UserId = userId,
+                Timestamp = timestamp,
+                Data = new Dictionary<string, string>
+                {
+                    {"rating", rating.ToString()}
+                }
+            };
+
+            POIProxySessionManager.archiveSessionEvent(sessionId, endEvent, timestamp);
+
+            //Update the session info with rating
+            POIProxySessionManager.updateSessionInfo(sessionId, new Dictionary<string, string>
+            {
+                {"rating", rating.ToString()}
+            });
+
+            
+            //Upload the session archive
+            uploadSessionArchive(sessionId);
 
             //Update the answer activity
             updateAnswerActivity(userId, sessionId, rating);
         }
 
-
-        //Check if the message is duplicated
-        public bool checkSessionMsgDuplicate(string sessionId, double msgTimestamp)
-        {
-            //POIGlobalVar.POIDebugLog("In check msg duplicate, timestamp is:" + msgTimestamp);
-            var session = getArchiveBySessionId(sessionId);
-            if (session.checkEventExists(msgTimestamp))
-            {
-                return true;
-            }
-            else
-            {
-                return false;
-            }
-        }
-
         //Functions for sending messages
         public void textMsgReceived(string userId, string sessionId, string message, double timestamp)
         {
-            var session = getArchiveBySessionId(sessionId);
-            session.archiveTextEvent(userId, message, timestamp);
+            POIInteractiveEvent poiEvent = new POIInteractiveEvent
+            {
+                EventType = "text",
+                UserId = userId,
+                Timestamp = timestamp,
+                Message = message
+            };
+
+            POIProxySessionManager.archiveSessionEvent(sessionId, poiEvent, timestamp);
         }
 
         public void imageMsgReceived(string userId, string sessionId, string mediaId, double timestamp)
         {
-            var session = getArchiveBySessionId(sessionId);
-            session.archiveImageEvent(userId, mediaId, timestamp);
+            POIInteractiveEvent poiEvent = new POIInteractiveEvent
+            {
+                //EventIndex = EventList.Count,
+                EventType = "image",
+                MediaId = mediaId,
+                UserId = userId,
+                Timestamp = timestamp,
+            };
+
+            POIProxySessionManager.archiveSessionEvent(sessionId, poiEvent, timestamp);
         }
 
         public void voiceMsgReceived(string userId, string sessionId, string mediaId, double timestamp)
         {
-            var session = getArchiveBySessionId(sessionId);
-            session.archiveVoiceEvent(userId, mediaId, timestamp);
+            POIInteractiveEvent poiEvent = new POIInteractiveEvent
+            {
+                //EventIndex = EventList.Count,
+                EventType = "voice",
+                MediaId = mediaId,
+                UserId = userId,
+                Timestamp = timestamp,
+            };
+
+            POIProxySessionManager.archiveSessionEvent(sessionId, poiEvent, timestamp);
         }
 
         public void illustrationMsgReceived(string userId, string sessionId, string mediaId, double timestamp)
         {
-            var session = getArchiveBySessionId(sessionId);
-            session.archiveIllustrationEvent(userId, mediaId, timestamp);
+            POIInteractiveEvent poiEvent = new POIInteractiveEvent
+            {
+                //EventIndex = EventList.Count,
+                EventType = "illustration",
+                MediaId = mediaId,
+                UserId = userId,
+                Timestamp = timestamp,
+            };
+
+            POIProxySessionManager.archiveSessionEvent(sessionId, poiEvent, timestamp);
         }
 
         public List<POIInteractiveEvent> getMissedEventsInSession(string sessionId, double timestamp)
