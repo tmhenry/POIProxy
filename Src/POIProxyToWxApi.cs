@@ -5,6 +5,7 @@ using System.Linq;
 using System.Web;
 
 using System.Net;
+using System.Net.Http;
 using System.Threading.Tasks;
 //using System.Net.Http;
 
@@ -14,25 +15,51 @@ namespace POIProxy
 {
     public class POIProxyToWxApi
     {
-        //private static string baseReqUrl = "http://www.qdaan.com/POIWebService-test/dnsServer/weixinApi.php";
         private static string baseReqUrl = WebConfigurationManager.AppSettings["WxServer"];
 
         private async static Task sendReq(NameValueCollection postVal)
         {
+            POIGlobalVar.POIDebugLog("WxApi.php base req url is: " + baseReqUrl);
             postVal["appProxy"] = "Yes";
 
+            /*
             using (WebClient client = new WebClient())
             {
                 client.Proxy = null;
 
                 try
                 {
+                    POIGlobalVar.POIDebugLog("post val is : " + postVal);
                     await client.UploadValuesTaskAsync(baseReqUrl, postVal);
                 }
                 catch (WebException ex)
                 {
                     POIGlobalVar.POIDebugLog(ex);
                 }
+            }*/
+
+            using (var client = new HttpClient())
+            {
+                var values = new List<KeyValuePair<string, string>>();
+                foreach (string key in postVal.Keys)
+                {
+                    values.Add(new KeyValuePair<string, string>(key, postVal[key]));
+                }
+
+                try
+                {
+                    var content = new FormUrlEncodedContent(values);
+                    var response = await client.PostAsync(baseReqUrl, content);
+
+                    var responseStr = await response.Content.ReadAsStringAsync();
+
+                    POIGlobalVar.POIDebugLog(responseStr);
+                }
+                catch(Exception e)
+                {
+                    POIGlobalVar.POIDebugLog(e.Message);
+                }
+                
             }
         }
 
@@ -60,6 +87,8 @@ namespace POIProxy
 
         public static async Task interactiveSessionNewUserJoined(string userId, string sessionId, string userInfo)
         {
+            POIGlobalVar.POIDebugLog("Sending new user joined message to wxApi.php");
+
             NameValueCollection values = new NameValueCollection();
             values["userId"] = userId;
             values["sessionId"] = sessionId;

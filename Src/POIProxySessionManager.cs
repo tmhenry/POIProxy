@@ -31,6 +31,8 @@ namespace POIProxy
             using (var redisClient = redisManager.GetClient())
             {
                 int maxNumUsers = checkPrivateTutoring(sessionId) ? 1 : 10;
+
+                POIGlobalVar.POIDebugLog("In acquire session token, total is " + maxNumUsers);
                 
                 if (redisClient.Increment("session_user_count:" + sessionId, 1) <= maxNumUsers)
                 {
@@ -302,7 +304,9 @@ namespace POIProxy
         {
             using (var redisClient = redisManager.GetClient())
             {
-                var sessionInfo = redisClient.Hashes["sessionId:" + sessionId];
+                var sessionInfo = redisClient.Hashes["session:" + sessionId];
+
+                POIGlobalVar.POIDebugLog("Access type is : " + sessionInfo["access_type"]);
 
                 if (sessionInfo["access_type"] == "group")
                 {

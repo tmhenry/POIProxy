@@ -527,9 +527,9 @@ namespace POIProxy
 
             //Archive the session rating event
             double timestamp = POITimestamp.ConvertToUnixTimestamp(DateTime.Now);
-            POIInteractiveEvent endEvent = new POIInteractiveEvent
+            POIInteractiveEvent rateEvent = new POIInteractiveEvent
             {
-                EventType = "session_rateed",
+                EventType = "session_rated",
                 UserId = userId,
                 Timestamp = timestamp,
                 Data = new Dictionary<string, string>
@@ -538,7 +538,7 @@ namespace POIProxy
                 }
             };
 
-            POIProxySessionManager.archiveSessionEvent(sessionId, endEvent, timestamp);
+            POIProxySessionManager.archiveSessionEvent(sessionId, rateEvent, timestamp);
 
             //Update the session info with rating
             POIProxySessionManager.updateSessionInfo(sessionId, new Dictionary<string, string>

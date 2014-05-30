@@ -139,8 +139,10 @@ namespace POIProxy
             }
         }
 
-        public async Task createInteractiveSession(string mediaId, string description, string accessType="group")
+        public async Task createInteractiveSession(string mediaId, string description)
         {
+            string accessType = "group";
+
             POIGlobalVar.POIDebugLog("Creator id is : " + Clients.Caller.userId);
 
             //Create the session
