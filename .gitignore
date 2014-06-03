@@ -184,3 +184,6 @@ UpgradeLog*.htm
 
 # Microsoft Fakes
 FakesAssemblies/
+
+*.csprojResolveAssemblyReference.cache
+*.csproj.FileListAbsolute.txt
