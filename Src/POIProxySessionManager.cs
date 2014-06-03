@@ -32,7 +32,7 @@ namespace POIProxy
             {
                 int maxNumUsers = checkPrivateTutoring(sessionId) ? 1 : 10;
 
-                POIGlobalVar.POIDebugLog("In acquire session token, total is " + maxNumUsers);
+                PPLog.infoLog("In acquire session token, total is " + maxNumUsers);
                 
                 if (redisClient.Increment("session_user_count:" + sessionId, 1) <= maxNumUsers)
                 {
@@ -171,7 +171,7 @@ namespace POIProxy
 
                 if (userInfo.Count == 0)
                 {
-                    POIGlobalVar.POIDebugLog("Read user info from db");
+                    PPLog.infoLog("Read user info from db");
 
                     //Read user info from db and save into redis
                     userInfo["user_id"] = userId;
@@ -306,7 +306,7 @@ namespace POIProxy
             {
                 var sessionInfo = redisClient.Hashes["session:" + sessionId];
 
-                POIGlobalVar.POIDebugLog("Access type is : " + sessionInfo["access_type"]);
+                PPLog.infoLog("Access type is : " + sessionInfo["access_type"]);
 
                 if (sessionInfo["access_type"] == "group")
                 {

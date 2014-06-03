@@ -51,7 +51,7 @@ namespace POIProxy
             }
             catch (Exception e)
             {
-                POIGlobalVar.POIDebugLog(e);
+                PPLog.errorLog(e);
             }
         }
 

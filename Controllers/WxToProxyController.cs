@@ -33,7 +33,7 @@ namespace POIProxy.Controllers
             string mediaId = msgInfo["mediaId"];
             double timestamp = double.Parse(msgInfo["timestamp"]);
 
-            POIGlobalVar.POIDebugLog("Message timestamp: " + timestamp);
+            PPLog.infoLog("Message timestamp: " + timestamp);
 
             switch (msgType)
             {
@@ -92,7 +92,7 @@ namespace POIProxy.Controllers
             string sessionId, userId, infoStr, desc, mediaId, userInfo, newSessionId; 
             int rating;
 
-            POIGlobalVar.POIDebugLog("Wx to proxy session post type is: " + type);
+            PPLog.infoLog("Wx to proxy session post type is: " + type);
 
             try
             {
@@ -125,7 +125,7 @@ namespace POIProxy.Controllers
 
                     case "sessionCancelled":
                         sessionId = msgInfo["sessionId"];
-                        POIGlobalVar.POIDebugLog("Here" + " " + sessionId);
+                        PPLog.infoLog("Here" + " " + sessionId);
                         //userId = msgInfo["userId"];
                         interMsgHandler.cancelInteractiveSession("", sessionId);
 
@@ -133,7 +133,7 @@ namespace POIProxy.Controllers
 
                     case "sessionEnded":
                         sessionId = msgInfo["sessionId"];
-                        POIGlobalVar.POIDebugLog("Session ended: " + sessionId);
+                        PPLog.infoLog("Session ended: " + sessionId);
                         userId = msgInfo["userId"];
                         interMsgHandler.endInteractiveSession(userId, sessionId);
 
@@ -170,7 +170,7 @@ namespace POIProxy.Controllers
             }
             catch (Exception e)
             {
-                POIGlobalVar.POIDebugLog("In wx to proxy post session: " + e.Message);
+                PPLog.errorLog("In wx to proxy post session: " + e.Message);
             }
             
         }
@@ -185,9 +185,9 @@ namespace POIProxy.Controllers
             string presId = result.Item1;
             string sessionId = result.Item2;
 
-            POIGlobalVar.POIDebugLog("Description is " + description);
+            PPLog.infoLog("Description is " + description);
 
-            POIGlobalVar.POIDebugLog("Session created!: " + sessionId);
+            PPLog.infoLog("Session created!: " + sessionId);
 
             //Notify the weixin user the connection has been created
             await POIProxyToWxApi.interactiveSessionCreated(userId, sessionId);
@@ -205,21 +205,21 @@ namespace POIProxy.Controllers
             if (double.Parse(archiveInfo["create_at"])
                 >= POITimestamp.ConvertToUnixTimestamp(DateTime.Now.AddSeconds(-60)))
             {
-                POIGlobalVar.POIDebugLog("Cannot join the session, not passing time limit");
+                PPLog.infoLog("Cannot join the session, not passing time limit");
                 //Notify the weixin user about the join failed
                 await POIProxyToWxApi.interactiveSessionJoinBeforeTimeLimit(userId, sessionId);
             }
             else if (POIProxySessionManager.checkUserInSession(sessionId, userId))
             {
                 //User already in the session
-                POIGlobalVar.POIDebugLog("Session already joined");
+                PPLog.infoLog("Session already joined");
 
                 //Notify the weixin users about the join operation
                 await POIProxyToWxApi.interactiveSessionJoined(userId, sessionId);
             }
             else if (POIProxySessionManager.acquireSessionToken(sessionId))
             {
-                POIGlobalVar.POIDebugLog("Session is open, joined!");
+                PPLog.infoLog("Session is open, joined!");
                 double timestamp = POITimestamp.ConvertToUnixTimestamp(DateTime.Now);
 
                 interMsgHandler.joinInteractiveSession(userId, sessionId, timestamp);
@@ -231,7 +231,7 @@ namespace POIProxy.Controllers
 
                 POIProxySessionManager.subscribeSession(sessionId, userId);
 
-                POIGlobalVar.POIDebugLog(archiveJson);
+                PPLog.infoLog(archiveJson);
 
                 //Notify the weixin users about the join operation
                 await POIProxyToWxApi.interactiveSessionJoined(userId, sessionId);
@@ -247,7 +247,7 @@ namespace POIProxy.Controllers
             }
             else
             {
-                POIGlobalVar.POIDebugLog("Cannot join the session, taken by others");
+                PPLog.infoLog("Cannot join the session, taken by others");
                 //Notify the weixin user about the join failed
                 await POIProxyToWxApi.interactiveSessionJoinFailed(userId, sessionId);
             }

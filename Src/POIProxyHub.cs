@@ -24,16 +24,16 @@ namespace POIProxy
         
         public void Log(string msg)
         {
-            POIGlobalVar.POIDebugLog(msg);
+            PPLog.infoLog(msg);
 
             try
             {
                 Clients.Caller.logMsg("hi hi");
-                POIGlobalVar.POIDebugLog("Call completed");
+                PPLog.infoLog("Call completed");
             }
             catch (Exception e)
             {
-                POIGlobalVar.POIDebugLog(e.Message);
+                PPLog.errorLog(e.Message);
             }
             
         }
@@ -41,7 +41,7 @@ namespace POIProxy
 
         public async Task textMsgReceived(string sessionId, string message, double timestamp)
         {
-            POIGlobalVar.POIDebugLog("Text received: " + message + " , session is :" + sessionId + " ," + timestamp);
+            PPLog.infoLog("Text received: " + message + " , session is :" + sessionId + " ," + timestamp);
 
             if (!POIProxySessionManager.checkEventExists(sessionId, timestamp))
             {
@@ -60,7 +60,7 @@ namespace POIProxy
             }
             else
             {
-                POIGlobalVar.POIDebugLog("Message duplicate: timestamp is " + timestamp);
+                PPLog.infoLog("Message duplicate: timestamp is " + timestamp);
                 //Message duplicate: send back the ack
                 Clients.Caller.msgAckReceived(sessionId, timestamp);
             }
@@ -85,7 +85,7 @@ namespace POIProxy
             }
             else
             {
-                POIGlobalVar.POIDebugLog("Message duplicate: timestamp is " + timestamp);
+                PPLog.infoLog("Message duplicate: timestamp is " + timestamp);
                 //Message duplicate: send back the ack
                 Clients.Caller.msgAckReceived(sessionId, timestamp);
             }
@@ -109,7 +109,7 @@ namespace POIProxy
             }
             else
             {
-                POIGlobalVar.POIDebugLog("Message duplicate: timestamp is " + timestamp);
+                PPLog.infoLog("Message duplicate: timestamp is " + timestamp);
                 //Message duplicate: send back the ack
                 Clients.Caller.msgAckReceived(sessionId, timestamp);
             }
@@ -133,7 +133,7 @@ namespace POIProxy
             }
             else
             {
-                POIGlobalVar.POIDebugLog("Message duplicate: timestamp is " + timestamp);
+                PPLog.infoLog("Message duplicate: timestamp is " + timestamp);
                 //Message duplicate: send back the ack
                 Clients.Caller.msgAckReceived(sessionId, timestamp);
             }
@@ -143,7 +143,7 @@ namespace POIProxy
         {
             string accessType = "group";
 
-            POIGlobalVar.POIDebugLog("Creator id is : " + Clients.Caller.userId);
+            PPLog.infoLog("Creator id is : " + Clients.Caller.userId);
 
             //Create the session
             Tuple<string,string> result = interMsgHandler.
@@ -151,9 +151,9 @@ namespace POIProxy
             string presId = result.Item1;
             string sessionId = result.Item2;
 
-            POIGlobalVar.POIDebugLog("Description is " + description);
+            PPLog.infoLog("Description is " + description);
 
-            POIGlobalVar.POIDebugLog("Session created!: " + sessionId);
+            PPLog.infoLog("Session created!: " + sessionId);
 
             double timestamp = POITimestamp.ConvertToUnixTimestamp(DateTime.Now);
 
@@ -175,27 +175,27 @@ namespace POIProxy
             if (double.Parse(archiveInfo["create_at"])
                 >= POITimestamp.ConvertToUnixTimestamp(DateTime.Now.AddSeconds(-60)))
             {
-                POIGlobalVar.POIDebugLog("Cannot join the session, not passing time limit");
+                PPLog.infoLog("Cannot join the session, not passing time limit");
                 Clients.Caller.interactiveSessionJoinBeforeStarted(sessionId);
             }
             else if (POIProxySessionManager.checkUserInSession(sessionId, Clients.Caller.userId))
             {
                 //User already in the session
-                POIGlobalVar.POIDebugLog("Session already joined");
+                PPLog.infoLog("Session already joined");
 
                 double timestamp = POITimestamp.ConvertToUnixTimestamp(DateTime.Now);
                 string archiveJson = jsonHandler.Serialize(POIProxySessionManager.getSessionArchive(sessionId));
 
                 await Groups.Add(Context.ConnectionId, "session_" + sessionId);
 
-                POIGlobalVar.POIDebugLog(archiveJson);
+                PPLog.infoLog(archiveJson);
 
                 //Send the archive to the user
                 Clients.Caller.interactiveSessionJoined(sessionId, archiveJson, timestamp);
             }
             else if (POIProxySessionManager.acquireSessionToken(sessionId))
             {
-                POIGlobalVar.POIDebugLog("Session is open, joined!");
+                PPLog.infoLog("Session is open, joined!");
                 double timestamp = POITimestamp.ConvertToUnixTimestamp(DateTime.Now);
 
                 interMsgHandler.joinInteractiveSession(Clients.Caller.userId, sessionId, timestamp);
@@ -207,7 +207,7 @@ namespace POIProxy
 
                 await Groups.Add(Context.ConnectionId, "session_" + sessionId);
 
-                POIGlobalVar.POIDebugLog(archiveJson);
+                PPLog.infoLog(archiveJson);
 
                 //Notify the user the join operation has been completed
                 Clients.Caller.interactiveSessionJoined(sessionId, archiveJson, timestamp);
@@ -223,7 +223,7 @@ namespace POIProxy
             }
             else
             {
-                POIGlobalVar.POIDebugLog("Cannot join the session, taken by others");
+                PPLog.infoLog("Cannot join the session, taken by others");
                 Clients.Caller.interactiveSessionJoinFailed(sessionId);
             }
         }
@@ -285,9 +285,9 @@ namespace POIProxy
         public async Task syncClient(string sessionListJson)
         {
             string userId = Clients.Caller.userId;
-            POIGlobalVar.POIDebugLog("sync client " + userId);
+            PPLog.infoLog("sync client " + userId);
 
-            POIGlobalVar.POIDebugLog("session list from client is :" + sessionListJson);
+            PPLog.infoLog("session list from client is :" + sessionListJson);
 
             Dictionary<string, double> sessionList = jsonHandler.
                 Deserialize<Dictionary<string, double>>(sessionListJson);
@@ -302,7 +302,7 @@ namespace POIProxy
             }
             catch (Exception e)
             {
-                POIGlobalVar.POIDebugLog(e.Message);
+                PPLog.errorLog(e.Message);
             }
 
             try
@@ -316,7 +316,7 @@ namespace POIProxy
                     await Groups.Add(Context.ConnectionId, "session_" + sessionId);
 
                     //Get the time reference
-                    //POIGlobalVar.POIDebugLog("session sync ref: " + sessionId + " " + double.Parse(serverState[sessionId]));
+                    //PPLog.infoLog("session sync ref: " + sessionId + " " + double.Parse(serverState[sessionId]));
 
                     var missedEvents = interMsgHandler.getMissedEventsInSession(sessionId, double.Parse(serverState[sessionId]));
                     
@@ -334,7 +334,7 @@ namespace POIProxy
             }
             catch (Exception e)
             {
-                POIGlobalVar.POIDebugLog("In sync session group information: " + e.Message);
+                PPLog.errorLog("In sync session group information: " + e.Message);
             }
             
         }
@@ -360,17 +360,17 @@ namespace POIProxy
 
             if (service == "interactive")
             {
-                POIGlobalVar.POIDebugLog("Client connected to interactive service");
+                PPLog.infoLog("Client connected to interactive service");
             }
             else if (service == "log")
             {
                 //For receiving server error log
                 Groups.Add(Context.ConnectionId, "serverLog");
-                POIGlobalVar.POIDebugLog("Server log connected!");
+                PPLog.infoLog("Server log connected!");
             }
             else
             {
-                POIGlobalVar.POIDebugLog("Service type not recognized");
+                PPLog.infoLog("Service type not recognized");
             }
 
             return base.OnConnected();
@@ -386,11 +386,11 @@ namespace POIProxy
                 try
                 {
                     //Handling user disconnected
-                    POIGlobalVar.POIDebugLog("Client " + info["userId"] + " disconnected");
+                    PPLog.infoLog("Client " + info["userId"] + " disconnected");
                 }
                 catch (Exception e)
                 {
-                    POIGlobalVar.POIDebugLog(e.Message);
+                    PPLog.errorLog(e.Message);
                 }
 
             }
@@ -408,11 +408,11 @@ namespace POIProxy
                 try
                 {
                     //Handling user reconnecting
-                    POIGlobalVar.POIDebugLog("Client " + info["userId"] + " reconnected");
+                    PPLog.infoLog("Client " + info["userId"] + " reconnected");
                 }
                 catch (Exception e)
                 {
-                    POIGlobalVar.POIDebugLog(e.Message);
+                    PPLog.errorLog(e.Message);
                 }
 
             }

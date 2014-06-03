@@ -184,7 +184,7 @@ namespace POIProxy
             DataTable result = dbManager.selectFromTable("session", cols, conditions);
             if (result.Rows.Count > 0)
             {
-                POIGlobalVar.POIDebugLog("found session open " + result.Rows[0]["id"]);
+                PPLog.infoLog("found session open " + result.Rows[0]["id"]);
                 isInState = true;
             }
 
@@ -389,12 +389,12 @@ namespace POIProxy
 
         public bool checkAndProcessArchiveDuringSessionEnd(string sessionId)
         {
-            POIGlobalVar.POIDebugLog("Session id is " + sessionId);
+            PPLog.infoLog("Session id is " + sessionId);
 
             //Check if the session is in the right state (must be in serving state)
             if (checkSessionServing(sessionId))
             {
-                POIGlobalVar.POIDebugLog("Uploading session archive!");
+                PPLog.infoLog("Uploading session archive!");
 
                 string mediaId = POICdnHelper.generateCdnKeyForSessionArchive(sessionId);
                 POICdnHelper.uploadStrToQiniuCDN(mediaId, jsonHandler.Serialize(""));
@@ -418,7 +418,7 @@ namespace POIProxy
 
         public void uploadSessionArchive(string sessionId)
         {
-            POIGlobalVar.POIDebugLog("Uploading session archive!");
+            PPLog.infoLog("Uploading session archive!");
 
             string mediaId = POICdnHelper.generateCdnKeyForSessionArchive(sessionId);
             POICdnHelper.uploadStrToQiniuCDN(mediaId, 
@@ -455,7 +455,7 @@ namespace POIProxy
             }
             else
             {
-                POIGlobalVar.POIDebugLog("In duplicate session, cannot find original session");
+                PPLog.infoLog("In duplicate session, cannot find original session");
                 return (-1).ToString();
             }
         }
@@ -612,7 +612,7 @@ namespace POIProxy
 
         public List<POIInteractiveEvent> getMissedEventsInSession(string sessionId, double timestamp)
         {
-            POIGlobalVar.POIDebugLog("Getting missed event for session : " + sessionId);
+            PPLog.infoLog("Getting missed event for session : " + sessionId);
             var missedEvents = new List<POIInteractiveEvent>();
 
             try
@@ -631,11 +631,11 @@ namespace POIProxy
                     }
                 }
                 
-                POIGlobalVar.POIDebugLog("Missed events is " + jsonHandler.Serialize(missedEvents));
+                PPLog.infoLog("Missed events is " + jsonHandler.Serialize(missedEvents));
             }
             catch (Exception e)
             {
-                POIGlobalVar.POIDebugLog(e.Message);
+                PPLog.errorLog(e.Message);
             }
            
 

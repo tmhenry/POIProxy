@@ -40,7 +40,7 @@ namespace POIProxy
             }
             catch (Exception e)
             {
-                POIGlobalVar.POIDebugLog("Push to ios: " + e.Message);
+                PPLog.errorLog("Push to ios: " + e.Message);
             }
 
             try
@@ -64,7 +64,7 @@ namespace POIProxy
             }
             catch (Exception e)
             {
-                POIGlobalVar.POIDebugLog("Push to android: " + e.Message);
+                PPLog.errorLog("Push to android: " + e.Message);
             }
             
         }
@@ -93,7 +93,7 @@ namespace POIProxy
             }
             catch (Exception e)
             {
-                POIGlobalVar.POIDebugLog("Push to ios: " + e.Message);
+                PPLog.errorLog("Push to ios: " + e.Message);
             }
 
             try
@@ -117,7 +117,7 @@ namespace POIProxy
             }
             catch (Exception e)
             {
-                POIGlobalVar.POIDebugLog("Push to android: " + e.Message);
+                PPLog.errorLog("Push to android: " + e.Message);
             }
         }
 
@@ -158,7 +158,7 @@ namespace POIProxy
 
         public static async Task sessionCreated(string sessionId)
         {
-            POIGlobalVar.POIDebugLog("Session created broadcasted!");
+            PPLog.infoLog("Session created broadcasted!");
             await broadcastNotification(sessionId, "有题了，快来抢！");
         }
     }

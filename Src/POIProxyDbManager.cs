@@ -51,7 +51,7 @@ namespace POIProxy
             }
             catch
             {
-                POIGlobalVar.POIDebugLog("Error in db init");
+                PPLog.errorLog("Error in db init");
             }
 
             connectionString = "SERVER=" + server + ";" + "DATABASE=" +
@@ -89,15 +89,15 @@ namespace POIProxy
                 DataTable table = selectFromTable("user_match", columns, newValues);
                 foreach (DataRow row in table.Rows)
                 {
-                    POIGlobalVar.POIDebugLog(row["uid"]);
+                    PPLog.infoLog(row["uid"]);
                 }
 
-                POIGlobalVar.POIDebugLog("hahha");
+                PPLog.infoLog("hahha");
 
             }
             catch
             {
-                POIGlobalVar.POIDebugLog("Error in db test");
+                PPLog.errorLog("Error in db test");
             }
         }
 
@@ -118,13 +118,13 @@ namespace POIProxy
                 MySqlCommand cmd = new MySqlCommand(sql, connection);
                 rowId = Convert.ToString(cmd.ExecuteScalar());
 
-                //POIGlobalVar.POIDebugLog(rowId);
+                //PPLog.infoLog(rowId);
 
                 connection.Close();
             }
             catch(Exception e)
             {
-                POIGlobalVar.POIDebugLog("Error in db insert: " + e.Message);
+                PPLog.errorLog("Error in db insert: " + e.Message);
             }
 
             return rowId;
@@ -147,7 +147,7 @@ namespace POIProxy
             }
             catch(Exception e)
             {
-                POIGlobalVar.POIDebugLog("Error in db delete: " + e.Message);
+                PPLog.errorLog("Error in db delete: " + e.Message);
             }
         }
 
@@ -169,7 +169,7 @@ namespace POIProxy
             }
             catch(Exception e)
             {
-                POIGlobalVar.POIDebugLog("Error in db update: " + e.Message);
+                PPLog.errorLog("Error in db update: " + e.Message);
             }
         }
 
@@ -206,7 +206,7 @@ namespace POIProxy
             }
             catch(Exception e)
             {
-                POIGlobalVar.POIDebugLog("Error in db select: " + e.Message);
+                PPLog.errorLog("Error in db select: " + e.Message);
             }
 
             return ds.Tables[0];

@@ -19,7 +19,7 @@ namespace POIProxy
 
         private async static Task sendReq(NameValueCollection postVal)
         {
-            POIGlobalVar.POIDebugLog("WxApi.php base req url is: " + baseReqUrl);
+            PPLog.infoLog("WxApi.php base req url is: " + baseReqUrl);
             postVal["appProxy"] = "Yes";
 
             /*
@@ -29,12 +29,12 @@ namespace POIProxy
 
                 try
                 {
-                    POIGlobalVar.POIDebugLog("post val is : " + postVal);
+                    PPLog.infoLog("post val is : " + postVal);
                     await client.UploadValuesTaskAsync(baseReqUrl, postVal);
                 }
                 catch (WebException ex)
                 {
-                    POIGlobalVar.POIDebugLog(ex);
+                    PPLog.infoLog(ex);
                 }
             }*/
 
@@ -53,11 +53,11 @@ namespace POIProxy
 
                     var responseStr = await response.Content.ReadAsStringAsync();
 
-                    POIGlobalVar.POIDebugLog(responseStr);
+                    PPLog.infoLog(responseStr);
                 }
                 catch(Exception e)
                 {
-                    POIGlobalVar.POIDebugLog(e.Message);
+                    PPLog.errorLog(e.Message);
                 }
                 
             }
@@ -87,7 +87,7 @@ namespace POIProxy
 
         public static async Task interactiveSessionNewUserJoined(string userId, string sessionId, string userInfo)
         {
-            POIGlobalVar.POIDebugLog("Sending new user joined message to wxApi.php");
+            PPLog.infoLog("Sending new user joined message to wxApi.php");
 
             NameValueCollection values = new NameValueCollection();
             values["userId"] = userId;

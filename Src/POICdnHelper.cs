@@ -28,14 +28,14 @@ namespace POIProxy
                     outFile.Write(str);
                 }
 
-                POIGlobalVar.POIDebugLog("File is : " + fileName);
+                PPLog.infoLog("File is : " + fileName);
 
                 //Upload the file to cdn
                 return uploadFileToQiniuCDN(key, fileName);
             }
             catch (Exception e)
             {
-                POIGlobalVar.POIDebugLog(e.Message);
+                PPLog.errorLog(e.Message);
                 return "";
             }
         }
@@ -44,7 +44,7 @@ namespace POIProxy
         {
             string bucket = WebConfigurationManager.AppSettings["QiniuBucket"];
 
-            POIGlobalVar.POIDebugLog("Bucket is : " + bucket);
+            PPLog.infoLog("Bucket is : " + bucket);
             var policy = new PutPolicy(bucket, 3600);
 
             string upToken = policy.Token();
@@ -54,20 +54,20 @@ namespace POIProxy
             IOClient client = new IOClient();
             PutRet ret = client.PutFile(upToken, key, fileName, extra);
 
-            POIGlobalVar.POIDebugLog("Bucket is : " + bucket);
-            POIGlobalVar.POIDebugLog("Key is : " + ret.key);
-            POIGlobalVar.POIDebugLog("Response is : " + ret.Response);
-            POIGlobalVar.POIDebugLog("Status code is : " + ret.StatusCode);
-            POIGlobalVar.POIDebugLog("Hash is : " + ret.Hash);
+            PPLog.infoLog("Bucket is : " + bucket);
+            PPLog.infoLog("Key is : " + ret.key);
+            PPLog.infoLog("Response is : " + ret.Response);
+            PPLog.infoLog("Status code is : " + ret.StatusCode);
+            PPLog.infoLog("Hash is : " + ret.Hash);
 
 
             if (ret.OK)
             {
-                POIGlobalVar.POIDebugLog("Upload successful: ");
+                PPLog.infoLog("Upload successful: ");
             }
             else
             {
-                POIGlobalVar.POIDebugLog("Cannot upload: ");
+                PPLog.infoLog("Cannot upload: ");
             }
 
             return ret.key;

@@ -190,6 +190,7 @@
     <Compile Include="Src\POIProxyToWxApi.cs" />
     <Compile Include="Src\POISessionArchive.cs" />
     <Compile Include="Src\POITimestamp.cs" />
+    <Compile Include="Src\PPLog.cs" />
     <Compile Include="Startup.cs" />
   </ItemGroup>
   <ItemGroup>

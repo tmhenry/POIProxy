@@ -3,12 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Web;
 
-using log4net;
-using System.Reflection;
-
-using Microsoft.AspNet.SignalR;
-using System.Web.Script.Serialization;
-
 namespace POIProxy
 {
     //Define all the global variables here
@@ -35,24 +29,6 @@ namespace POIProxy
         public static int MaxMobileClientCount { get; set; }
 
         //public static POIUIScheduler Scheduler { get; set; }
-
-        private static readonly ILog log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
-        public static void POIDebugLog(object msg)
-        {
-            //Notify all the server web end about the message
-            var context = GlobalHost.ConnectionManager.GetHubContext<POIProxyHub>();
-            context.Clients.Group(@"serverLog").logMessage(msg);
-
-            try
-            {
-                log.Debug(msg);
-            }
-            catch (Exception e)
-            {
-                context.Clients.Group(@"serverLog").logMessage(e);
-            }
-        }
     }
 
 }
