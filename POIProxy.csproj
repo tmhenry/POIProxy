@@ -168,78 +168,18 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="activity.cs">
-      <DependentUpon>POIEntities.tt</DependentUpon>
-    </Compile>
-    <Compile Include="category.cs">
-      <DependentUpon>POIEntities.tt</DependentUpon>
-    </Compile>
-    <Compile Include="content.cs">
-      <DependentUpon>POIEntities.tt</DependentUpon>
-    </Compile>
     <Compile Include="Controllers\ComClientController.cs" />
     <Compile Include="Controllers\HomeController.cs" />
     <Compile Include="Controllers\ProxyStatusController.cs" />
     <Compile Include="Controllers\WxToProxyController.cs" />
-    <Compile Include="course.cs">
-      <DependentUpon>POIEntities.tt</DependentUpon>
-    </Compile>
-    <Compile Include="device.cs">
-      <DependentUpon>POIEntities.tt</DependentUpon>
-    </Compile>
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
-    <Compile Include="group.cs">
-      <DependentUpon>POIEntities.tt</DependentUpon>
-    </Compile>
     <Compile Include="Src\POIInteractiveEvent.cs" />
     <Compile Include="Src\POIProxyInteractiveMsgHandler.cs" />
-    <Compile Include="keyword.cs">
-      <DependentUpon>POIEntities.tt</DependentUpon>
-    </Compile>
-    <Compile Include="login_attempts.cs">
-      <DependentUpon>POIEntities.tt</DependentUpon>
-    </Compile>
     <Compile Include="Models\ComClientViewModel.cs" />
     <Compile Include="Models\HomeViewModel.cs" />
-    <Compile Include="organization.cs">
-      <DependentUpon>POIEntities.tt</DependentUpon>
-    </Compile>
-    <Compile Include="POIEntities.Context.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>POIEntities.Context.tt</DependentUpon>
-    </Compile>
-    <Compile Include="POIEntities.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>POIEntities.tt</DependentUpon>
-    </Compile>
-    <Compile Include="POIEntities.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>POIEntities.edmx</DependentUpon>
-    </Compile>
-    <Compile Include="presentation.cs">
-      <DependentUpon>POIEntities.tt</DependentUpon>
-    </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="relationship.cs">
-      <DependentUpon>POIEntities.tt</DependentUpon>
-    </Compile>
-    <Compile Include="schedule.cs">
-      <DependentUpon>POIEntities.tt</DependentUpon>
-    </Compile>
-    <Compile Include="server.cs">
-      <DependentUpon>POIEntities.tt</DependentUpon>
-    </Compile>
-    <Compile Include="session.cs">
-      <DependentUpon>POIEntities.tt</DependentUpon>
-    </Compile>
-    <Compile Include="site.cs">
-      <DependentUpon>POIEntities.tt</DependentUpon>
-    </Compile>
     <Compile Include="Src\POICdnHelper.cs" />
     <Compile Include="Src\POIGlobalVar.cs" />
     <Compile Include="Src\POIProxyDbManager.cs" />
@@ -251,36 +191,6 @@
     <Compile Include="Src\POISessionArchive.cs" />
     <Compile Include="Src\POITimestamp.cs" />
     <Compile Include="Startup.cs" />
-    <Compile Include="tag.cs">
-      <DependentUpon>POIEntities.tt</DependentUpon>
-    </Compile>
-    <Compile Include="tag_relationship.cs">
-      <DependentUpon>POIEntities.tt</DependentUpon>
-    </Compile>
-    <Compile Include="token.cs">
-      <DependentUpon>POIEntities.tt</DependentUpon>
-    </Compile>
-    <Compile Include="tutor_status.cs">
-      <DependentUpon>POIEntities.tt</DependentUpon>
-    </Compile>
-    <Compile Include="user.cs">
-      <DependentUpon>POIEntities.tt</DependentUpon>
-    </Compile>
-    <Compile Include="users_groups.cs">
-      <DependentUpon>POIEntities.tt</DependentUpon>
-    </Compile>
-    <Compile Include="user_device.cs">
-      <DependentUpon>POIEntities.tt</DependentUpon>
-    </Compile>
-    <Compile Include="user_match.cs">
-      <DependentUpon>POIEntities.tt</DependentUpon>
-    </Compile>
-    <Compile Include="user_profile.cs">
-      <DependentUpon>POIEntities.tt</DependentUpon>
-    </Compile>
-    <Compile Include="user_right.cs">
-      <DependentUpon>POIEntities.tt</DependentUpon>
-    </Compile>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="App_Start\FilterConfig.cs" />
@@ -293,23 +203,6 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="Global.asax" />
-    <EntityDeploy Include="POIEntities.edmx">
-      <Generator>EntityModelCodeGenerator</Generator>
-      <LastGenOutput>POIEntities.Designer.cs</LastGenOutput>
-    </EntityDeploy>
-    <Content Include="POIEntities.Context.tt">
-      <Generator>TextTemplatingFileGenerator</Generator>
-      <DependentUpon>POIEntities.edmx</DependentUpon>
-      <LastGenOutput>POIEntities.Context.cs</LastGenOutput>
-    </Content>
-    <Content Include="POIEntities.edmx.diagram">
-      <DependentUpon>POIEntities.edmx</DependentUpon>
-    </Content>
-    <Content Include="POIEntities.tt">
-      <Generator>TextTemplatingFileGenerator</Generator>
-      <DependentUpon>POIEntities.edmx</DependentUpon>
-      <LastGenOutput>POIEntities.cs</LastGenOutput>
-    </Content>
     <None Include="Properties\PublishProfiles\Alibaba.14.229_8094.pubxml" />
     <None Include="Properties\PublishProfiles\Alibaba14.229.pubxml" />
     <None Include="Properties\PublishProfiles\Alibaba14.229_8092.pubxml" />
