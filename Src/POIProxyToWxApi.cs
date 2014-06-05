@@ -53,7 +53,7 @@ namespace POIProxy
 
                     var responseStr = await response.Content.ReadAsStringAsync();
 
-                    PPLog.infoLog(responseStr);
+                    PPLog.debugLog(responseStr);
                 }
                 catch(Exception e)
                 {

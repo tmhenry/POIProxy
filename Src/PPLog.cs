@@ -7,12 +7,14 @@ using log4net;
 using System.Reflection;
 
 using Microsoft.AspNet.SignalR;
+using System.Diagnostics;
 
 namespace POIProxy
 {
     public static class PPLog
     {
         private static readonly ILog log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        //private static StackTrace stackTrace = new StackTrace();
 
         public static void debugLog(object msg)
         {
@@ -43,6 +45,9 @@ namespace POIProxy
         {
             string dateTime = DateTime.Now.ToString("HH:mm:ss");
             msg = "[" + dateTime + "]" + " " + type + ":  " + msg;
+
+            //var methodBase = stackTrace.GetFrame(2).GetMethod();
+            //msg += " (" + methodBase.ReflectedType.Name + " " + methodBase.Name + ")";
 
             var context = GlobalHost.ConnectionManager.GetHubContext<POIProxyHub>();
             context.Clients.Group(@"serverLog").logMessage(msg);

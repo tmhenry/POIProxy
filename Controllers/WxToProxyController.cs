@@ -33,7 +33,7 @@ namespace POIProxy.Controllers
             string mediaId = msgInfo["mediaId"];
             double timestamp = double.Parse(msgInfo["timestamp"]);
 
-            PPLog.infoLog("Message timestamp: " + timestamp);
+            PPLog.infoLog("Message content: " + DictToString(msgInfo, null) + "Message timestamp: " + timestamp);
 
             switch (msgType)
             {
@@ -277,6 +277,17 @@ namespace POIProxy.Controllers
             interMsgHandler.updateSessionStatus(newSessionId, "open");
 
             await POIProxyPushNotifier.sessionCreated(newSessionId);
+        }
+
+        public string DictToString<T, V>(IEnumerable<KeyValuePair<T, V>> items, string format)
+        {
+            format = String.IsNullOrEmpty(format) ? "{0}='{1}' " : format;
+
+            System.Text.StringBuilder itemString = new System.Text.StringBuilder();
+            foreach (var item in items)
+                itemString.AppendFormat(format, item.Key, item.Value);
+
+            return itemString.ToString();
         }
     }
 }
