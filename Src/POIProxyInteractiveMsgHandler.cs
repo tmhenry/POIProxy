@@ -184,7 +184,7 @@ namespace POIProxy
             DataTable result = dbManager.selectFromTable("session", cols, conditions);
             if (result.Rows.Count > 0)
             {
-                PPLog.infoLog("found session open " + result.Rows[0]["id"]);
+                PPLog.infoLog("[POIProxyInteractiveMsgHandler checkSessionState] found session open " + result.Rows[0]["id"]);
                 isInState = true;
             }
 
@@ -389,7 +389,7 @@ namespace POIProxy
 
         public bool checkAndProcessArchiveDuringSessionEnd(string sessionId)
         {
-            PPLog.infoLog("Session id is " + sessionId);
+            PPLog.infoLog("[POIProxyInteractiveMsgHandler checkAndProcessArchiveDuringSessionEnd] Session id is " + sessionId);
 
             //Check if the session is in the right state (must be in serving state)
             if (checkSessionServing(sessionId))
@@ -418,7 +418,7 @@ namespace POIProxy
 
         public void uploadSessionArchive(string sessionId)
         {
-            PPLog.infoLog("Uploading session archive!");
+            PPLog.infoLog("[POIProxyInteractiveMsgHandler uploadSessionArchive] Uploading session archive!");
 
             string mediaId = POICdnHelper.generateCdnKeyForSessionArchive(sessionId);
             POICdnHelper.uploadStrToQiniuCDN(mediaId, 
@@ -612,7 +612,7 @@ namespace POIProxy
 
         public List<POIInteractiveEvent> getMissedEventsInSession(string sessionId, double timestamp)
         {
-            PPLog.infoLog("Getting missed event for session : " + sessionId);
+            PPLog.debugLog("[POIProxyInteractiveMsgHandler getMissedEventsInSession] Getting missed event for session : " + sessionId);
             var missedEvents = new List<POIInteractiveEvent>();
 
             try
@@ -631,7 +631,7 @@ namespace POIProxy
                     }
                 }
                 
-                PPLog.infoLog("Missed events is " + jsonHandler.Serialize(missedEvents));
+                PPLog.debugLog("Missed events is " + jsonHandler.Serialize(missedEvents));
             }
             catch (Exception e)
             {

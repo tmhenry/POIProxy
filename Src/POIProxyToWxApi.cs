@@ -19,7 +19,7 @@ namespace POIProxy
 
         private async static Task sendReq(NameValueCollection postVal)
         {
-            PPLog.infoLog("WxApi.php base req url is: " + baseReqUrl);
+            PPLog.infoLog("[POIProxyToWxApi sendReq] WxApi.php base req url is: " + baseReqUrl);
             postVal["appProxy"] = "Yes";
 
             /*
@@ -53,7 +53,7 @@ namespace POIProxy
 
                     var responseStr = await response.Content.ReadAsStringAsync();
 
-                    PPLog.debugLog(responseStr);
+                    PPLog.infoLog("[POIProxyToWxApi sendReq] responseStr:" + responseStr);
                 }
                 catch(Exception e)
                 {

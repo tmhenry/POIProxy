@@ -21,28 +21,9 @@ namespace POIProxy
     {
         static POIProxyInteractiveMsgHandler interMsgHandler = POIGlobalVar.Kernel.myInterMsgHandler;
         JavaScriptSerializer jsonHandler = new JavaScriptSerializer();
-        
-        public void Log(string msg)
-        {
-            PPLog.infoLog(msg);
-
-            try
-            {
-                Clients.Caller.logMsg("hi hi");
-                PPLog.infoLog("Call completed");
-            }
-            catch (Exception e)
-            {
-                PPLog.errorLog(e.Message);
-            }
-            
-        }
-
 
         public async Task textMsgReceived(string sessionId, string message, double timestamp)
         {
-            PPLog.infoLog("Text received: " + message + " , session is :" + sessionId + " ," + timestamp);
-
             if (!POIProxySessionManager.checkEventExists(sessionId, timestamp))
             {
                 interMsgHandler.textMsgReceived(Clients.Caller.userId, sessionId, message, timestamp);
@@ -51,6 +32,7 @@ namespace POIProxy
                     textMsgReceived(Clients.Caller.userId, sessionId, message, timestamp);
 
                 Clients.Caller.msgAckReceived(sessionId, timestamp);
+                PPLog.infoLog("[POIProxyHub textMsgReceived] " + message + " session:" + sessionId + " timestamp: " + timestamp);
 
                 //Notify the weixin server
                 await POIProxyToWxApi.textMsgReceived(Clients.Caller.userId, sessionId, message);
@@ -60,7 +42,7 @@ namespace POIProxy
             }
             else
             {
-                PPLog.infoLog("Message duplicate: timestamp is " + timestamp);
+                PPLog.infoLog("[POIProxyHub textMsgReceived] Message duplicate: timestamp is " + timestamp);
                 //Message duplicate: send back the ack
                 Clients.Caller.msgAckReceived(sessionId, timestamp);
             }
@@ -77,6 +59,7 @@ namespace POIProxy
                     imageMsgReceived(Clients.Caller.userId, sessionId, mediaId, timestamp);
 
                 Clients.Caller.msgAckReceived(sessionId, timestamp);
+                PPLog.infoLog("[POIProxyHub imageMsgReceived] session: " + sessionId + " timestamp: " + timestamp);
 
                 await POIProxyToWxApi.imageMsgReceived(Clients.Caller.userId, sessionId, mediaId);
 
@@ -85,7 +68,7 @@ namespace POIProxy
             }
             else
             {
-                PPLog.infoLog("Message duplicate: timestamp is " + timestamp);
+                PPLog.infoLog("[POIProxyHub imageMsgReceived] Message duplicate: timestamp is " + timestamp);
                 //Message duplicate: send back the ack
                 Clients.Caller.msgAckReceived(sessionId, timestamp);
             }
@@ -101,6 +84,7 @@ namespace POIProxy
                     voiceMsgReceived(Clients.Caller.userId, sessionId, mediaId, timestamp);
 
                 Clients.Caller.msgAckReceived(sessionId, timestamp);
+                PPLog.infoLog("[POIProxyHub voiceMsgReceived] session: " + sessionId + " timestamp: " + timestamp);
 
                 await POIProxyToWxApi.voiceMsgReceived(Clients.Caller.userId, sessionId, mediaId);
 
@@ -109,7 +93,7 @@ namespace POIProxy
             }
             else
             {
-                PPLog.infoLog("Message duplicate: timestamp is " + timestamp);
+                PPLog.infoLog("[POIProxyHub voiceMsgReceived] Message duplicate: timestamp is " + timestamp);
                 //Message duplicate: send back the ack
                 Clients.Caller.msgAckReceived(sessionId, timestamp);
             }
@@ -125,6 +109,7 @@ namespace POIProxy
                     illustrationMsgReceived(Clients.Caller.userId, sessionId, mediaId, timestamp);
 
                 Clients.Caller.msgAckReceived(sessionId, timestamp);
+                PPLog.infoLog("[POIProxyHub illustrationMsgReceived] session: " + sessionId + " timestamp: " + timestamp);
 
                 await POIProxyToWxApi.illustrationMsgReceived(Clients.Caller.userId, sessionId, mediaId);
 
@@ -133,7 +118,7 @@ namespace POIProxy
             }
             else
             {
-                PPLog.infoLog("Message duplicate: timestamp is " + timestamp);
+                PPLog.infoLog("[POIProxyHub illustrationMsgReceived] Message duplicate: timestamp is " + timestamp);
                 //Message duplicate: send back the ack
                 Clients.Caller.msgAckReceived(sessionId, timestamp);
             }
@@ -142,18 +127,14 @@ namespace POIProxy
         public async Task createInteractiveSession(string mediaId, string description)
         {
             string accessType = "group";
-
-            PPLog.infoLog("Creator id is : " + Clients.Caller.userId);
-
+            
             //Create the session
             Tuple<string,string> result = interMsgHandler.
                 createInteractiveSession(Clients.Caller.userId, mediaId, description, accessType);
             string presId = result.Item1;
             string sessionId = result.Item2;
 
-            PPLog.infoLog("Description is " + description);
-
-            PPLog.infoLog("Session created!: " + sessionId);
+            PPLog.infoLog("[POIProxyHub createInteractiveSession] description: " + description + "sessionId: " + sessionId);
 
             double timestamp = POITimestamp.ConvertToUnixTimestamp(DateTime.Now);
 
@@ -175,13 +156,13 @@ namespace POIProxy
             if (double.Parse(archiveInfo["create_at"])
                 >= POITimestamp.ConvertToUnixTimestamp(DateTime.Now.AddSeconds(-60)))
             {
-                PPLog.infoLog("Cannot join the session, not passing time limit");
+                PPLog.infoLog("[POIProxyHub joinInteractiveSession] Cannot join the session, not passing time limit");
                 Clients.Caller.interactiveSessionJoinBeforeStarted(sessionId);
             }
             else if (POIProxySessionManager.checkUserInSession(sessionId, Clients.Caller.userId))
             {
                 //User already in the session
-                PPLog.infoLog("Session already joined");
+                PPLog.infoLog("[POIProxyHub joinInteractiveSession] Session already joined");
 
                 double timestamp = POITimestamp.ConvertToUnixTimestamp(DateTime.Now);
                 string archiveJson = jsonHandler.Serialize(POIProxySessionManager.getSessionArchive(sessionId));
@@ -195,7 +176,7 @@ namespace POIProxy
             }
             else if (POIProxySessionManager.acquireSessionToken(sessionId))
             {
-                PPLog.infoLog("Session is open, joined!");
+                
                 double timestamp = POITimestamp.ConvertToUnixTimestamp(DateTime.Now);
 
                 interMsgHandler.joinInteractiveSession(Clients.Caller.userId, sessionId, timestamp);
@@ -207,7 +188,7 @@ namespace POIProxy
 
                 await Groups.Add(Context.ConnectionId, "session_" + sessionId);
 
-                PPLog.infoLog(archiveJson);
+                PPLog.infoLog("[POIProxyHub joinInteractiveSession] Session is open, joined! archive: " + archiveJson);
 
                 //Notify the user the join operation has been completed
                 Clients.Caller.interactiveSessionJoined(sessionId, archiveJson, timestamp);
@@ -223,7 +204,7 @@ namespace POIProxy
             }
             else
             {
-                PPLog.infoLog("Cannot join the session, taken by others");
+                PPLog.infoLog("[POIProxyHub joinInteractiveSession] Cannot join the session, taken by others");
                 Clients.Caller.interactiveSessionJoinFailed(sessionId);
             }
         }
@@ -239,6 +220,7 @@ namespace POIProxy
 
             //Notify the weixin server about the ending operation
             await POIProxyToWxApi.interactiveSessionEnded(Clients.Caller.userId, sessionId);
+            PPLog.infoLog("[POIProxyHub endInteractiveSession] sessionId: " + sessionId + " userid:" + Clients.Caller.userId);
 
             //Send push notification
             await POIProxyPushNotifier.sessionEnded(sessionId);
@@ -252,6 +234,7 @@ namespace POIProxy
             //Send notification to all clients in the session
             Clients.Group("session_" + sessionId, Context.ConnectionId)
                 .interactiveSessionRatedAndEnded(Clients.Caller.userId, sessionId, rating);
+            PPLog.infoLog("[POIProxyHub rateAndEndInteractiveSession] session: " + sessionId + " userid:" + Clients.Caller.userId);
 
             //Send push notification
             await POIProxyPushNotifier.sessionRated(sessionId, rating);
@@ -272,6 +255,7 @@ namespace POIProxy
             //Notify the signalr users about the cancel operation
             Clients.Group("session_" + sessionId, Context.ConnectionId)
                 .interactiveSessionCancelled(sessionId);
+            PPLog.infoLog("[POIProxyHub reraiseInteractiveSession] session: " + sessionId + " newSessionId: " + newSessionId);
 
             //Notify the weixin users about the cancel operation
             await POIProxyToWxApi.interactiveSessionCancelled(Clients.Caller.userId, sessionId);
@@ -285,9 +269,7 @@ namespace POIProxy
         public async Task syncClient(string sessionListJson)
         {
             string userId = Clients.Caller.userId;
-            PPLog.infoLog("sync client " + userId);
-
-            PPLog.infoLog("session list from client is :" + sessionListJson);
+            PPLog.infoLog("[POIProxyHub syncClient] userId: " + userId + " session list from client is :" + sessionListJson);
 
             Dictionary<string, double> sessionList = jsonHandler.
                 Deserialize<Dictionary<string, double>>(sessionListJson);
@@ -346,6 +328,7 @@ namespace POIProxy
 
             //Remove server state
             POIProxySessionManager.unsubscribeSession(sessionId, Clients.Caller.userId);
+            PPLog.infoLog("[POIProxyHub unsubscribeSession] sessionId: " + sessionId + " userid:" + Clients.Caller.userId);
         }
 
         #region new connection handling function
@@ -360,17 +343,17 @@ namespace POIProxy
 
             if (service == "interactive")
             {
-                PPLog.infoLog("Client connected to interactive service");
+                PPLog.infoLog("[POIProxyHub OnConnected] Client connected to interactive service");
             }
             else if (service == "log")
             {
                 //For receiving server error log
                 Groups.Add(Context.ConnectionId, "serverLog");
-                PPLog.infoLog("Server log connected!");
+                PPLog.infoLog("[POIProxyHub OnConnected] Server log connected!");
             }
             else
             {
-                PPLog.infoLog("Service type not recognized");
+                PPLog.infoLog("[POIProxyHub OnConnected] Service type not recognized");
             }
 
             return base.OnConnected();
@@ -386,7 +369,7 @@ namespace POIProxy
                 try
                 {
                     //Handling user disconnected
-                    PPLog.infoLog("Client " + info["userId"] + " disconnected");
+                    PPLog.infoLog("[POIProxyHub OnDisconnected] Client " + info["userId"] + " disconnected");
                 }
                 catch (Exception e)
                 {
@@ -408,7 +391,7 @@ namespace POIProxy
                 try
                 {
                     //Handling user reconnecting
-                    PPLog.infoLog("Client " + info["userId"] + " reconnected");
+                    PPLog.infoLog("[POIProxyHub OnReconnected] Client " + info["userId"] + " reconnected");
                 }
                 catch (Exception e)
                 {

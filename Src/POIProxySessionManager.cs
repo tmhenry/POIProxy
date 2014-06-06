@@ -306,7 +306,7 @@ namespace POIProxy
             {
                 var sessionInfo = redisClient.Hashes["session:" + sessionId];
 
-                PPLog.infoLog("Access type is : " + sessionInfo["access_type"]);
+                PPLog.infoLog("[POIProxySessionManager checkPrivateTutoring] Access type is : " + sessionInfo["access_type"]);
 
                 if (sessionInfo["access_type"] == "group")
                 {

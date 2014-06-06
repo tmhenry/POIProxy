@@ -44,7 +44,7 @@ namespace POIProxy
         {
             string bucket = WebConfigurationManager.AppSettings["QiniuBucket"];
 
-            PPLog.infoLog("Bucket is : " + bucket);
+            PPLog.debugLog("Bucket is : " + bucket);
             var policy = new PutPolicy(bucket, 3600);
 
             string upToken = policy.Token();
@@ -54,20 +54,20 @@ namespace POIProxy
             IOClient client = new IOClient();
             PutRet ret = client.PutFile(upToken, key, fileName, extra);
 
-            PPLog.infoLog("Bucket is : " + bucket);
-            PPLog.infoLog("Key is : " + ret.key);
-            PPLog.infoLog("Response is : " + ret.Response);
-            PPLog.infoLog("Status code is : " + ret.StatusCode);
-            PPLog.infoLog("Hash is : " + ret.Hash);
+            PPLog.debugLog("Bucket is : " + bucket);
+            PPLog.debugLog("Key is : " + ret.key);
+            PPLog.debugLog("Response is : " + ret.Response);
+            PPLog.debugLog("Status code is : " + ret.StatusCode);
+            PPLog.debugLog("Hash is : " + ret.Hash);
 
 
             if (ret.OK)
             {
-                PPLog.infoLog("Upload successful: ");
+                PPLog.infoLog("Upload successful ");
             }
             else
             {
-                PPLog.infoLog("Cannot upload: ");
+                PPLog.infoLog("Cannot upload ");
             }
 
             return ret.key;
