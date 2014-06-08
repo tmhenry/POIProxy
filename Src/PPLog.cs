@@ -50,9 +50,9 @@ namespace POIProxy
             //msg += " (" + methodBase.ReflectedType.Name + " " + methodBase.Name + ")";
 
             var context = GlobalHost.ConnectionManager.GetHubContext<POIProxyHub>();
-            if (type != "debug") {
+            //if (type != "debug") {
                 context.Clients.Group(@"serverLog").logMessage(msg);
-            }
+            //}
             
             try
             {

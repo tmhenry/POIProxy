@@ -158,7 +158,7 @@ namespace POIProxy
 
         public static async Task sessionCreated(string sessionId)
         {
-            PPLog.infoLog("Session created broadcasted!");
+            PPLog.infoLog("[POIProxyPushNotifier sessionCreated] Session created broadcasted!");
             await broadcastNotification(sessionId, "有题了，快来抢！");
         }
     }
