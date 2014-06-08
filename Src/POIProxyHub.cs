@@ -383,22 +383,24 @@ namespace POIProxy
 
         public override System.Threading.Tasks.Task OnReconnected()
         {
-            var info = Context.QueryString;
-            String service = info["service"];
-
-            if (service == "interactive")
+            //var info = Context.QueryString;
+            try
             {
-                try
-                {
-                    //Handling user reconnecting
-                    PPLog.infoLog("[POIProxyHub OnReconnected] Client " + info["userId"] + " reconnected");
-                }
-                catch (Exception e)
-                {
-                    PPLog.errorLog(e.Message);
-                }
-
+                //Handling user reconnecting
+                //PPLog.infoLog("[POIProxyHub OnReconnected] Client " + info["userId"] + " reconnected");
+                PPLog.infoLog("[POIProxyHub OnReconnected] Client reconnected");
             }
+            catch (Exception e)
+            {
+                PPLog.errorLog(e.Message);
+            }
+
+            /*if (service == "interactive")
+            {
+                
+                String service = info["service"];
+
+            }*/
 
             return base.OnReconnected();
         }
