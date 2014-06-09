@@ -29,21 +29,6 @@
             <param name="assemblyName"></param>
             <returns>The type if it exists</returns>
         </member>
-        <member name="M:ServiceStack.AutoMappingUtils.PopulateWith(System.Object)">
-            <summary>
-            Populate an object with Example data.
-            </summary>
-            <param name="obj"></param>
-            <returns></returns>
-        </member>
-        <member name="M:ServiceStack.AutoMappingUtils.PopulateObjectInternal(System.Object,System.Collections.Generic.Dictionary{System.Type,System.Int32})">
-            <summary>
-            Populates the object with example data.
-            </summary>
-            <param name="obj"></param>
-            <param name="recursionInfo">Tracks how deeply nested we are</param>
-            <returns></returns>
-        </member>
         <member name="M:ServiceStack.Text.Common.DateTimeSerializer.Prepare(System.DateTime,System.Boolean)">
             <summary>
             If AlwaysUseUtc is set to true then convert all DateTime to UTC.
@@ -96,6 +81,11 @@
         <member name="T:ServiceStack.Text.DateTimeExtensions">
             <summary>
             A fast, standards-based, serialization-issue free DateTime serailizer.
+            </summary>
+        </member>
+        <member name="T:ServiceStack.Text.WP.HashSet`1">
+            <summary>
+             A hashset implementation that uses an IDictionary
             </summary>
         </member>
         <member name="M:ServiceStack.Text.ITypeSerializer`1.CanCreateFromString(System.Type)">
@@ -154,7 +144,7 @@
             to support web-friendly serialized formats, ie emitting lowercase_underscore_casing for JSON
             </summary>
         </member>
-        <member name="F:ServiceStack.Text.JsConfig.sPropertyConvention">
+        <member name="F:ServiceStack.Text.JsConfig.propertyConvention">
             <summary>
             Define how property names are mapped during deserialization
             </summary>
@@ -267,22 +257,22 @@
             Whether there is a fn (raw or otherwise)
             </summary>
         </member>
-        <member name="F:ServiceStack.Text.PropertyConvention.Strict">
+        <member name="F:ServiceStack.Text.JsonPropertyConvention.ExactMatch">
             <summary>
             The property names on target types must match property names in the JSON source
             </summary>
         </member>
-        <member name="F:ServiceStack.Text.PropertyConvention.Lenient">
+        <member name="F:ServiceStack.Text.JsonPropertyConvention.Lenient">
             <summary>
             The property names on target types may not match the property names in the JSON source
             </summary>
         </member>
-        <member name="F:ServiceStack.Text.TimeSpanHandler.DurationFormat">
+        <member name="F:ServiceStack.Text.JsonTimeSpanHandler.DurationFormat">
             <summary>
             Uses the xsd format like PT15H10M20S
             </summary>
         </member>
-        <member name="F:ServiceStack.Text.TimeSpanHandler.StandardFormat">
+        <member name="F:ServiceStack.Text.JsonTimeSpanHandler.StandardFormat">
             <summary>
             Uses the standard .net ToString method of the TimeSpan class
             </summary>
@@ -363,16 +353,6 @@
             </summary>
             <typeparam name="T"></typeparam>
         </member>
-        <member name="T:ServiceStack.Licensing">
-            <summary>
-            Public Code API to register commercial license for ServiceStack.
-            </summary>
-        </member>
-        <member name="T:ServiceStack.LicenseUtils">
-            <summary>
-            Internal Utilities to verify licensing
-            </summary>
-        </member>
         <member name="T:ServiceStack.Text.Marc.Link`2">
             <summary>
             Pretty Thread-Safe cache class from:
@@ -444,85 +424,31 @@
             Get or set the value of a named member on the target instance
             </summary>
         </member>
-        <member name="M:ServiceStack.PathUtils.MapProjectPath(System.String)">
-            <summary>
-            Maps the path of a file in the context of a VS project
-            </summary>
-            <param name="relativePath">the relative path</param>
-            <returns>the absolute path</returns>
-            <remarks>Assumes static content is two directories above the /bin/ directory,
-            eg. in a unit test scenario  the assembly would be in /bin/Debug/.</remarks>
-        </member>
-        <member name="M:ServiceStack.PathUtils.MapAbsolutePath(System.String)">
-            <summary>
-            Maps the path of a file in a self-hosted scenario
-            </summary>
-            <param name="relativePath">the relative path</param>
-            <returns>the absolute path</returns>
-            <remarks>Assumes static content is copied to /bin/ folder with the assemblies</remarks>
-        </member>
-        <member name="M:ServiceStack.PathUtils.MapHostAbsolutePath(System.String)">
-            <summary>
-            Maps the path of a file in an Asp.Net hosted scenario
-            </summary>
-            <param name="relativePath">the relative path</param>
-            <returns>the absolute path</returns>
-            <remarks>Assumes static content is in the parent folder of the /bin/ directory</remarks>
-        </member>
-        <member name="T:ServiceStack.QueryStringWriter`1">
+        <member name="T:ServiceStack.Text.QueryStringWriter`1">
             <summary>
             Implement the serializer using a more static approach
             </summary>
             <typeparam name="T"></typeparam>
         </member>
-        <member name="M:ServiceStack.ReflectionExtensions.New``1(System.Type)">
-            <summary>
-            Creates a new instance of type. 
-            First looks at JsConfig.ModelFactory before falling back to CreateInstance
-            </summary>
-        </member>
-        <member name="M:ServiceStack.ReflectionExtensions.New(System.Type)">
-            <summary>
-            Creates a new instance of type. 
-            First looks at JsConfig.ModelFactory before falling back to CreateInstance
-            </summary>
-        </member>
-        <member name="M:ServiceStack.ReflectionExtensions.CreateInstance(System.Type)">
-            <summary>
-            Creates a new instance from the default constructor of type
-            </summary>
-        </member>
-        <member name="M:ServiceStack.PlatformExtensions.AddAttributes(System.Reflection.PropertyInfo,System.Attribute[])">
-            <summary>
-            Add a Property attribute at runtime. 
-            <para>Not threadsafe, should only add attributes on Startup.</para>
-            </summary>
-        </member>
-        <member name="M:ServiceStack.PlatformExtensions.ReplaceAttribute(System.Reflection.PropertyInfo,System.Attribute)">
-            <summary>
-            Add a Property attribute at runtime. 
-            <para>Not threadsafe, should only add attributes on Startup.</para>
-            </summary>
-        </member>
-        <member name="F:ServiceStack.StreamExtensions.DefaultBufferSize">
+        <member name="F:ServiceStack.Text.StreamExtensions.DefaultBufferSize">
             <summary>
             @jonskeet: Collection of utility methods which operate on streams.
             r285, February 26th 2009: http://www.yoda.arachsys.com/csharp/miscutil/
             </summary>
         </member>
-        <member name="M:ServiceStack.StreamExtensions.ReadFully(System.IO.Stream)">
+        <member name="M:ServiceStack.Text.StreamExtensions.ReadFully(System.IO.Stream)">
             <summary>
             Reads the given stream up to the end, returning the data as a byte
             array.
             </summary>
         </member>
-        <member name="M:ServiceStack.StreamExtensions.ReadFully(System.IO.Stream,System.Int32)">
+        <member name="M:ServiceStack.Text.StreamExtensions.ReadFully(System.IO.Stream,System.Int32)">
             <summary>
             Reads the given stream up to the end, returning the data as a byte
             array, using the given buffer size.
             </summary>
         </member>
-        <member name="M:ServiceStack.StreamExtensions.ReadFully(System.IO.Stream,System.Byte[])">
+        <member name="M:ServiceStack.Text.StreamExtensions.ReadFully(System.IO.Stream,System.Byte[])">
             <summary>
             Reads the given stream up to the end, returning the data as a byte
             array, using the given buffer for transferring data. Note that the
@@ -530,54 +456,54 @@
             be cleared beforehand.
             </summary>
         </member>
-        <member name="M:ServiceStack.StreamExtensions.CopyTo(System.IO.Stream,System.IO.Stream)">
+        <member name="M:ServiceStack.Text.StreamExtensions.CopyTo(System.IO.Stream,System.IO.Stream)">
             <summary>
             Copies all the data from one stream into another.
             </summary>
         </member>
-        <member name="M:ServiceStack.StreamExtensions.CopyTo(System.IO.Stream,System.IO.Stream,System.Int32)">
+        <member name="M:ServiceStack.Text.StreamExtensions.CopyTo(System.IO.Stream,System.IO.Stream,System.Int32)">
             <summary>
             Copies all the data from one stream into another, using a buffer
             of the given size.
             </summary>
         </member>
-        <member name="M:ServiceStack.StreamExtensions.CopyTo(System.IO.Stream,System.IO.Stream,System.Byte[])">
+        <member name="M:ServiceStack.Text.StreamExtensions.CopyTo(System.IO.Stream,System.IO.Stream,System.Byte[])">
             <summary>
             Copies all the data from one stream into another, using the given 
             buffer for transferring data. Note that the current contents of 
             the buffer is ignored, so the buffer needn't be cleared beforehand.
             </summary>
         </member>
-        <member name="M:ServiceStack.StreamExtensions.ReadExactly(System.IO.Stream,System.Int32)">
+        <member name="M:ServiceStack.Text.StreamExtensions.ReadExactly(System.IO.Stream,System.Int32)">
             <summary>
             Reads exactly the given number of bytes from the specified stream.
             If the end of the stream is reached before the specified amount
             of data is read, an exception is thrown.
             </summary>
         </member>
-        <member name="M:ServiceStack.StreamExtensions.ReadExactly(System.IO.Stream,System.Byte[])">
+        <member name="M:ServiceStack.Text.StreamExtensions.ReadExactly(System.IO.Stream,System.Byte[])">
             <summary>
             Reads into a buffer, filling it completely.
             </summary>
         </member>
-        <member name="M:ServiceStack.StreamExtensions.ReadExactly(System.IO.Stream,System.Byte[],System.Int32)">
+        <member name="M:ServiceStack.Text.StreamExtensions.ReadExactly(System.IO.Stream,System.Byte[],System.Int32)">
             <summary>
             Reads exactly the given number of bytes from the specified stream,
             into the given buffer, starting at position 0 of the array.
             </summary>
         </member>
-        <member name="M:ServiceStack.StreamExtensions.ReadExactly(System.IO.Stream,System.Byte[],System.Int32,System.Int32)">
+        <member name="M:ServiceStack.Text.StreamExtensions.ReadExactly(System.IO.Stream,System.Byte[],System.Int32,System.Int32)">
             <summary>
             Reads exactly the given number of bytes from the specified stream,
             into the given buffer, starting at position 0 of the array.
             </summary>
         </member>
-        <member name="M:ServiceStack.StreamExtensions.ReadExactlyFast(System.IO.Stream,System.Byte[],System.Int32,System.Int32)">
+        <member name="M:ServiceStack.Text.StreamExtensions.ReadExactlyFast(System.IO.Stream,System.Byte[],System.Int32,System.Int32)">
             <summary>
             Same as ReadExactly, but without the argument checks.
             </summary>
         </member>
-        <member name="M:ServiceStack.StringExtensions.BaseConvert(System.String,System.Int32,System.Int32)">
+        <member name="M:ServiceStack.Text.StringExtensions.BaseConvert(System.String,System.Int32,System.Int32)">
             <summary>
             Converts from base: 0 - 62
             </summary>
@@ -586,7 +512,7 @@
             <param name="to">To.</param>
             <returns></returns>
         </member>
-        <member name="M:ServiceStack.StringExtensions.FastToUtf8Bytes(System.String)">
+        <member name="M:ServiceStack.Text.StringExtensions.FastToUtf8Bytes(System.String)">
             <summary>
             Skip the encoding process for 'safe strings' 
             </summary>

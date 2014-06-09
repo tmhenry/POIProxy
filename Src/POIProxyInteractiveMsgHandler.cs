@@ -228,6 +228,7 @@ namespace POIProxy
             addUserToSessionRecord(userId, sessionId);
 
             //Get the information about the activity
+            var userInfo = POIProxySessionManager.getUserInfo(userId);
             Dictionary<string, string> infoDict = new Dictionary<string, string>();
             infoDict["session_id"] = sessionId;
             infoDict["pres_id"] = presId;
@@ -236,8 +237,18 @@ namespace POIProxy
             infoDict["description"] = desc;
             infoDict["cover"] = mediaId;
             infoDict["access_type"] = accessType;
+            infoDict["user_id"] = userInfo["user_id"];
+            infoDict["username"] = userInfo["username"];
+            infoDict["avatar"] = userInfo["avatar"];
 
-            POIProxySessionManager.updateSessionInfo(sessionId, infoDict);
+            try {
+                POIProxySessionManager.updateSessionInfo(sessionId, infoDict);
+            }
+            catch (Exception e)
+            {
+                PPLog.errorLog("redis error:" + e.Message);
+            }
+            
 
             //Archive the session created event
             POIInteractiveEvent poiEvent = new POIInteractiveEvent
