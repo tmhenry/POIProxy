@@ -13,7 +13,7 @@ namespace POIProxy
 {
     public class POIProxySessionManager
     {
-        private static PooledRedisClientManager redisManager = new PooledRedisClientManager("localhost:6379");
+        private static PooledRedisClientManager redisManager = new PooledRedisClientManager(POIGlobalVar.RedisHost + ":" + POIGlobalVar.RedisPort);
         private static POIProxyDbManager dbManager = POIProxyDbManager.Instance;
 
         public static void refreshSessionTokenPool(string sessionId)

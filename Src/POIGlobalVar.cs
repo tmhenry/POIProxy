@@ -23,6 +23,9 @@ namespace POIProxy
         public static String DbUsername { get; set; }
         public static String DbPassword { get; set; }
 
+        public static String RedisHost { get; set; }
+        public static String RedisPort { get; set; }
+
         public static String KeywordsFileName { get { return "POI_Keywords.txt"; } }
         public static String KeywordsFileType { get { return ".txt"; } }
 

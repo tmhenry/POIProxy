@@ -48,6 +48,9 @@ namespace POIProxy
                 POIGlobalVar.DbName = WebConfigurationManager.AppSettings["DbName"];
                 POIGlobalVar.DbUsername = WebConfigurationManager.AppSettings["DbUsername"];
                 POIGlobalVar.DbPassword = WebConfigurationManager.AppSettings["DbPassword"];
+
+                POIGlobalVar.RedisHost = WebConfigurationManager.AppSettings["RedisHost"];
+                POIGlobalVar.RedisPort = WebConfigurationManager.AppSettings["RedisPort"];
             }
             catch (Exception e)
             {
