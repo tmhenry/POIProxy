@@ -169,13 +169,8 @@ namespace POIProxy
             {
                 var userInfo = redisClient.Hashes["user:" + userId];
 
-                if (userInfo.Count == 0)
+                if (userInfo.Count == 0 || !userInfo.ContainsKey("user_id") || !userInfo.ContainsKey("username") || !userInfo.ContainsKey("avatar"))
                 {
-                    PPLog.infoLog("Read user info from db");
-
-                    //Read user info from db and save into redis
-                    userInfo["user_id"] = userId;
-
                     Dictionary<string, object> conditions = new Dictionary<string, object>();
                     List<string> cols = new List<string>();
 
@@ -186,6 +181,9 @@ namespace POIProxy
                     DataRow user = dbManager.selectSingleRowFromTable("users", cols, conditions);
                     if (user != null)
                     {
+                        PPLog.infoLog("Read user info from db");
+                        //Read user info from db and save into redis
+                        userInfo["user_id"] = userId;
                         userInfo["username"] = user["username"] as string;
                         userInfo["avatar"] = user["avatar"] as string;
 
