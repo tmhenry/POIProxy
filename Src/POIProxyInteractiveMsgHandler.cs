@@ -516,6 +516,7 @@ namespace POIProxy
 
         public void rateInteractiveSession(string userId, string sessionId, int rating)
         {
+            PPLog.debugLog("rateInteractiveSession: userId: "+userId+" sessionId: "+sessionId+ " rating: "+rating);
             if (POIProxySessionManager.checkPrivateTutoring(sessionId))
             {
                 //Check if the session is in serving status
@@ -532,8 +533,15 @@ namespace POIProxy
             }
             else
             {
-                //In group session, there is no session end waiting, so end is initiated by rating
-                updateSessionStatusWithRating(sessionId, rating, true);
+                if (checkSessionOpen(sessionId))
+                {
+                    cancelInteractiveSession(userId, sessionId);
+                }
+                else
+                {
+                    //In group session, there is no session end waiting, so end is initiated by rating
+                    updateSessionStatusWithRating(sessionId, rating, true);
+                }
             }
 
             //Archive the session rating event
@@ -623,7 +631,7 @@ namespace POIProxy
 
         public List<POIInteractiveEvent> getMissedEventsInSession(string sessionId, double timestamp)
         {
-            PPLog.debugLog("[POIProxyInteractiveMsgHandler getMissedEventsInSession] Getting missed event for session : " + sessionId);
+            //PPLog.debugLog("[POIProxyInteractiveMsgHandler getMissedEventsInSession] Getting missed event for session : " + sessionId);
             var missedEvents = new List<POIInteractiveEvent>();
 
             try
@@ -642,7 +650,7 @@ namespace POIProxy
                     }
                 }
                 
-                PPLog.debugLog("Missed events is " + jsonHandler.Serialize(missedEvents));
+                //PPLog.debugLog("Missed events is " + jsonHandler.Serialize(missedEvents));
             }
             catch (Exception e)
             {
