@@ -239,6 +239,25 @@ namespace POIProxy
             }
         }
 
+        public static void updateUserDevice(string userId, string deviceId, string system)
+        {
+            using (var redisClient = redisManager.GetClient())
+            {
+                var users = redisClient.Hashes["user_device:" + userId];
+                users["deviceId"] = deviceId;
+                users["system"] = system;
+            }
+        }
+
+        public static String getUserDevice(string userId)
+        {
+            using (var redisClient = redisManager.GetClient())
+            { 
+                var users = redisClient.Hashes["user_device:" + userId];
+                return users["deviceId"];
+            }
+        }
+
         public static Dictionary<string,string> getSessionInfo(string sessionId)
         {
             using (var redisClient = redisManager.GetClient())

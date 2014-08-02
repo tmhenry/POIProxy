@@ -45,6 +45,14 @@
     <Reference Include="EntityFramework.SqlServer">
       <HintPath>packages\EntityFramework.6.0.2\lib\net45\EntityFramework.SqlServer.dll</HintPath>
     </Reference>
+    <Reference Include="GetuiServerApiSDK, Version=3.0.0.1, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>packages\protobuffer\GetuiServerApiSDK.dll</HintPath>
+    </Reference>
+    <Reference Include="Google.ProtocolBuffers, Version=2.4.1.473, Culture=neutral, PublicKeyToken=55f7125234beb589, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>packages\protobuffer\Google.ProtocolBuffers.dll</HintPath>
+    </Reference>
     <Reference Include="log4net">
       <HintPath>packages\log4net.2.0.3\lib\net40-full\log4net.dll</HintPath>
     </Reference>
@@ -230,6 +238,7 @@
     <None Include="Properties\PublishProfiles\Alibaba14.229_8093.pubxml" />
     <None Include="Properties\PublishProfiles\Alibaba218.244.132.113_8091.pubxml" />
     <None Include="Properties\PublishProfiles\Alibaba218.244.132.113_8092.pubxml" />
+    <None Include="Properties\PublishProfiles\Alibaba218.244.132.113_8093.pubxml" />
     <None Include="Properties\PublishProfiles\ProxyPublish.pubxml" />
     <None Include="Properties\PublishProfiles\Publish100.pubxml" />
     <None Include="Properties\PublishProfiles\Publish100ftp.pubxml" />

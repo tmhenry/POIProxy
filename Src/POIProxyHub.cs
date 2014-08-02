@@ -38,7 +38,7 @@ namespace POIProxy
                 await POIProxyToWxApi.textMsgReceived(Clients.Caller.userId, sessionId, message);
 
                 //Send push notification
-                await POIProxyPushNotifier.textMsgReceived(sessionId);
+                //await POIProxyPushNotifier.textMsgReceived(sessionId, message);
             }
             else
             {
@@ -151,7 +151,11 @@ namespace POIProxy
 
         public async Task joinInteractiveSession(string sessionId)
         {
-            var archiveInfo = POIProxySessionManager.getSessionInfo(sessionId);            
+            var archiveInfo = POIProxySessionManager.getSessionInfo(sessionId);
+            if (string.IsNullOrEmpty(Clients.Caller.userId))
+                PPLog.errorLog("[POIProxyHub joinInteractiveSession] miss parameters: userId");
+            if (string.IsNullOrEmpty(sessionId))
+                PPLog.errorLog("[POIProxyHub joinInteractiveSession] miss parameters: sessionId");
 
             if (double.Parse(archiveInfo["create_at"])
                 >= POITimestamp.ConvertToUnixTimestamp(DateTime.Now.AddSeconds(-60)))

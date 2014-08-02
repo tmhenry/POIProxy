@@ -527,6 +527,7 @@ namespace POIProxy
                 }
                 else
                 {
+                    PPLog.debugLog("rateInteractiveSession checkSessionServing not");
                     //Session end initiated by end event
                     updateSessionStatusWithRating(sessionId, rating, false);
                 }

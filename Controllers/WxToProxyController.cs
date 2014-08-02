@@ -40,10 +40,11 @@ namespace POIProxy.Controllers
                 case "text":
                     interMsgHandler.textMsgReceived(userId, sessionId, message, timestamp);
 
-                    hubContext.Clients.Group("session_" + sessionId).
-                        textMsgReceived(userId, sessionId, message, timestamp);
+                    List<string> userList = POIProxySessionManager.getUsersBySessionId(sessionId);
+                    userList.Remove(userId);
 
-                    await POIProxyPushNotifier.textMsgReceived(sessionId);
+                    await POIProxyPushNotifier.textMsgReceived(userList, sessionId, message, timestamp);
+                    await POIProxyToWxApi.textMsgReceived(userId, sessionId, message);
                     
                     break;
 
@@ -175,6 +176,33 @@ namespace POIProxy.Controllers
             
         }
 
+
+        [HttpPost]
+        public string Users(HttpRequestMessage request)
+        {
+            string content = request.Content.ReadAsStringAsync().Result;
+            Dictionary<string, string> userInfo = jsonHandler.Deserialize<Dictionary<string, string>>(content);
+
+            string type = userInfo["type"];
+            try
+            {
+                switch (type)
+                {
+                    case "updateUserDevice":
+                        string deviceId = userInfo["deviceId"];
+                        string userId = userInfo["userId"];
+                        string system = userInfo["system"];
+                        POIProxySessionManager.updateUserDevice(userId, deviceId, system);
+                    break;
+                }
+                return jsonHandler.Serialize(new { status = "success" });
+            }
+            catch (Exception e)
+            {
+                PPLog.errorLog("error in users operation received: " + e.Message);
+                return jsonHandler.Serialize(new { status = "fail", content = e.Message });
+            }
+        }
 
 
         private async Task wxCreateInteractiveSession(string userId, string mediaId, string description)
