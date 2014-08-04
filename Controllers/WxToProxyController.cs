@@ -20,7 +20,7 @@ namespace POIProxy.Controllers
         JavaScriptSerializer jsonHandler = new JavaScriptSerializer();
 
         [HttpPost]
-        public async Task<string> Message(HttpRequestMessage request)
+        public async Task<HttpResponseMessage> Message(HttpRequestMessage request)
         {
             //Check if post is coming from the allowed IP address
             string content = request.Content.ReadAsStringAsync().Result;
@@ -35,55 +35,69 @@ namespace POIProxy.Controllers
 
             PPLog.infoLog("Message content: " + DictToString(msgInfo, null) + "Message timestamp: " + timestamp);
 
-            switch (msgType)
+            try {
+                switch (msgType)
+                {
+                    case "text":
+                        interMsgHandler.textMsgReceived(userId, sessionId, message, timestamp);
+
+                        hubContext.Clients.Group("session_" + sessionId).
+                            textMsgReceived(userId, sessionId, message, timestamp);
+
+                        await POIProxyPushNotifier.textMsgReceived(sessionId);
+
+                        break;
+
+                    case "image":
+                        interMsgHandler.imageMsgReceived(userId, sessionId, mediaId, timestamp);
+
+                        hubContext.Clients.Group("session_" + sessionId).
+                            imageMsgReceived(userId, sessionId, mediaId, timestamp);
+
+                        await POIProxyPushNotifier.imageMsgReceived(sessionId);
+
+                        break;
+
+                    case "voice":
+                        interMsgHandler.voiceMsgReceived(userId, sessionId, mediaId, timestamp);
+
+                        hubContext.Clients.Group("session_" + sessionId).
+                            voiceMsgReceived(userId, sessionId, mediaId, timestamp);
+
+                        await POIProxyPushNotifier.voiceMsgReceived(sessionId);
+
+
+                        break;
+
+                    case "illustration":
+                        interMsgHandler.illustrationMsgReceived(userId, sessionId, mediaId, timestamp);
+
+                        hubContext.Clients.Group("session_" + sessionId).
+                            illustrationMsgReceived(userId, sessionId, mediaId, timestamp);
+
+                        await POIProxyPushNotifier.illustrationMsgReceived(sessionId);
+
+                        break;
+                }
+
+                var response = Request.CreateResponse(HttpStatusCode.OK);
+                response.StatusCode = HttpStatusCode.OK;
+                response.Content = new StringContent(jsonHandler.Serialize(new { status = "success" }));
+                return response;
+            }
+            catch (Exception e)
             {
-                case "text":
-                    interMsgHandler.textMsgReceived(userId, sessionId, message, timestamp);
-
-                    hubContext.Clients.Group("session_" + sessionId).
-                        textMsgReceived(userId, sessionId, message, timestamp);
-
-                    await POIProxyPushNotifier.textMsgReceived(sessionId);
-                    
-                    break;
-
-                case "image":
-                    interMsgHandler.imageMsgReceived(userId, sessionId, mediaId, timestamp);
-
-                    hubContext.Clients.Group("session_" + sessionId).
-                        imageMsgReceived(userId, sessionId, mediaId, timestamp);
-
-                    await POIProxyPushNotifier.imageMsgReceived(sessionId);
-                    
-                    break;
-
-                case "voice":
-                    interMsgHandler.voiceMsgReceived(userId, sessionId, mediaId, timestamp);
-
-                    hubContext.Clients.Group("session_" + sessionId).
-                        voiceMsgReceived(userId, sessionId, mediaId, timestamp);
-
-                    await POIProxyPushNotifier.voiceMsgReceived(sessionId);
-
-                    
-                    break;
-
-                case "illustration":
-                    interMsgHandler.illustrationMsgReceived(userId, sessionId, mediaId, timestamp);
-
-                    hubContext.Clients.Group("session_" + sessionId).
-                        illustrationMsgReceived(userId, sessionId, mediaId, timestamp);
-
-                    await POIProxyPushNotifier.illustrationMsgReceived(sessionId);
-
-                    break;
+                PPLog.errorLog("In wx to proxy post message: " + e.Message);
+                var response = Request.CreateResponse(HttpStatusCode.OK);
+                response.StatusCode = HttpStatusCode.ExpectationFailed;
+                response.Content = new StringContent(jsonHandler.Serialize(new { status = "fail", content = e.Message }));
+                return response;
             }
 
-            return "{Message:OK}";
         }
 
         [HttpPost]
-        public async Task Session(HttpRequestMessage request)
+        public async Task<HttpResponseMessage> Session(HttpRequestMessage request)
         {
             string content = request.Content.ReadAsStringAsync().Result;
             Dictionary<string, string> msgInfo = jsonHandler.Deserialize<Dictionary<string, string>>(content);
@@ -167,10 +181,18 @@ namespace POIProxy.Controllers
 
                         break;
                 }
+                var response = Request.CreateResponse(HttpStatusCode.OK);
+                response.StatusCode = HttpStatusCode.OK;
+                response.Content = new StringContent(jsonHandler.Serialize(new { status = "success" }));
+                return response;
             }
             catch (Exception e)
             {
                 PPLog.errorLog("In wx to proxy post session: " + e.Message);
+                var response = Request.CreateResponse(HttpStatusCode.OK);
+                response.StatusCode = HttpStatusCode.ExpectationFailed;
+                response.Content = new StringContent(jsonHandler.Serialize(new { status = "fail", content = e.Message }));
+                return response;
             }
             
         }
