@@ -12,17 +12,19 @@ using Parse;
 using com.igetui.api.openservice;
 using com.igetui.api.openservice.igetui;
 using com.igetui.api.openservice.igetui.template;
+using com.igetui.api.openservice.igetui.Target;
+using System.Web.Configuration;
 
 namespace POIProxy
 {
     public class POIProxyPushNotifier
     {
 
-        private static String APPID = "g5NzYPihq79hDqeEniKdB4";                     //您应用的AppId
-        private static String APPKEY = "14fWxOQdCG6wxzXPGqTwA6";                    //您应用的AppKey
-        private static String MASTERSECRET = "6X52s1s6KiAlySbI7STBn9";              //您应用的MasterSecret 
+        private static String APPID = WebConfigurationManager.AppSettings["getuiAppId"];                            //您应用的AppId
+        private static String APPKEY = WebConfigurationManager.AppSettings["getuiAppKey"];                          //您应用的AppKey
+        private static String MASTERSECRET = WebConfigurationManager.AppSettings["getuiMasterSecret"];              //您应用的MasterSecret 
         private static String CLIENTID = "3f2e7654c014e39a53c05fc22ff8bc359b67026d5525fe85e51b7460b76a139c";        //您获取的clientID
-        private static String HOST = "http://sdk.open.api.igexin.com/apiex.htm";    //HOST：OpenService接口地址
+        private static String HOST = WebConfigurationManager.AppSettings["getuiHost"];                              //HOST：OpenService接口地址
 
         //Note: user list needs to be json encoded list of user ids
         public async static Task sendPushNotification(string sessionId, string message)
@@ -136,17 +138,17 @@ namespace POIProxy
             sendPushNotificationTest(userId, sessionId, message, timestamp);
         }
 
-        public static async Task imageMsgReceived(string sessionId)
+        public static async Task imageMsgReceived(List<string> userId, string sessionId, string mediaId, double timestamp)
         {
             await sendPushNotification(sessionId, "收到图片消息");
         }
 
-        public static async Task voiceMsgReceived(string sessionId)
+        public static async Task voiceMsgReceived(List<string> userId, string sessionId, string mediaId, double timestamp)
         {
             await sendPushNotification(sessionId, "收到语音消息");
         }
 
-        public static async Task illustrationMsgReceived(string sessionId)
+        public static async Task illustrationMsgReceived(List<string> userId, string sessionId, string mediaId, double timestamp)
         {
             await sendPushNotification(sessionId, "收到白板演算消息");
         }
@@ -174,32 +176,42 @@ namespace POIProxy
 
         public static void sendPushNotificationTest(List<string> userList, string sessionId, string message, double timestamp)
         {
-            TransmissionTemplate transMissionTemplate = TransmissionTemplate(message);
-
-            NotificationTemplate notifactionTemplate = NotificationTemplate(message);
-
-            IGtPush push = new IGtPush(HOST, APPKEY, MASTERSECRET);
-            ListMessage listMessage = new ListMessage();
-            listMessage.IsOffline = true;                         // 用户当前不在线时，是否离线存储,可选
-            listMessage.OfflineExpireTime = 1000 * 3600 * 12;            // 离线有效时间，单位为毫秒，可选
-            listMessage.Data = transMissionTemplate;
-
-            List<com.igetui.api.openservice.igetui.Target> targetList = new List<com.igetui.api.openservice.igetui.Target>();
+            //detect is or not needed to push to app.
+            List<Target> targetList = new List<Target>();
+            bool needToPushApp = false;
             foreach (string userId in userList) {
-                com.igetui.api.openservice.igetui.Target target = new com.igetui.api.openservice.igetui.Target();
-                target.appId = APPID;
-
-                target.clientId = POIProxySessionManager.getUserDevice(userId);
-                //target.clientId = "0e31593baa61f992627c340b61d74996";
-                targetList.Add(target);
+                string system = POIProxySessionManager.getUserDevice(userId)["system"];
+                if (system == "ios" || system == "android")
+                {
+                    needToPushApp = true;
+                    Target target = new Target();
+                    target.appId = APPID;
+                    target.clientId = POIProxySessionManager.getUserDevice(userId)["clientId"];
+                    targetList.Add(target);
+                }
+                else
+                {
+                    continue;
+                }
             }
 
-            String contentId = push.getContentId(listMessage);
-            String pushResult = push.pushMessageToList(contentId, targetList);
-            PPLog.debugLog("push result：" + pushResult);
+            if (needToPushApp) {
+                TransmissionTemplate transMissionTemplate = transmissionTemplate(message);
+
+                IGtPush push = new IGtPush(HOST, APPKEY, MASTERSECRET);
+                ListMessage listMessage = new ListMessage();
+                listMessage.IsOffline = true;                                // 用户当前不在线时，是否离线存储,可选
+                listMessage.OfflineExpireTime = 1000 * 3600 * 24 * 10;            // 离线有效时间，单位为毫秒，可选
+                listMessage.Data = transMissionTemplate;
+
+                String contentId = push.getContentId(listMessage);
+                String pushResult = push.pushMessageToList(contentId, targetList);
+                PPLog.debugLog("push to APP result：" + pushResult);
+            }
+            
         }
 
-        public static TransmissionTemplate TransmissionTemplate(String message)
+        public static TransmissionTemplate transmissionTemplate(String message)
         {
             TransmissionTemplate template = new TransmissionTemplate();
             template.AppId = APPID;
@@ -213,7 +225,7 @@ namespace POIProxy
         }
 
         //通知透传模板动作内容
-        public static NotificationTemplate NotificationTemplate(String message)
+        public static NotificationTemplate notificationTemplate(String message)
         {
             NotificationTemplate template = new NotificationTemplate();
             template.AppId = APPID;

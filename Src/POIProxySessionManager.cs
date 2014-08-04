@@ -249,12 +249,12 @@ namespace POIProxy
             }
         }
 
-        public static String getUserDevice(string userId)
+        public static IRedisHash getUserDevice(string userId)
         {
             using (var redisClient = redisManager.GetClient())
             { 
                 var users = redisClient.Hashes["user_device:" + userId];
-                return users["deviceId"];
+                return users;
             }
         }
 

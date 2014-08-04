@@ -155,38 +155,44 @@ namespace POIProxy
             await sendReq(values);
         }
 
-        private static async Task msgReceived(string userId, string sessionId, string msgType, string message, string mediaId)
+        private static async Task msgReceived(List<string> userList, string sessionId, string msgType, string message, string mediaId)
         {
-            NameValueCollection values = new NameValueCollection();
-            values["userId"] = userId;
-            values["sessionId"] = sessionId;
-            values["msgType"] = msgType;
-            values["message"] = message;
-            values["mediaId"] = mediaId;
+            //the best way here is passing userList to weixin when multi weixin users join.so we don't consider here.
+            foreach (string userId in userList) {
+                string system = POIProxySessionManager.getUserDevice(userId)["system"];
+                if (system == "weixin") {
+                    NameValueCollection values = new NameValueCollection();
+                    values["userId"] = userId;
+                    values["sessionId"] = sessionId;
+                    values["msgType"] = msgType;
+                    values["message"] = message;
+                    values["mediaId"] = mediaId;
 
-            values["reqType"] = "msgReceived";
+                    values["reqType"] = "msgReceived";
 
-            await sendReq(values);
+                    await sendReq(values);
+                }
+            }
         }
 
-        public static async Task textMsgReceived(string userId, string sessionId, string message)
+        public static async Task textMsgReceived(List<string> userList, string sessionId, string message)
         {
-            await msgReceived(userId, sessionId, "text", message, "");
+            await msgReceived(userList, sessionId, "text", message, "");
         }
 
-        public static async Task voiceMsgReceived(string userId, string sessionId, string mediaId)
+        public static async Task voiceMsgReceived(List<string> userList, string sessionId, string mediaId)
         {
-            await msgReceived(userId, sessionId, "voice", "", mediaId);
+            await msgReceived(userList, sessionId, "voice", "", mediaId);
         }
 
-        public static async Task imageMsgReceived(string userId, string sessionId, string mediaId)
+        public static async Task imageMsgReceived(List<string> userList, string sessionId, string mediaId)
         {
-            await msgReceived(userId, sessionId, "image", "", mediaId);
+            await msgReceived(userList, sessionId, "image", "", mediaId);
         }
 
-        public static async Task illustrationMsgReceived(string userId, string sessionId, string mediaId)
+        public static async Task illustrationMsgReceived(List<string> userList, string sessionId, string mediaId)
         {
-            await msgReceived(userId, sessionId, "illustration", "", mediaId);
+            await msgReceived(userList, sessionId, "illustration", "", mediaId);
         }
     }
 }
