@@ -29,6 +29,7 @@ namespace POIProxy.Controllers
                 string content = request.Content.ReadAsStringAsync().Result;
                 Dictionary<string, string> msgInfo = jsonHandler.Deserialize<Dictionary<string, string>>(content);
 
+                string messageId = msgInfo["messageId"];
                 string userId = msgInfo["userId"];
                 string sessionId = msgInfo["sessionId"];
                 string msgType = msgInfo["msgType"];
@@ -45,25 +46,25 @@ namespace POIProxy.Controllers
                 {
                     case "text":
                         interMsgHandler.textMsgReceived(userId, sessionId, message, timestamp);
-                        await POIProxyPushNotifier.textMsgReceived(userList, sessionId, message, timestamp);
+                        POIProxyPushNotifier.textMsgReceived(userList, sessionId, message, timestamp);
                         await POIProxyToWxApi.textMsgReceived(userList, sessionId, message);
                         break;
 
                     case "image":
                         interMsgHandler.imageMsgReceived(userId, sessionId, mediaId, timestamp);
-                        await POIProxyPushNotifier.imageMsgReceived(userList, sessionId, mediaId, timestamp);
+                        POIProxyPushNotifier.imageMsgReceived(userList, sessionId, mediaId, timestamp);
                         await POIProxyToWxApi.imageMsgReceived(userList, sessionId, mediaId);
                         break;
 
                     case "voice":
                         interMsgHandler.voiceMsgReceived(userId, sessionId, mediaId, timestamp);
-                        await POIProxyPushNotifier.voiceMsgReceived(userList, sessionId, mediaId, timestamp);
+                        POIProxyPushNotifier.voiceMsgReceived(userList, sessionId, mediaId, timestamp);
                         await POIProxyToWxApi.voiceMsgReceived(userList, sessionId, mediaId);
                         break;
 
                     case "illustration":
                         interMsgHandler.illustrationMsgReceived(userId, sessionId, mediaId, timestamp);
-                        await POIProxyPushNotifier.illustrationMsgReceived(userList, sessionId, mediaId, timestamp);
+                        POIProxyPushNotifier.illustrationMsgReceived(userList, sessionId, mediaId, timestamp);
                         await POIProxyToWxApi.illustrationMsgReceived(userList, sessionId, mediaId);
                         break;
                 }
@@ -110,7 +111,7 @@ namespace POIProxy.Controllers
                         hubContext.Clients.Group("session_" + sessionId)
                             .interactiveSessionRatedAndEnded(userId, sessionId, rating);
 
-                        await POIProxyPushNotifier.sessionRated(sessionId, rating);
+                        POIProxyPushNotifier.sessionRated(sessionId, rating);
 
                         break;
 
@@ -141,7 +142,7 @@ namespace POIProxy.Controllers
                         hubContext.Clients.Group("session_" + sessionId)
                             .interactiveSessionEnded(userId, sessionId);
 
-                        await POIProxyPushNotifier.sessionEnded(sessionId);
+                        POIProxyPushNotifier.sessionEnded(sessionId);
 
                         break;
 
@@ -221,17 +222,15 @@ namespace POIProxy.Controllers
             string presId = result.Item1;
             string sessionId = result.Item2;
 
-            PPLog.infoLog("Description is " + description);
-
-            PPLog.infoLog("Session created!: " + sessionId);
+            PPLog.infoLog("Session created!: " + sessionId + "Description is " + description);
 
             //Notify the weixin user the connection has been created
-            await POIProxyToWxApi.interactiveSessionCreated(userId, sessionId);
+            //await POIProxyToWxApi.interactiveSessionCreated(userId, sessionId);
 
             //Make the session open after everything is ready
             interMsgHandler.updateSessionStatus(sessionId, "open");
 
-            await POIProxyPushNotifier.sessionCreated(sessionId);
+            POIProxyPushNotifier.sessionCreated(sessionId);
         }
 
         private async Task wxJoinInteractiveSession(string userId, string sessionId)
@@ -279,7 +278,7 @@ namespace POIProxy.Controllers
                 await POIProxyToWxApi.interactiveSessionNewUserJoined(userId, sessionId, userInfoJson);
 
                 //Send push notification
-                await POIProxyPushNotifier.sessionJoined(sessionId);
+                POIProxyPushNotifier.sessionJoined(sessionId);
             }
             else
             {
@@ -312,7 +311,7 @@ namespace POIProxy.Controllers
             //Make the session open after everything is ready
             interMsgHandler.updateSessionStatus(newSessionId, "open");
 
-            await POIProxyPushNotifier.sessionCreated(newSessionId);
+            POIProxyPushNotifier.sessionCreated(newSessionId);
         }
 
         public string DictToString<T, V>(IEnumerable<KeyValuePair<T, V>> items, string format)

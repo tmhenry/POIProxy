@@ -38,7 +38,7 @@ namespace POIProxy
                 await POIProxyToWxApi.textMsgReceived(Clients.Caller.userId, sessionId, message);
 
                 //Send push notification
-                //await POIProxyPushNotifier.textMsgReceived(sessionId, message);
+                POIProxyPushNotifier.textMsgReceived(POIProxySessionManager.getUsersBySessionId(sessionId),sessionId, message, timestamp);
             }
             else
             {
@@ -64,7 +64,7 @@ namespace POIProxy
                 await POIProxyToWxApi.imageMsgReceived(Clients.Caller.userId, sessionId, mediaId);
 
                 //Send push notification
-                await POIProxyPushNotifier.imageMsgReceived(sessionId);
+                POIProxyPushNotifier.imageMsgReceived(POIProxySessionManager.getUsersBySessionId(sessionId), sessionId, mediaId, timestamp);
             }
             else
             {
@@ -89,7 +89,7 @@ namespace POIProxy
                 await POIProxyToWxApi.voiceMsgReceived(Clients.Caller.userId, sessionId, mediaId);
 
                 //Send push notification
-                await POIProxyPushNotifier.voiceMsgReceived(sessionId);
+                POIProxyPushNotifier.voiceMsgReceived(POIProxySessionManager.getUsersBySessionId(sessionId), sessionId, mediaId, timestamp);
             }
             else
             {
@@ -114,7 +114,7 @@ namespace POIProxy
                 await POIProxyToWxApi.illustrationMsgReceived(Clients.Caller.userId, sessionId, mediaId);
 
                 //Send push notification
-                await POIProxyPushNotifier.illustrationMsgReceived(sessionId);
+                POIProxyPushNotifier.illustrationMsgReceived(POIProxySessionManager.getUsersBySessionId(sessionId), sessionId, mediaId, timestamp);
             }
             else
             {
@@ -146,7 +146,7 @@ namespace POIProxy
             //Make the session open after everything is ready
             interMsgHandler.updateSessionStatus(sessionId, "open");
 
-            await POIProxyPushNotifier.sessionCreated(sessionId);
+            POIProxyPushNotifier.sessionCreated(sessionId);
         }
 
         public async Task joinInteractiveSession(string sessionId)
@@ -204,7 +204,7 @@ namespace POIProxy
                 await POIProxyToWxApi.interactiveSessionNewUserJoined(Clients.Caller.userId, sessionId, userInfoJson);
 
                 //Send push notification
-                await POIProxyPushNotifier.sessionJoined(sessionId);
+                POIProxyPushNotifier.sessionJoined(sessionId);
             }
             else
             {
@@ -227,7 +227,7 @@ namespace POIProxy
             PPLog.infoLog("[POIProxyHub endInteractiveSession] sessionId: " + sessionId + " userid:" + Clients.Caller.userId);
 
             //Send push notification
-            await POIProxyPushNotifier.sessionEnded(sessionId);
+            POIProxyPushNotifier.sessionEnded(sessionId);
         }
 
         public async Task rateAndEndInteractiveSession(string sessionId, int rating)
@@ -241,7 +241,7 @@ namespace POIProxy
             PPLog.infoLog("[POIProxyHub rateAndEndInteractiveSession] session: " + sessionId + " userid:" + Clients.Caller.userId);
 
             //Send push notification
-            await POIProxyPushNotifier.sessionRated(sessionId, rating);
+            POIProxyPushNotifier.sessionRated(sessionId, rating);
         }
 
         public async Task reraiseInteractiveSession(string sessionId)
@@ -267,7 +267,7 @@ namespace POIProxy
             //Make the session open after everything is ready
             interMsgHandler.updateSessionStatus(newSessionId, "open");
 
-            await POIProxyPushNotifier.sessionCreated(newSessionId);
+            POIProxyPushNotifier.sessionCreated(newSessionId);
         }
 
         public async Task syncClient(string sessionListJson)

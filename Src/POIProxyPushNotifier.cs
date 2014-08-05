@@ -12,7 +12,6 @@ using Parse;
 using com.igetui.api.openservice;
 using com.igetui.api.openservice.igetui;
 using com.igetui.api.openservice.igetui.template;
-using com.igetui.api.openservice.igetui.Target;
 using System.Web.Configuration;
 
 namespace POIProxy
@@ -27,164 +26,60 @@ namespace POIProxy
         private static String HOST = WebConfigurationManager.AppSettings["getuiHost"];                              //HOST：OpenService接口地址
 
         //Note: user list needs to be json encoded list of user ids
-        public async static Task sendPushNotification(string sessionId, string message)
-        {
-            try
-            {
-                //Send ios push
-                var iosPush = new ParsePush();
-
-                iosPush.Query = from installation in ParseInstallation.Query
-                                where installation.DeviceType == "ios"
-                                select installation;
-
-                iosPush.Data = new Dictionary<string, object> {
-                    {"alert", message},
-                    {"sound", "cheering.caf"},
-                    {"sessionId", sessionId},
-                    {"action", "com.poi.login.HANDLE_NOTIFICATION"}
-                };
-
-                iosPush.Channels = new List<string> { "session_" + sessionId };
-
-                await iosPush.SendAsync();
-            }
-            catch (Exception e)
-            {
-                PPLog.errorLog("Push to ios: " + e.Message);
-            }
-
-            try
-            {
-                //Send android push
-                var androidPush = new ParsePush();
-
-                androidPush.Query = from installation in ParseInstallation.Query
-                                    where installation.DeviceType == "android"
-                                    select installation;
-
-                androidPush.Data = new Dictionary<string, object> {
-                    {"message", message},
-                    {"sessionId", sessionId},
-                    {"action", "com.poi.login.HANDLE_NOTIFICATION"}
-                };
-
-                androidPush.Channels = new List<string> { "session_" + sessionId };
-
-                await androidPush.SendAsync();
-            }
-            catch (Exception e)
-            {
-                PPLog.errorLog("Push to android: " + e.Message);
-            }
-
-        }
-
-        public static async Task broadcastNotification(string sessionId, string message)
-        {
-            try
-            {
-                //Send ios push
-                var iosPush = new ParsePush();
-
-                iosPush.Query = from installation in ParseInstallation.Query
-                                where installation.DeviceType == "ios"
-                                select installation;
-
-                iosPush.Data = new Dictionary<string, object> {
-                    {"alert", message},
-                    {"sound", "cheering.caf"},
-                    {"sessionId", sessionId},
-                    {"action", "com.poi.login.HANDLE_NOTIFICATION"}
-                };
-
-                iosPush.Channels = new List<string> { "broadcast" };
-
-                await iosPush.SendAsync();
-            }
-            catch (Exception e)
-            {
-                PPLog.errorLog("Push to ios: " + e.Message);
-            }
-
-            try
-            {
-                //Send android push
-                var androidPush = new ParsePush();
-
-                androidPush.Query = from installation in ParseInstallation.Query
-                                    where installation.DeviceType == "android"
-                                    select installation;
-
-                androidPush.Data = new Dictionary<string, object> {
-                    {"message", message},
-                    {"sessionId", sessionId},
-                    {"action", "com.poi.login.HANDLE_NOTIFICATION"}
-                };
-
-                androidPush.Channels = new List<string> { "broadcast" };
-
-                await androidPush.SendAsync();
-            }
-            catch (Exception e)
-            {
-                PPLog.errorLog("Push to android: " + e.Message);
-            }
-        }
-
-        public static async Task textMsgReceived(List<string> userId, string sessionId, string message, double timestamp)
+        public static void textMsgReceived(List<string> userId, string sessionId, string message, double timestamp)
         {
             //await sendPushNotification(sessionId, "收到文字消息");
-            sendPushNotificationTest(userId, sessionId, message, timestamp);
+            sendPushNotification(userId, sessionId, message, timestamp);
         }
 
-        public static async Task imageMsgReceived(List<string> userId, string sessionId, string mediaId, double timestamp)
+        public static void imageMsgReceived(List<string> userId, string sessionId, string mediaId, double timestamp)
         {
-            await sendPushNotification(sessionId, "收到图片消息");
+            sendPushNotification(userId, sessionId, "收到图片消息", timestamp);
         }
 
-        public static async Task voiceMsgReceived(List<string> userId, string sessionId, string mediaId, double timestamp)
+        public static void voiceMsgReceived(List<string> userId, string sessionId, string mediaId, double timestamp)
         {
-            await sendPushNotification(sessionId, "收到语音消息");
+            sendPushNotification(userId, sessionId, "收到语音消息", timestamp);
         }
 
-        public static async Task illustrationMsgReceived(List<string> userId, string sessionId, string mediaId, double timestamp)
+        public static void illustrationMsgReceived(List<string> userId, string sessionId, string mediaId, double timestamp)
         {
-            await sendPushNotification(sessionId, "收到白板演算消息");
+            sendPushNotification(userId, sessionId, "收到白板演算消息", timestamp);
         }
 
-        public static async Task sessionJoined(string sessionId)
+        public static void sessionJoined(string sessionId)
         {
-            await sendPushNotification(sessionId, "老师来了！");
+            //sendPushNotification(userId, sessionId, "老师来了！", timestamp);
         }
 
-        public static async Task sessionRated(string sessionId, int rating)
+        public static void sessionRated(string sessionId, int rating)
         {
-            await sendPushNotification(sessionId, "收到评分" + rating);
+            //sendPushNotification(userId, sessionId, "收到评分！" + rating, timestamp);
         }
 
-        public static async Task sessionEnded(string sessionId)
+        public static void sessionEnded(string sessionId)
         {
-            await sendPushNotification(sessionId, "解答已经结束");
+            //sendPushNotification(userId, sessionId, "解答已经结束", timestamp);
         }
 
-        public static async Task sessionCreated(string sessionId)
+        public static void sessionCreated(string sessionId)
         {
             PPLog.infoLog("[POIProxyPushNotifier sessionCreated] Session created broadcasted!");
-            await broadcastNotification(sessionId, "有题了，快来抢！");
+            broadcastNotification(sessionId, "有题了，快来抢！");
         }
 
-        public static void sendPushNotificationTest(List<string> userList, string sessionId, string message, double timestamp)
+        private static void sendPushNotification(List<string> userList, string sessionId, string message, double timestamp)
         {
             //detect is or not needed to push to app.
-            List<Target> targetList = new List<Target>();
+            List<com.igetui.api.openservice.igetui.Target> targetList = new List<com.igetui.api.openservice.igetui.Target>();
             bool needToPushApp = false;
-            foreach (string userId in userList) {
+            foreach (string userId in userList)
+            {
                 string system = POIProxySessionManager.getUserDevice(userId)["system"];
                 if (system == "ios" || system == "android")
                 {
                     needToPushApp = true;
-                    Target target = new Target();
+                    com.igetui.api.openservice.igetui.Target target = new com.igetui.api.openservice.igetui.Target();
                     target.appId = APPID;
                     target.clientId = POIProxySessionManager.getUserDevice(userId)["clientId"];
                     targetList.Add(target);
@@ -195,7 +90,8 @@ namespace POIProxy
                 }
             }
 
-            if (needToPushApp) {
+            if (needToPushApp)
+            {
                 TransmissionTemplate transMissionTemplate = transmissionTemplate(message);
 
                 IGtPush push = new IGtPush(HOST, APPKEY, MASTERSECRET);
@@ -208,7 +104,45 @@ namespace POIProxy
                 String pushResult = push.pushMessageToList(contentId, targetList);
                 PPLog.debugLog("push to APP result：" + pushResult);
             }
-            
+
+        }
+
+        private static void broadcastNotification(string sessionId, string content)
+        {
+            IGtPush push = new IGtPush(HOST, APPKEY, MASTERSECRET);
+
+            AppMessage message = new AppMessage();
+
+            TransmissionTemplate template = transmissionTemplate(content);
+
+            message.IsOffline = true;                         // 用户当前不在线时，是否离线存储,可选
+            message.OfflineExpireTime = 1000 * 3600 * 24 * 10;            // 离线有效时间，单位为毫秒，可选
+            message.Data = template;
+
+            List<String> appIdList = new List<string>();
+            appIdList.Add(APPID);
+
+            List<String> phoneTypeList = new List<string>();    //通知接收者的手机操作系统类型
+            phoneTypeList.Add("ANDROID");
+            phoneTypeList.Add("IOS");
+
+            List<String> provinceList = new List<string>();     //通知接收者所在省份
+            //provinceList.Add("浙江");
+            //provinceList.Add("上海");
+            //provinceList.Add("北京");
+
+            List<String> tagList = new List<string>();
+            //tagList.Add("开心");
+
+            message.AppIdList = appIdList;
+            message.PhoneTypeList = phoneTypeList;
+            message.ProvinceList = provinceList;
+            message.TagList = tagList;
+
+
+            String pushResult = push.pushMessageToApp(message);
+            System.Console.WriteLine("-----------------------------------------------");
+            System.Console.WriteLine("服务端返回结果：" + pushResult);
         }
 
         public static TransmissionTemplate transmissionTemplate(String message)
