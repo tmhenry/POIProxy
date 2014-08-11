@@ -18,7 +18,7 @@ namespace POIProxy.Controllers
         JavaScriptSerializer jsonHandler = new JavaScriptSerializer();
         private string baseUrl = WebConfigurationManager.AppSettings["ProxyHost"] + ":" + WebConfigurationManager.AppSettings["ProxyPort"] + "/api/WxToProxy/";
         private enum resource { SESSIONS, MESSAGES, USERS, SERVICES};
-        private enum sessionType { CREATE, JOIN, END, CANCEL, UPDATE, RERAISE, RATING_RECIVED };
+        private enum sessionType { CREATE, JOIN, END, CANCEL, UPDATE, RERAISE, RATING};
         private enum messageType { TEXT, IMAGE, VOICE, ILLUSTRATION};
         private enum serviceType { SYSTEM };
         private enum userType { UPDATE };
@@ -152,6 +152,7 @@ namespace POIProxy.Controllers
                     sessionType = type,
                     msgId = msgId,
                     userId = userId,
+                    userInfo = jsonHandler.Serialize(POIProxySessionManager.getUserInfo(userId)),
                     sessionId = sessionId,
                     timestamp = timestamp,
                 });
@@ -162,7 +163,7 @@ namespace POIProxy.Controllers
                     userList.Remove(userId);
                     switch (type)
                     {
-                        case (int)sessionType.RATING_RECIVED:
+                        case (int)sessionType.RATING:
                             //Update the database
                             sessionId = msgInfo["sessionId"];
                             userId = msgInfo["userId"];
@@ -201,11 +202,11 @@ namespace POIProxy.Controllers
                             break;
 
                         case (int)sessionType.END:
-                            sessionId = msgInfo["sessionId"];
                             PPLog.infoLog("Session ended: " + sessionId);
                             userId = msgInfo["userId"];
                             interMsgHandler.endInteractiveSession(msgId, userId, sessionId);
-                            await POIProxyToWxApi.interactiveSessionEnded(userId, sessionId);
+                            var sessionInfo = POIProxySessionManager.getSessionInfo(sessionId);
+                            await POIProxyToWxApi.interactiveSessionEnded(sessionInfo["creator"], sessionId);
                             POIProxyPushNotifier.send(userList, pushMsg);
 
                             break;
@@ -213,7 +214,7 @@ namespace POIProxy.Controllers
                         //Join and create operation received from weixin 
                         case (int)sessionType.JOIN:
                             sessionId = msgInfo["sessionId"];
-                            var sessionInfo = POIProxySessionManager.getSessionInfo(sessionId);
+                            sessionInfo = POIProxySessionManager.getSessionInfo(sessionId);
                             errcode = await wxJoinInteractiveSession(msgInfo, sessionInfo, pushMsg, userList);
                             if(errcode == (int)errorCode.SUCCESS)
                                 returnContent = jsonHandler.Serialize(POIProxySessionManager.getSessionArchive(sessionId));
@@ -241,7 +242,7 @@ namespace POIProxy.Controllers
                         case (int)sessionType.RERAISE:
                             sessionId = msgInfo["sessionId"];
                             userId = msgInfo["userId"];
-                            await wxReraiseInteractiveSession(msgInfo, pushMsg);
+                            await wxReraiseInteractiveSession(msgInfo, userList, pushMsg);
 
                             break;
                     } 
@@ -407,9 +408,6 @@ namespace POIProxy.Controllers
                 //Notify the weixin users about the join operation
                 await POIProxyToWxApi.interactiveSessionJoined(userId, sessionId);
 
-                /*hubContext.Clients.Group("session_" + sessionId).
-                    interactiveSessionNewUserJoined(userId, sessionId, userInfoJson, timestamp);*/
-
                 //Notify the wexin server about the join operation
                 await POIProxyToWxApi.interactiveSessionNewUserJoined(sessionInfo["creator"], sessionId, userInfoJson);
 
@@ -426,7 +424,7 @@ namespace POIProxy.Controllers
             }
         }
 
-        private async Task wxReraiseInteractiveSession(Dictionary<string, string> msgInfo, string pushMsg)
+        private async Task wxReraiseInteractiveSession(Dictionary<string, string> msgInfo, List<string> userList, string pushMsg)
         {
             string newSessionId = interMsgHandler.duplicateInteractiveSession(msgInfo["sessionId"], double.Parse(msgInfo["timestamp"]));
             interMsgHandler.reraiseInteractiveSession(msgInfo["msgId"], msgInfo["userId"], msgInfo["sessionId"], newSessionId, double.Parse(msgInfo["timestamp"]));
@@ -449,6 +447,7 @@ namespace POIProxy.Controllers
             //interMsgHandler.updateSessionStatus(newSessionId, "open");
 
             //to be updated.
+            POIProxyPushNotifier.send(userList, pushMsg);
             POIProxyPushNotifier.broadcast(pushMsg);
         }
 

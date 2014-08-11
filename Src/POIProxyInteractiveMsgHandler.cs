@@ -515,6 +515,7 @@ namespace POIProxy
             {
                 //EventIndex = EventList.Count,
                 EventType = "session_ended",
+                EventId = msgId,
                 UserId = userId,
                 Timestamp = timestamp
             };

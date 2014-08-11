@@ -78,8 +78,6 @@ namespace POIProxy
 
         public static async Task interactiveSessionNewUserJoined(string userId, string sessionId, string userInfo)
         {
-            PPLog.infoLog("Sending new user joined message to wxApi.php");
-
             NameValueCollection values = new NameValueCollection();
             values["userId"] = userId;
             values["sessionId"] = sessionId;
