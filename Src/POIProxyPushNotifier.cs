@@ -22,53 +22,9 @@ namespace POIProxy
         private static String APPID = WebConfigurationManager.AppSettings["getuiAppId"];                            //您应用的AppId
         private static String APPKEY = WebConfigurationManager.AppSettings["getuiAppKey"];                          //您应用的AppKey
         private static String MASTERSECRET = WebConfigurationManager.AppSettings["getuiMasterSecret"];              //您应用的MasterSecret 
-        private static String CLIENTID = "3f2e7654c014e39a53c05fc22ff8bc359b67026d5525fe85e51b7460b76a139c";        //您获取的clientID
         private static String HOST = WebConfigurationManager.AppSettings["getuiHost"];                              //HOST：OpenService接口地址
 
-        //Note: user list needs to be json encoded list of user ids
-        public static void textMsgReceived(List<string> userId, string sessionId, string message, double timestamp)
-        {
-            //await sendPushNotification(sessionId, "收到文字消息");
-            sendPushNotification(userId, sessionId, message, timestamp);
-        }
-
-        public static void imageMsgReceived(List<string> userId, string sessionId, string mediaId, double timestamp)
-        {
-            sendPushNotification(userId, sessionId, "收到图片消息", timestamp);
-        }
-
-        public static void voiceMsgReceived(List<string> userId, string sessionId, string mediaId, double timestamp)
-        {
-            sendPushNotification(userId, sessionId, "收到语音消息", timestamp);
-        }
-
-        public static void illustrationMsgReceived(List<string> userId, string sessionId, string mediaId, double timestamp)
-        {
-            sendPushNotification(userId, sessionId, "收到白板演算消息", timestamp);
-        }
-
-        public static void sessionJoined(string sessionId)
-        {
-            //sendPushNotification(userId, sessionId, "老师来了！", timestamp);
-        }
-
-        public static void sessionRated(string sessionId, int rating)
-        {
-            //sendPushNotification(userId, sessionId, "收到评分！" + rating, timestamp);
-        }
-
-        public static void sessionEnded(string sessionId)
-        {
-            //sendPushNotification(userId, sessionId, "解答已经结束", timestamp);
-        }
-
-        public static void sessionCreated(string sessionId)
-        {
-            PPLog.infoLog("[POIProxyPushNotifier sessionCreated] Session created broadcasted!");
-            broadcastNotification(sessionId, "有题了，快来抢！");
-        }
-
-        private static void sendPushNotification(List<string> userList, string sessionId, string message, double timestamp)
+        public static void send(List<string> userList, string message)
         {
             //detect is or not needed to push to app.
             List<com.igetui.api.openservice.igetui.Target> targetList = new List<com.igetui.api.openservice.igetui.Target>();
@@ -81,7 +37,7 @@ namespace POIProxy
                     needToPushApp = true;
                     com.igetui.api.openservice.igetui.Target target = new com.igetui.api.openservice.igetui.Target();
                     target.appId = APPID;
-                    target.clientId = POIProxySessionManager.getUserDevice(userId)["clientId"];
+                    target.clientId = POIProxySessionManager.getUserDevice(userId)["deviceId"];
                     targetList.Add(target);
                 }
                 else
@@ -102,21 +58,19 @@ namespace POIProxy
 
                 String contentId = push.getContentId(listMessage);
                 String pushResult = push.pushMessageToList(contentId, targetList);
-                PPLog.debugLog("push to APP result：" + pushResult);
+                PPLog.infoLog("[POIProxyPushNotifier]  push to app result: " + pushResult);
             }
 
         }
 
-        private static void broadcastNotification(string sessionId, string content)
+        public static void broadcast(string pushMsg)
         {
-            IGtPush push = new IGtPush(HOST, APPKEY, MASTERSECRET);
+            TransmissionTemplate template = transmissionTemplate(pushMsg);
+            NotificationTemplate notificationMsg = notificationTemplate(pushMsg);
 
             AppMessage message = new AppMessage();
-
-            TransmissionTemplate template = transmissionTemplate(content);
-
-            message.IsOffline = true;                         // 用户当前不在线时，是否离线存储,可选
-            message.OfflineExpireTime = 1000 * 3600 * 24 * 10;            // 离线有效时间，单位为毫秒，可选
+            message.IsOffline = true;                                       // 用户当前不在线时，是否离线存储,可选
+            message.OfflineExpireTime = 1000 * 3600 * 24 * 10;              // 离线有效时间，单位为毫秒，可选
             message.Data = template;
 
             List<String> appIdList = new List<string>();
@@ -139,10 +93,9 @@ namespace POIProxy
             message.ProvinceList = provinceList;
             message.TagList = tagList;
 
-
+            IGtPush push = new IGtPush(HOST, APPKEY, MASTERSECRET);
             String pushResult = push.pushMessageToApp(message);
-            System.Console.WriteLine("-----------------------------------------------");
-            System.Console.WriteLine("服务端返回结果：" + pushResult);
+            PPLog.infoLog("[POIProxyPushNotifier] Session created broadcasted result: " + pushResult);
         }
 
         public static TransmissionTemplate transmissionTemplate(String message)
@@ -154,7 +107,7 @@ namespace POIProxy
             template.TransmissionContent = message;  //透传内容
             //iOS推送需要的pushInfo字段
             //template.setPushInfo(actionLocKey, badge, message, sound, payload, locKey, locArgs, launchImage);
-            //template.setPushInfo("", 4, "", "", "", "", "", "");
+            //template.setPushInfo("", 1, "新消息", "", message, "", "", "");
             return template;
         }
 
@@ -164,15 +117,16 @@ namespace POIProxy
             NotificationTemplate template = new NotificationTemplate();
             template.AppId = APPID;
             template.AppKey = APPKEY;
-            template.Title = "优问答文字消息";         //通知栏标题
-            template.Text = message;          //通知栏内容
+            template.Title = "黄欢";         //通知栏标题
+            template.Text = "黄欢";          //通知栏内容
             template.Logo = "";               //通知栏显示本地图片
             template.LogoURL = "";                    //通知栏显示网络图标
 
             template.TransmissionType = "1";          //应用启动类型，1：强制应用启动  2：等待应用启动
-            template.TransmissionContent = "sessionId:1100";   //透传内容
+            template.TransmissionContent = message;   //透传内容
             //iOS推送需要的pushInfo字段
             //template.setPushInfo(actionLocKey, badge, message, sound, payload, locKey, locArgs, launchImage);
+            template.setPushInfo("", 1, "新消息", "", "", "", "", "");
 
             template.IsRing = true;                //接收到消息是否响铃，true：响铃 false：不响铃
             template.IsVibrate = true;               //接收到消息是否震动，true：震动 false：不震动

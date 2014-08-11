@@ -28,7 +28,7 @@ namespace POIProxy
                     outFile.Write(str);
                 }
 
-                PPLog.infoLog("File is : " + fileName);
+                //PPLog.infoLog("File is : " + fileName);
 
                 //Upload the file to cdn
                 return uploadFileToQiniuCDN(key, fileName);
@@ -44,7 +44,6 @@ namespace POIProxy
         {
             string bucket = WebConfigurationManager.AppSettings["QiniuBucket"];
 
-            PPLog.debugLog("Bucket is : " + bucket);
             var policy = new PutPolicy(bucket, 3600);
 
             string upToken = policy.Token();
@@ -54,20 +53,20 @@ namespace POIProxy
             IOClient client = new IOClient();
             PutRet ret = client.PutFile(upToken, key, fileName, extra);
 
-            PPLog.debugLog("Bucket is : " + bucket);
+            /*PPLog.debugLog("Bucket is : " + bucket);
             PPLog.debugLog("Key is : " + ret.key);
             PPLog.debugLog("Response is : " + ret.Response);
             PPLog.debugLog("Status code is : " + ret.StatusCode);
-            PPLog.debugLog("Hash is : " + ret.Hash);
+            PPLog.debugLog("Hash is : " + ret.Hash);*/
 
 
             if (ret.OK)
             {
-                PPLog.infoLog("Upload successful ");
+                //PPLog.infoLog("Upload successful ");
             }
             else
             {
-                PPLog.infoLog("Cannot upload ");
+                PPLog.infoLog("Upload failed. ");
             }
 
             return ret.key;

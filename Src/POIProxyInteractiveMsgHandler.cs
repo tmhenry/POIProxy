@@ -199,7 +199,7 @@ namespace POIProxy
             return dbManager.selectSingleRowFromTable("session", null, conditions);
         }
 
-        public Tuple<string,string> createInteractiveSession(string userId, string mediaId, 
+        public Tuple<string,string> createInteractiveSession(string msgId, string userId, string mediaId, 
             string desc, string accessType = "private")
         {
             double timestamp = POITimestamp.ConvertToUnixTimestamp(DateTime.Now);
@@ -220,7 +220,7 @@ namespace POIProxy
             values["presId"] = presId;
             values["creator"] = userId;
             values["create_at"] = timestamp;
-            values["status"] = "created";
+            values["status"] = "open";
 
             string sessionId = dbManager.insertIntoTable("session", values);
 
@@ -255,6 +255,7 @@ namespace POIProxy
             {
                 //EventIndex = EventList.Count,
                 EventType = "session_created",
+                EventId = msgId.ToString(),
                 MediaId = "",
                 UserId = userId,
                 Timestamp = timestamp,
@@ -262,7 +263,7 @@ namespace POIProxy
                 Data = infoDict
             };
 
-            POIProxySessionManager.archiveSessionEvent(sessionId, poiEvent, timestamp);
+            POIProxySessionManager.archiveSessionEvent(sessionId, poiEvent);
 
             //Subscribe the user to the session
             POIProxySessionManager.subscribeSession(sessionId, userId);
@@ -273,7 +274,7 @@ namespace POIProxy
             return new Tuple<string,string>(presId, sessionId);
         }
 
-        public void joinInteractiveSession(string userId, string sessionId, double timestamp)
+        public void joinInteractiveSession(string msgId, string userId, string sessionId, double timestamp)
         {
             //add the current user into the session table
             addUserToSessionRecord(userId, sessionId);
@@ -285,6 +286,7 @@ namespace POIProxy
             POIInteractiveEvent poiEvent = new POIInteractiveEvent
             {
                 EventType = "session_joined",
+                EventId = msgId,
                 MediaId = "",
                 UserId = userId,
                 Timestamp = timestamp,
@@ -292,7 +294,7 @@ namespace POIProxy
                 Data = POIProxySessionManager.getUserInfo(userId)
             };
 
-            POIProxySessionManager.archiveSessionEvent(sessionId, poiEvent, timestamp);
+            POIProxySessionManager.archiveSessionEvent(sessionId, poiEvent);
 
             //Subscribe the user to the session
             POIProxySessionManager.subscribeSession(sessionId, userId);
@@ -301,8 +303,11 @@ namespace POIProxy
             addAnswerActivity(userId, sessionId);
         }
 
-        public void cancelInteractiveSession(string userId, string sessionId)
+        public void cancelInteractiveSession(Dictionary<string,string>msgInfo)
         {
+            string msgId = msgInfo["msgId"];
+            string userId = msgInfo["userId"];
+            string sessionId = msgInfo["sessionId"];
             double timestamp = POITimestamp.ConvertToUnixTimestamp(DateTime.Now);
 
             //Set the status to cancelled
@@ -328,14 +333,15 @@ namespace POIProxy
             POIInteractiveEvent cancelEvent = new POIInteractiveEvent
             {
                 EventType = "session_cancelled",
+                EventId = msgId,
                 UserId = userId,
                 Timestamp = timestamp,
             };
 
-            POIProxySessionManager.archiveSessionEvent(sessionId, cancelEvent, timestamp);
+            POIProxySessionManager.archiveSessionEvent(sessionId, cancelEvent);
         }
 
-        public void reraiseInteractiveSession(string userId, string sessionId, string newSessionId, double timestamp)
+        public void reraiseInteractiveSession(string msgId, string userId, string sessionId, string newSessionId, double timestamp)
         {
             //Set the status to cancelled for the initial session
             updateSessionStatus(sessionId, "cancelled");
@@ -347,11 +353,12 @@ namespace POIProxy
             POIInteractiveEvent cancelEvent = new POIInteractiveEvent
             {
                 EventType = "session_cancelled",
+                EventId = msgId,
                 UserId = userId,
                 Timestamp = timestamp,
             };
 
-            POIProxySessionManager.archiveSessionEvent(sessionId, cancelEvent, timestamp);
+            POIProxySessionManager.archiveSessionEvent(sessionId, cancelEvent);
 
             Dictionary<string, string> info = POIProxySessionManager.getSessionInfo(sessionId);
 
@@ -388,6 +395,7 @@ namespace POIProxy
             {
                 //EventIndex = EventList.Count,
                 EventType = "session_created",
+                EventId = msgId,
                 MediaId = "",
                 UserId = userId,
                 Timestamp = timestamp,
@@ -395,7 +403,7 @@ namespace POIProxy
                 Data = POIProxySessionManager.getSessionInfo(newSessionId)
             };
 
-            POIProxySessionManager.archiveSessionEvent(newSessionId, createEvent, timestamp);
+            POIProxySessionManager.archiveSessionEvent(newSessionId, createEvent);
         }
 
         public bool checkAndProcessArchiveDuringSessionEnd(string sessionId)
@@ -460,7 +468,7 @@ namespace POIProxy
                 values["presId"] = result["presId"];
                 values["creator"] = result["creator"];
                 values["create_at"] = timestamp;
-                values["status"] = "created";
+                values["status"] = "open";
 
                 return dbManager.insertIntoTable("session", values);
             }
@@ -489,7 +497,7 @@ namespace POIProxy
 
         
 
-        public void endInteractiveSession(string userId, string sessionId)
+        public void endInteractiveSession(string msgId, string userId, string sessionId)
         {
             if (POIProxySessionManager.checkPrivateTutoring(sessionId))
             {
@@ -511,12 +519,16 @@ namespace POIProxy
                 Timestamp = timestamp
             };
 
-            POIProxySessionManager.archiveSessionEvent(sessionId, endEvent, timestamp);
+            POIProxySessionManager.archiveSessionEvent(sessionId, endEvent);
         }
 
-        public void rateInteractiveSession(string userId, string sessionId, int rating)
+        public void rateInteractiveSession(Dictionary<string,string> msgInfo)
         {
-            PPLog.debugLog("rateInteractiveSession: userId: "+userId+" sessionId: "+sessionId+ " rating: "+rating);
+            string msgId = msgInfo["msgId"];
+            string userId = msgInfo["userId"];
+            string sessionId = msgInfo["sessionId"];
+            int rating = Convert.ToInt32(msgInfo["rating"]);
+            PPLog.debugLog("rateInteractiveSession: userId: " + userId + " sessionId: " + sessionId + " rating: " + rating);
             if (POIProxySessionManager.checkPrivateTutoring(sessionId))
             {
                 //Check if the session is in serving status
@@ -536,7 +548,7 @@ namespace POIProxy
             {
                 if (checkSessionOpen(sessionId))
                 {
-                    cancelInteractiveSession(userId, sessionId);
+                    cancelInteractiveSession(msgInfo);
                 }
                 else
                 {
@@ -550,6 +562,7 @@ namespace POIProxy
             POIInteractiveEvent rateEvent = new POIInteractiveEvent
             {
                 EventType = "session_rated",
+                EventId = msgId,
                 UserId = userId,
                 Timestamp = timestamp,
                 Data = new Dictionary<string, string>
@@ -558,7 +571,7 @@ namespace POIProxy
                 }
             };
 
-            POIProxySessionManager.archiveSessionEvent(sessionId, rateEvent, timestamp);
+            POIProxySessionManager.archiveSessionEvent(sessionId, rateEvent);
 
             //Update the session info with rating
             POIProxySessionManager.updateSessionInfo(sessionId, new Dictionary<string, string>
@@ -575,59 +588,63 @@ namespace POIProxy
         }
 
         //Functions for sending messages
-        public void textMsgReceived(string userId, string sessionId, string message, double timestamp)
+        public void textMsgReceived(string msgId, string userId, string sessionId, string message, double timestamp)
         {
             POIInteractiveEvent poiEvent = new POIInteractiveEvent
             {
                 EventType = "text",
+                EventId = msgId,
                 UserId = userId,
                 Timestamp = timestamp,
                 Message = message
             };
 
-            POIProxySessionManager.archiveSessionEvent(sessionId, poiEvent, timestamp);
+            POIProxySessionManager.archiveSessionEvent(sessionId, poiEvent);
         }
 
-        public void imageMsgReceived(string userId, string sessionId, string mediaId, double timestamp)
+        public void imageMsgReceived(string msgId, string userId, string sessionId, string mediaId, double timestamp)
         {
             POIInteractiveEvent poiEvent = new POIInteractiveEvent
             {
                 //EventIndex = EventList.Count,
                 EventType = "image",
+                EventId = msgId,
                 MediaId = mediaId,
                 UserId = userId,
                 Timestamp = timestamp,
             };
 
-            POIProxySessionManager.archiveSessionEvent(sessionId, poiEvent, timestamp);
+            POIProxySessionManager.archiveSessionEvent(sessionId, poiEvent);
         }
 
-        public void voiceMsgReceived(string userId, string sessionId, string mediaId, double timestamp)
+        public void voiceMsgReceived(string msgId, string userId, string sessionId, string mediaId, double timestamp)
         {
             POIInteractiveEvent poiEvent = new POIInteractiveEvent
             {
                 //EventIndex = EventList.Count,
                 EventType = "voice",
+                EventId = msgId,
                 MediaId = mediaId,
                 UserId = userId,
                 Timestamp = timestamp,
             };
 
-            POIProxySessionManager.archiveSessionEvent(sessionId, poiEvent, timestamp);
+            POIProxySessionManager.archiveSessionEvent(sessionId, poiEvent);
         }
 
-        public void illustrationMsgReceived(string userId, string sessionId, string mediaId, double timestamp)
+        public void illustrationMsgReceived(string msgId, string userId, string sessionId, string mediaId, double timestamp)
         {
             POIInteractiveEvent poiEvent = new POIInteractiveEvent
             {
                 //EventIndex = EventList.Count,
                 EventType = "illustration",
+                EventId = msgId,
                 MediaId = mediaId,
                 UserId = userId,
                 Timestamp = timestamp,
             };
 
-            POIProxySessionManager.archiveSessionEvent(sessionId, poiEvent, timestamp);
+            POIProxySessionManager.archiveSessionEvent(sessionId, poiEvent);
         }
 
         public List<POIInteractiveEvent> getMissedEventsInSession(string sessionId, double timestamp)

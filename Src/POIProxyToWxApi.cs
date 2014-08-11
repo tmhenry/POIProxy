@@ -19,47 +19,38 @@ namespace POIProxy
 
         private async static Task sendReq(NameValueCollection postVal)
         {
-            PPLog.infoLog("[POIProxyToWxApi sendReq] WxApi.php base req url is: " + baseReqUrl);
-            postVal["appProxy"] = "Yes";
-
-            /*
-            using (WebClient client = new WebClient())
+            string userId = postVal["userId"];
+            string system = POIProxySessionManager.getUserDevice(userId)["system"];
+            if (system != "ios" && system != "android")
             {
-                client.Proxy = null;
+                postVal["appProxy"] = "Yes";
 
-                try
+                using (var client = new HttpClient())
                 {
-                    PPLog.infoLog("post val is : " + postVal);
-                    await client.UploadValuesTaskAsync(baseReqUrl, postVal);
-                }
-                catch (WebException ex)
-                {
-                    PPLog.infoLog(ex);
-                }
-            }*/
+                    var values = new List<KeyValuePair<string, string>>();
+                    foreach (string key in postVal.Keys)
+                    {
+                        values.Add(new KeyValuePair<string, string>(key, postVal[key]));
+                    }
 
-            using (var client = new HttpClient())
-            {
-                var values = new List<KeyValuePair<string, string>>();
-                foreach (string key in postVal.Keys)
-                {
-                    values.Add(new KeyValuePair<string, string>(key, postVal[key]));
-                }
+                    try
+                    {
+                        var content = new FormUrlEncodedContent(values);
+                        var response = await client.PostAsync(baseReqUrl, content);
 
-                try
-                {
-                    var content = new FormUrlEncodedContent(values);
-                    var response = await client.PostAsync(baseReqUrl, content);
+                        var responseStr = await response.Content.ReadAsStringAsync();
 
-                    var responseStr = await response.Content.ReadAsStringAsync();
+                        PPLog.infoLog("[POIProxyToWxApi]  push to weixin result: " + responseStr);
+                    }
+                    catch (Exception e)
+                    {
+                        PPLog.errorLog(e.Message);
+                    }
 
-                    PPLog.infoLog("[POIProxyToWxApi sendReq] responseStr:" + responseStr);
                 }
-                catch(Exception e)
-                {
-                    PPLog.errorLog(e.Message);
-                }
-                
+            }
+            else {
+                //PPLog.infoLog("[POIProxyToWxApi sendReq] userId is not weixin User");
             }
         }
 
@@ -159,19 +150,16 @@ namespace POIProxy
         {
             //the best way here is passing userList to weixin when multi weixin users join.so we don't consider here.
             foreach (string userId in userList) {
-                string system = POIProxySessionManager.getUserDevice(userId)["system"];
-                if (system == "weixin") {
-                    NameValueCollection values = new NameValueCollection();
-                    values["userId"] = userId;
-                    values["sessionId"] = sessionId;
-                    values["msgType"] = msgType;
-                    values["message"] = message;
-                    values["mediaId"] = mediaId;
+                NameValueCollection values = new NameValueCollection();
+                values["userId"] = userId;
+                values["sessionId"] = sessionId;
+                values["msgType"] = msgType;
+                values["message"] = message;
+                values["mediaId"] = mediaId;
 
-                    values["reqType"] = "msgReceived";
+                values["reqType"] = "msgReceived";
 
-                    await sendReq(values);
-                }
+                await sendReq(values);
             }
         }
 

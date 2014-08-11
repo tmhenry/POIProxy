@@ -22,11 +22,11 @@ namespace POIProxy
         static POIProxyInteractiveMsgHandler interMsgHandler = POIGlobalVar.Kernel.myInterMsgHandler;
         JavaScriptSerializer jsonHandler = new JavaScriptSerializer();
 
-        public async Task textMsgReceived(string sessionId, string message, double timestamp)
+        public async Task textMsgReceived(string sessionId, string message, double timestamp, string messageId)
         {
-            if (!POIProxySessionManager.checkEventExists(sessionId, timestamp))
+            if (!POIProxySessionManager.checkEventExists(sessionId, messageId))
             {
-                interMsgHandler.textMsgReceived(Clients.Caller.userId, sessionId, message, timestamp);
+                interMsgHandler.textMsgReceived(messageId, Clients.Caller.userId, sessionId, message, timestamp);
 
                 Clients.Group("session_" + sessionId, Context.ConnectionId).
                     textMsgReceived(Clients.Caller.userId, sessionId, message, timestamp);
@@ -38,7 +38,7 @@ namespace POIProxy
                 await POIProxyToWxApi.textMsgReceived(Clients.Caller.userId, sessionId, message);
 
                 //Send push notification
-                POIProxyPushNotifier.textMsgReceived(POIProxySessionManager.getUsersBySessionId(sessionId),sessionId, message, timestamp);
+                //POIProxyPushNotifier.textMsgReceived(POIProxySessionManager.getUsersBySessionId(sessionId),sessionId, message, timestamp);
             }
             else
             {
@@ -49,11 +49,11 @@ namespace POIProxy
             
         }
 
-        public async Task imageMsgReceived(string sessionId, string mediaId, double timestamp)
+        public async Task imageMsgReceived(string sessionId, string mediaId, double timestamp, string messageId)
         {
-            if (!POIProxySessionManager.checkEventExists(sessionId, timestamp))
+            if (!POIProxySessionManager.checkEventExists(sessionId, messageId))
             {
-                interMsgHandler.imageMsgReceived(Clients.Caller.userId, sessionId, mediaId, timestamp);
+                interMsgHandler.imageMsgReceived(messageId, Clients.Caller.userId, sessionId, mediaId, timestamp);
 
                 Clients.Group("session_" + sessionId, Context.ConnectionId).
                     imageMsgReceived(Clients.Caller.userId, sessionId, mediaId, timestamp);
@@ -64,7 +64,7 @@ namespace POIProxy
                 await POIProxyToWxApi.imageMsgReceived(Clients.Caller.userId, sessionId, mediaId);
 
                 //Send push notification
-                POIProxyPushNotifier.imageMsgReceived(POIProxySessionManager.getUsersBySessionId(sessionId), sessionId, mediaId, timestamp);
+                //POIProxyPushNotifier.imageMsgReceived(POIProxySessionManager.getUsersBySessionId(sessionId), sessionId, mediaId, timestamp);
             }
             else
             {
@@ -74,11 +74,11 @@ namespace POIProxy
             }
         }
 
-        public async Task voiceMsgReceived(string sessionId, string mediaId, double timestamp)
+        public async Task voiceMsgReceived(string sessionId, string mediaId, double timestamp, string messageId)
         {
-            if (!POIProxySessionManager.checkEventExists(sessionId, timestamp))
+            if (!POIProxySessionManager.checkEventExists(sessionId, messageId))
             {
-                interMsgHandler.voiceMsgReceived(Clients.Caller.userId, sessionId, mediaId, timestamp);
+                interMsgHandler.voiceMsgReceived(messageId, Clients.Caller.userId, sessionId, mediaId, timestamp);
 
                 Clients.Group("session_" + sessionId, Context.ConnectionId).
                     voiceMsgReceived(Clients.Caller.userId, sessionId, mediaId, timestamp);
@@ -89,7 +89,7 @@ namespace POIProxy
                 await POIProxyToWxApi.voiceMsgReceived(Clients.Caller.userId, sessionId, mediaId);
 
                 //Send push notification
-                POIProxyPushNotifier.voiceMsgReceived(POIProxySessionManager.getUsersBySessionId(sessionId), sessionId, mediaId, timestamp);
+                //POIProxyPushNotifier.voiceMsgReceived(POIProxySessionManager.getUsersBySessionId(sessionId), sessionId, mediaId, timestamp);
             }
             else
             {
@@ -99,11 +99,11 @@ namespace POIProxy
             }
         }
 
-        public async Task illustrationMsgReceived(string sessionId, string mediaId, double timestamp)
+        public async Task illustrationMsgReceived(string sessionId, string mediaId, double timestamp, string messageId)
         {
-            if (!POIProxySessionManager.checkEventExists(sessionId, timestamp))
+            if (!POIProxySessionManager.checkEventExists(sessionId, messageId))
             {
-                interMsgHandler.illustrationMsgReceived(Clients.Caller.userId, sessionId, mediaId, timestamp);
+                interMsgHandler.illustrationMsgReceived(messageId, Clients.Caller.userId, sessionId, mediaId, timestamp);
 
                 Clients.Group("session_" + sessionId, Context.ConnectionId).
                     illustrationMsgReceived(Clients.Caller.userId, sessionId, mediaId, timestamp);
@@ -114,7 +114,7 @@ namespace POIProxy
                 await POIProxyToWxApi.illustrationMsgReceived(Clients.Caller.userId, sessionId, mediaId);
 
                 //Send push notification
-                POIProxyPushNotifier.illustrationMsgReceived(POIProxySessionManager.getUsersBySessionId(sessionId), sessionId, mediaId, timestamp);
+                //POIProxyPushNotifier.illustrationMsgReceived(POIProxySessionManager.getUsersBySessionId(sessionId), sessionId, mediaId, timestamp);
             }
             else
             {
@@ -124,7 +124,7 @@ namespace POIProxy
             }
         }
 
-        public async Task createInteractiveSession(string mediaId, string description)
+        public async Task createInteractiveSession(string mediaId, string description, string msgId)
         {
             string accessType = "group";
             
@@ -146,10 +146,10 @@ namespace POIProxy
             //Make the session open after everything is ready
             interMsgHandler.updateSessionStatus(sessionId, "open");
 
-            POIProxyPushNotifier.sessionCreated(sessionId);
+            //POIProxyPushNotifier.sessionCreated(sessionId);
         }
 
-        public async Task joinInteractiveSession(string sessionId)
+        public async Task joinInteractiveSession(string sessionId, string msgId)
         {
             var archiveInfo = POIProxySessionManager.getSessionInfo(sessionId);
             if (string.IsNullOrEmpty(Clients.Caller.userId))
@@ -183,7 +183,7 @@ namespace POIProxy
                 
                 double timestamp = POITimestamp.ConvertToUnixTimestamp(DateTime.Now);
 
-                interMsgHandler.joinInteractiveSession(Clients.Caller.userId, sessionId, timestamp);
+                interMsgHandler.joinInteractiveSession(msgId, Clients.Caller.userId, sessionId, timestamp);
                 //var userInfo = interMsgHandler.getUserInfoById(Clients.Caller.userId);
                 var userInfo = POIProxySessionManager.getUserInfo(Clients.Caller.userId);
 
@@ -204,7 +204,7 @@ namespace POIProxy
                 await POIProxyToWxApi.interactiveSessionNewUserJoined(Clients.Caller.userId, sessionId, userInfoJson);
 
                 //Send push notification
-                POIProxyPushNotifier.sessionJoined(sessionId);
+                //POIProxyPushNotifier.sessionJoined(sessionId);
             }
             else
             {
@@ -213,10 +213,10 @@ namespace POIProxy
             }
         }
 
-        public async Task endInteractiveSession(string sessionId)
+        public async Task endInteractiveSession(string sessionId, string msgId)
         {
             //Update the database
-            interMsgHandler.endInteractiveSession(Clients.Caller.userId, sessionId);
+            interMsgHandler.endInteractiveSession(msgId, Clients.Caller.userId, sessionId);
 
             //Send notification to all clients in the session
             Clients.Group("session_" + sessionId, Context.ConnectionId)
@@ -227,13 +227,13 @@ namespace POIProxy
             PPLog.infoLog("[POIProxyHub endInteractiveSession] sessionId: " + sessionId + " userid:" + Clients.Caller.userId);
 
             //Send push notification
-            POIProxyPushNotifier.sessionEnded(sessionId);
+            //POIProxyPushNotifier.sessionEnded(sessionId);
         }
 
-        public async Task rateAndEndInteractiveSession(string sessionId, int rating)
+        public async Task rateAndEndInteractiveSession(string sessionId, int rating, string msgId)
         {
             //Update the database
-            interMsgHandler.rateInteractiveSession(Clients.Caller.userId, sessionId, rating);
+            //interMsgHandler.rateInteractiveSession(msgId, Clients.Caller.userId, sessionId, rating);
 
             //Send notification to all clients in the session
             Clients.Group("session_" + sessionId, Context.ConnectionId)
@@ -241,14 +241,14 @@ namespace POIProxy
             PPLog.infoLog("[POIProxyHub rateAndEndInteractiveSession] session: " + sessionId + " userid:" + Clients.Caller.userId);
 
             //Send push notification
-            POIProxyPushNotifier.sessionRated(sessionId, rating);
+            //POIProxyPushNotifier.sessionRated(sessionId, rating);
         }
 
-        public async Task reraiseInteractiveSession(string sessionId)
+        public async Task reraiseInteractiveSession(string sessionId, string msgId)
         {
             double timestamp = POITimestamp.ConvertToUnixTimestamp(DateTime.Now);
             string newSessionId = interMsgHandler.duplicateInteractiveSession(sessionId, timestamp);
-            await interMsgHandler.reraiseInteractiveSession(Clients.Caller.userId, sessionId, newSessionId, timestamp);
+            await interMsgHandler.reraiseInteractiveSession(msgId, Clients.Caller.userId, sessionId, newSessionId, timestamp);
 
             //Add the student to the session group
             await Groups.Add(Context.ConnectionId, "session_" + newSessionId);
@@ -267,10 +267,10 @@ namespace POIProxy
             //Make the session open after everything is ready
             interMsgHandler.updateSessionStatus(newSessionId, "open");
 
-            POIProxyPushNotifier.sessionCreated(newSessionId);
+            //POIProxyPushNotifier.sessionCreated(newSessionId);
         }
 
-        public async Task syncClient(string sessionListJson)
+        public async Task syncClient(string sessionListJson, string msgId)
         {
             string userId = Clients.Caller.userId;
             PPLog.infoLog("[POIProxyHub syncClient] userId: " + userId + " session list from client is :" + sessionListJson);
@@ -325,7 +325,7 @@ namespace POIProxy
             
         }
 
-        public void unsubscribeSession(string sessionId)
+        public void unsubscribeSession(string sessionId, string msgId)
         {
             //Deregister connection id from the session group
             Groups.Remove(Context.ConnectionId, "session_" + sessionId);
@@ -392,7 +392,7 @@ namespace POIProxy
             {
                 //Handling user reconnecting
                 //PPLog.infoLog("[POIProxyHub OnReconnected] Client " + info["userId"] + " reconnected");
-                PPLog.infoLog("[POIProxyHub OnReconnected] Client reconnected");
+                //PPLog.infoLog("[POIProxyHub OnReconnected] Client reconnected");
             }
             catch (Exception e)
             {

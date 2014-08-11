@@ -232,6 +232,7 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="Global.asax" />
+    <None Include="Properties\PublishProfiles\Alibaba.112.124.14.229_8091.pubxml" />
     <None Include="Properties\PublishProfiles\Alibaba.14.229_8094.pubxml" />
     <None Include="Properties\PublishProfiles\Alibaba14.229.pubxml" />
     <None Include="Properties\PublishProfiles\Alibaba14.229_8092.pubxml" />

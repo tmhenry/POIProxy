@@ -32,7 +32,7 @@ namespace POIProxy
             {
                 int maxNumUsers = checkPrivateTutoring(sessionId) ? 1 : 10;
 
-                PPLog.infoLog("In acquire session token, total is " + maxNumUsers);
+                //PPLog.infoLog("In acquire session token, total is " + maxNumUsers);
                 
                 if (redisClient.Increment("session_user_count:" + sessionId, 1) <= maxNumUsers)
                 {
@@ -129,12 +129,12 @@ namespace POIProxy
             }
         }
 
-        public static void archiveSessionEvent(string sessionId, POIInteractiveEvent poiEvent, double timestamp)
+        public static void archiveSessionEvent(string sessionId, POIInteractiveEvent poiEvent)
         {
             using (var redisClient = redisManager.GetClient())
             {
-                var eventList = redisClient.As<POIInteractiveEvent>().GetHash<double>("archive:event_list:" + sessionId);
-                eventList[timestamp] = poiEvent;
+                var eventList = redisClient.As<POIInteractiveEvent>().GetHash<string>("archive:event_list:" + sessionId);
+                eventList[poiEvent.EventId] = poiEvent;
             }
         }
 
@@ -142,19 +142,19 @@ namespace POIProxy
         {
             using (var redisClient = redisManager.GetClient())
             {
-                var eventList = redisClient.As<POIInteractiveEvent>().GetHash<double>("archive:event_list:" + sessionId);
+                var eventList = redisClient.As<POIInteractiveEvent>().GetHash<string>("archive:event_list:" + sessionId);
                 return eventList.Values.ToList();
             }
         }
 
-        public static bool checkEventExists(string sessionId, double timestamp)
+        public static bool checkEventExists(string sessionId, string eventId)
         {
             using (var redisClient = redisManager.GetClient())
             {
-                var eventList = redisClient.As<POIInteractiveEvent>().GetHash<double>("archive:event_list:" + sessionId);
+                var eventList = redisClient.As<POIInteractiveEvent>().GetHash<string>("archive:event_list:" + sessionId);
                 if (eventList != null)
                 {
-                    return eventList.ContainsKey(timestamp);
+                    return eventList.ContainsKey(eventId);
                 }
                 else
                 {
@@ -169,7 +169,7 @@ namespace POIProxy
             {
                 var userInfo = redisClient.Hashes["user:" + userId];
 
-                if (userInfo.Count == 0 || !userInfo.ContainsKey("user_id") || !userInfo.ContainsKey("username") || !userInfo.ContainsKey("avatar"))
+                if (userInfo.Count == 0 || !userInfo.ContainsKey("user_id") || !userInfo.ContainsKey("username") || !userInfo.ContainsKey("avatar") || !userInfo.ContainsKey("accessRight"))
                 {
                     Dictionary<string, object> conditions = new Dictionary<string, object>();
                     List<string> cols = new List<string>();
@@ -177,15 +177,16 @@ namespace POIProxy
                     conditions["id"] = userId;
                     cols.Add("username");
                     cols.Add("avatar");
-
+                    cols.Add("accessRight");
                     DataRow user = dbManager.selectSingleRowFromTable("users", cols, conditions);
                     if (user != null)
                     {
-                        PPLog.infoLog("Read user info from db");
+                        PPLog.infoLog("Read user info from mysql");
                         //Read user info from db and save into redis
                         userInfo["user_id"] = userId;
-                        userInfo["username"] = user["username"] as string;
-                        userInfo["avatar"] = user["avatar"] as string;
+                        userInfo["username"] = user["username"].ToString();
+                        userInfo["avatar"] = user["avatar"].ToString();
+                        userInfo["accessRight"] = user["accessRight"].ToString();
 
                         //Find the user profile 
                         conditions.Clear();
