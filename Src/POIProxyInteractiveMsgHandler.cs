@@ -529,7 +529,7 @@ namespace POIProxy
             string userId = msgInfo["userId"];
             string sessionId = msgInfo["sessionId"];
             int rating = Convert.ToInt32(msgInfo["rating"]);
-            PPLog.debugLog("rateInteractiveSession: userId: " + userId + " sessionId: " + sessionId + " rating: " + rating);
+            //PPLog.debugLog("rateInteractiveSession: userId: " + userId + " sessionId: " + sessionId + " rating: " + rating);
             if (POIProxySessionManager.checkPrivateTutoring(sessionId))
             {
                 //Check if the session is in serving status
