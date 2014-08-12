@@ -27,7 +27,7 @@ namespace POIProxy.Controllers
             TIME_LIMITED = 1001, 
             ALREADY_JOINED = 1002, 
             TAKEN_BY_OTHERS = 1003, 
-            FORBIDDEN_JOIN = 1004,
+            STUDENT_CANNOT_JOIN = 1004,
             TUTOR_CANNOT_RATING = 1005,
             STUDENT_CANNOT_END = 1006 };
 
@@ -229,11 +229,7 @@ namespace POIProxy.Controllers
                             string presId = result.Item1;
                             sessionId = result.Item2;
 
-                            Dictionary<string, string> tempDic = jsonHandler.Deserialize<Dictionary<string, string>>(pushMsg);
-                            tempDic["sessionId"] = sessionId;
-                            pushMsg = jsonHandler.Serialize(tempDic);
-
-                            //POIProxyPushNotifier.broadcast(pushMsg);
+                            broadCastCreateSession(sessionId, pushMsg);
                             returnContent = jsonHandler.Serialize(new { sessionId = sessionId, timestamp = timestamp });
                             break;
 
@@ -323,6 +319,7 @@ namespace POIProxy.Controllers
                     serviceType = serviceType,
                     msgId = msgId,
                     title = title,
+                    message = message,
                     mediaId = mediaId,
                     url = url,
                     timestamp = timestamp,
@@ -371,7 +368,7 @@ namespace POIProxy.Controllers
             }
             else if (userInfo["accessRight"] != "tutor") {
                 PPLog.infoLog("[POIProxyHub wxJoinInteractiveSession] forbidden join");
-                return (int)errorCode.FORBIDDEN_JOIN;
+                return (int)errorCode.STUDENT_CANNOT_JOIN;
             }
             else if (POIProxySessionManager.acquireSessionToken(sessionId))
             {
@@ -424,10 +421,15 @@ namespace POIProxy.Controllers
 
             //to be updated.
             POIProxyPushNotifier.send(userList, pushMsg);
+            broadCastCreateSession(newSessionId, pushMsg);
+        }
+
+        private void broadCastCreateSession(string sessionId, string pushMsg)
+        {
             Dictionary<string, string> tempDic = jsonHandler.Deserialize<Dictionary<string, string>>(pushMsg);
-            tempDic["sessionType"] = sessionType.CREATE.ToString();
-            tempDic["sessionId"] = newSessionId;
+            tempDic["sessionId"] = sessionId;
             pushMsg = jsonHandler.Serialize(tempDic);
+
             POIProxyPushNotifier.broadcast(pushMsg);
         }
 
