@@ -30,7 +30,8 @@ namespace POIProxy
         {
             using (var redisClient = redisManager.GetClient())
             {
-                int maxNumUsers = checkPrivateTutoring(sessionId) ? 1 : 10;
+                //int maxNumUsers = checkPrivateTutoring(sessionId) ? 1 : 10;
+                int maxNumUsers = 1;
 
                 //PPLog.infoLog("In acquire session token, total is " + maxNumUsers);
                 

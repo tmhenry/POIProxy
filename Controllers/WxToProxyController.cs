@@ -20,7 +20,7 @@ namespace POIProxy.Controllers
         private enum resource { SESSIONS, MESSAGES, USERS, SERVICES};
         private enum sessionType { CREATE, JOIN, END, CANCEL, UPDATE, RERAISE, RATING};
         private enum messageType { TEXT, IMAGE, VOICE, ILLUSTRATION};
-        private enum serviceType { SYSTEM };
+        private enum serviceType { SYSTEM, ACTION, NEWS, EXTRA };
         private enum userType { UPDATE };
         private enum errorCode { 
             SUCCESS = 0, 
@@ -29,7 +29,8 @@ namespace POIProxy.Controllers
             TAKEN_BY_OTHERS = 1003, 
             STUDENT_CANNOT_JOIN = 1004,
             TUTOR_CANNOT_RATING = 1005,
-            STUDENT_CANNOT_END = 1006 };
+            STUDENT_CANNOT_END = 1006,
+            SESSION_NOT_OPEN };
 
         [HttpPost]
         public HttpResponseMessage Post(HttpRequestMessage request)
@@ -234,9 +235,14 @@ namespace POIProxy.Controllers
                             break;
 
                         case (int)sessionType.RERAISE:
-                            sessionId = msgInfo["sessionId"];
-                            userId = msgInfo["userId"];
-                            await wxReraiseInteractiveSession(msgInfo, userList, pushMsg);
+                            string newSessionId = interMsgHandler.duplicateInteractiveSession(sessionId, timestamp);
+                            interMsgHandler.reraiseInteractiveSession(msgId, userId, sessionId, newSessionId, timestamp);
+                            //Notify the student about interactive session reraised
+                            await POIProxyToWxApi.interactiveSessionReraised(userId, sessionId, newSessionId);
+
+                            POIProxyPushNotifier.send(userList, pushMsg);
+                            broadCastCreateSession(newSessionId, pushMsg);
+                            returnContent = jsonHandler.Serialize(new { sessionId = newSessionId, timestamp = timestamp });
                             break;
                     } 
                     var response = Request.CreateResponse(HttpStatusCode.OK);
@@ -349,7 +355,7 @@ namespace POIProxy.Controllers
             var userInfo = POIProxySessionManager.getUserInfo(userId);
             string userInfoJson = jsonHandler.Serialize(userInfo);
 
-            /*if (double.Parse(sessionInfo["create_at"])
+            if (double.Parse(sessionInfo["create_at"])
                 >= POITimestamp.ConvertToUnixTimestamp(DateTime.Now.AddSeconds(-60)))
             {
                 PPLog.infoLog("Cannot join the session, not passing time limit");
@@ -357,7 +363,12 @@ namespace POIProxy.Controllers
                 await POIProxyToWxApi.interactiveSessionJoinBeforeTimeLimit(userId, sessionId);
                 return (int) errorCode.TIME_LIMITED;
             }
-            else */if (POIProxySessionManager.checkUserInSession(sessionId, userId))
+            else if (!interMsgHandler.checkSessionOpen(sessionId))
+            {
+                PPLog.infoLog("[POIProxyHub wxJoinInteractiveSession] session status is not open");
+                return (int)errorCode.SESSION_NOT_OPEN;
+            }
+            else if (POIProxySessionManager.checkUserInSession(sessionId, userId))
             {
                 //User already in the session
                 PPLog.infoLog("[POIProxyHub wxJoinInteractiveSession] Session already joined");
@@ -397,36 +408,10 @@ namespace POIProxy.Controllers
             }
         }
 
-        private async Task wxReraiseInteractiveSession(Dictionary<string, string> msgInfo, List<string> userList, string pushMsg)
-        {
-            string newSessionId = interMsgHandler.duplicateInteractiveSession(msgInfo["sessionId"], double.Parse(msgInfo["timestamp"]));
-            interMsgHandler.reraiseInteractiveSession(msgInfo["msgId"], msgInfo["userId"], msgInfo["sessionId"], newSessionId, double.Parse(msgInfo["timestamp"]));
-
-            //Notify the student about interactive session reraised
-            await POIProxyToWxApi.interactiveSessionReraised(msgInfo["userId"], msgInfo["sessionId"], newSessionId);
-
-            /*hubContext.Clients.Group("session_" + sessionId).
-                textMsgReceived(userId, sessionId,
-                "志愿者你好，同学已经取消了这次提问，取消的提问不会影响你的积分", timestamp);*/
-
-            //Notify the signalr users about the cancel operation
-            /*hubContext.Clients.Group("session_" + sessionId).
-                interactiveSessionCancelled(sessionId);*/
-
-            //Notify the weixin users about the cancel operation
-            //await POIProxyToWxApi.interactiveSessionCancelled(msgInfo["userId"], msgInfo["sessionId"]);
-
-            //Make the session open after everything is ready
-            //interMsgHandler.updateSessionStatus(newSessionId, "open");
-
-            //to be updated.
-            POIProxyPushNotifier.send(userList, pushMsg);
-            broadCastCreateSession(newSessionId, pushMsg);
-        }
-
         private void broadCastCreateSession(string sessionId, string pushMsg)
         {
-            Dictionary<string, string> tempDic = jsonHandler.Deserialize<Dictionary<string, string>>(pushMsg);
+            Dictionary<string, object> tempDic = jsonHandler.Deserialize<Dictionary<string, object>>(pushMsg);
+            tempDic["sessionType"] = sessionType.CREATE;
             tempDic["sessionId"] = sessionId;
             pushMsg = jsonHandler.Serialize(tempDic);
 

@@ -107,7 +107,7 @@ namespace POIProxy
             template.TransmissionContent = message;  //透传内容
             //iOS推送需要的pushInfo字段
             //template.setPushInfo(actionLocKey, badge, message, sound, payload, locKey, locArgs, launchImage);
-            //template.setPushInfo("", 1, "新消息", "", message, "", "", "");
+            template.setPushInfo("", 1, "新题目提醒", "", "", "", "", "");
             return template;
         }
 
