@@ -30,7 +30,7 @@ namespace POIProxy.Controllers
             STUDENT_CANNOT_JOIN = 1004,
             TUTOR_CANNOT_RATING = 1005,
             STUDENT_CANNOT_END = 1006,
-            SESSION_NOT_OPEN };
+            SESSION_NOT_OPEN = 1007 };
 
         [HttpPost]
         public HttpResponseMessage Post(HttpRequestMessage request)
@@ -355,7 +355,7 @@ namespace POIProxy.Controllers
             var userInfo = POIProxySessionManager.getUserInfo(userId);
             string userInfoJson = jsonHandler.Serialize(userInfo);
 
-            if (double.Parse(sessionInfo["create_at"])
+            /*if (double.Parse(sessionInfo["create_at"])
                 >= POITimestamp.ConvertToUnixTimestamp(DateTime.Now.AddSeconds(-60)))
             {
                 PPLog.infoLog("Cannot join the session, not passing time limit");
@@ -363,7 +363,7 @@ namespace POIProxy.Controllers
                 await POIProxyToWxApi.interactiveSessionJoinBeforeTimeLimit(userId, sessionId);
                 return (int) errorCode.TIME_LIMITED;
             }
-            else if (!interMsgHandler.checkSessionOpen(sessionId))
+            else */if (!interMsgHandler.checkSessionOpen(sessionId))
             {
                 PPLog.infoLog("[POIProxyHub wxJoinInteractiveSession] session status is not open");
                 return (int)errorCode.SESSION_NOT_OPEN;
