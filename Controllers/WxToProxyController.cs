@@ -67,6 +67,7 @@ namespace POIProxy.Controllers
                 int msgType = int.Parse(msgInfo["msgType"]);
                 string message = msgInfo["message"];
                 string mediaId = msgInfo["mediaId"];
+                float mediaDuration = msgInfo.ContainsKey("mediaDuration") ? float.Parse(msgInfo["mediaDuration"]) : 0;
                 //double timestamp = double.Parse(msgInfo["timestamp"]);
                 double timestamp = POITimestamp.ConvertToUnixTimestamp(DateTime.Now);
                 string pushMsg= jsonHandler.Serialize(new {
@@ -77,6 +78,7 @@ namespace POIProxy.Controllers
                     msgType = msgType,
                     message = message,
                     mediaId = mediaId,
+                    mediaDuration = mediaDuration,
                     timestamp = timestamp
                 });
 
@@ -100,7 +102,7 @@ namespace POIProxy.Controllers
                             break;
 
                         case (int) messageType.VOICE:
-                            interMsgHandler.voiceMsgReceived(msgId, userId, sessionId, mediaId, timestamp);
+                            interMsgHandler.voiceMsgReceived(msgId, userId, sessionId, mediaId, timestamp, mediaDuration);
                             POIProxyPushNotifier.send(userList, pushMsg);
                             await POIProxyToWxApi.voiceMsgReceived(userList, sessionId, mediaId);
                             break;
@@ -226,7 +228,7 @@ namespace POIProxy.Controllers
 
                         case (int)sessionType.CREATE:
                             Tuple<string, string> result = interMsgHandler.
-                            createInteractiveSession(msgInfo["msgId"], msgInfo["userId"], msgInfo["mediaId"], msgInfo["description"], "private");
+                                createInteractiveSession(msgId, userId, msgInfo["mediaId"], msgInfo["description"], "private", msgInfo.ContainsKey("filter") ? msgInfo["filter"]:"");
                             string presId = result.Item1;
                             sessionId = result.Item2;
 

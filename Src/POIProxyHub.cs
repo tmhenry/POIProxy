@@ -78,7 +78,7 @@ namespace POIProxy
         {
             if (!POIProxySessionManager.checkEventExists(sessionId, messageId))
             {
-                interMsgHandler.voiceMsgReceived(messageId, Clients.Caller.userId, sessionId, mediaId, timestamp);
+                //interMsgHandler.voiceMsgReceived(messageId, Clients.Caller.userId, sessionId, mediaId, timestamp);
 
                 Clients.Group("session_" + sessionId, Context.ConnectionId).
                     voiceMsgReceived(Clients.Caller.userId, sessionId, mediaId, timestamp);
@@ -230,7 +230,7 @@ namespace POIProxy
             //POIProxyPushNotifier.sessionEnded(sessionId);
         }
 
-        public async Task rateAndEndInteractiveSession(string sessionId, int rating, string msgId)
+        public void rateAndEndInteractiveSession(string sessionId, int rating, string msgId)
         {
             //Update the database
             //interMsgHandler.rateInteractiveSession(msgId, Clients.Caller.userId, sessionId, rating);

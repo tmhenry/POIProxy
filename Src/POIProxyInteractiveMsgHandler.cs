@@ -200,7 +200,7 @@ namespace POIProxy
         }
 
         public Tuple<string,string> createInteractiveSession(string msgId, string userId, string mediaId, 
-            string desc, string accessType = "private")
+            string desc, string accessType = "private", string filter = "")
         {
             double timestamp = POITimestamp.ConvertToUnixTimestamp(DateTime.Now);
 
@@ -223,6 +223,17 @@ namespace POIProxy
             values["status"] = "open";
 
             string sessionId = dbManager.insertIntoTable("session", values);
+
+            if (filter != "") {
+                Dictionary<string, string> filterInfo = jsonHandler.Deserialize<Dictionary<string, string>>(filter);
+                values.Clear();
+                values["pid"] = presId;
+                values["gid"] = filterInfo["gid"];
+                values["sid"] = filterInfo["sid"];
+                values["cid"] = filterInfo["cid"];
+                PPLog.debugLog("filterInfo: " + values["gid"] + values["sid"] + values["cid"]);
+                dbManager.insertIntoTable("pres_category", values);
+            }
 
             //Insert record into the database for the user to session relationship
             addUserToSessionRecord(userId, sessionId);
@@ -618,7 +629,7 @@ namespace POIProxy
             POIProxySessionManager.archiveSessionEvent(sessionId, poiEvent);
         }
 
-        public void voiceMsgReceived(string msgId, string userId, string sessionId, string mediaId, double timestamp)
+        public void voiceMsgReceived(string msgId, string userId, string sessionId, string mediaId, double timestamp, float mediaDuration)
         {
             POIInteractiveEvent poiEvent = new POIInteractiveEvent
             {
@@ -626,6 +637,7 @@ namespace POIProxy
                 EventType = "voice",
                 EventId = msgId,
                 MediaId = mediaId,
+                MediaDuration = mediaDuration,
                 UserId = userId,
                 Timestamp = timestamp,
             };
