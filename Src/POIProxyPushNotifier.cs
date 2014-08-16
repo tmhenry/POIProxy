@@ -48,8 +48,63 @@ namespace POIProxy
 
             if (needToPushApp)
             {
-                TransmissionTemplate transMissionTemplate = transmissionTemplate(message);
-
+                JavaScriptSerializer jsonHandler = new JavaScriptSerializer();
+                Dictionary<string, string> msgInfo = jsonHandler.Deserialize<Dictionary<string, string>>(message);
+                String title = "";
+                switch (int.Parse(msgInfo["resource"]))
+                {
+                    case (int)POIGlobalVar.resource.SESSIONS:
+                        if ((int)POIGlobalVar.sessionType.JOIN ==int.Parse( msgInfo["sessionType"]))
+                        {
+                            title = "有人来帮我解决问题啦!";
+                        }
+                        else if ((int)POIGlobalVar.sessionType.RERAISE == int.Parse(msgInfo["sessionType"]))
+                        {
+                            title = "很可惜,刚才的回答被小朋友重新提问了!";
+                        }
+                        else if ((int)POIGlobalVar.sessionType.RATING == int.Parse(msgInfo["sessionType"]))
+                        {
+                            title = "您正在回答的问题获得了评分!";
+                        }
+                        else if ((int)POIGlobalVar.sessionType.END == int.Parse(msgInfo["sessionType"]))
+                        {
+                            title = "您的问题已经被解决,请为辛苦的志愿者评分^_^";
+                        }
+                        else
+                        {
+                            title = "你收到了一条信息";
+                        }
+                        break;
+                    case (int)POIGlobalVar.resource.MESSAGES:
+                        if ((int)POIGlobalVar.messageType.TEXT == int.Parse(msgInfo["msgType"]))
+                        {
+                            title = "你收到了一条文字信息";
+                        }
+                        else if ((int)POIGlobalVar.messageType.VOICE == int.Parse(msgInfo["msgType"]))
+                        {
+                            title = "你收到了一条语音信息";
+                        }
+                        else if ((int)POIGlobalVar.messageType.IMAGE == int.Parse(msgInfo["msgType"]))
+                        {
+                            title = "你收到了一条图片信息";
+                        }
+                        else if ((int)POIGlobalVar.messageType.ILLUSTRATION == int.Parse(msgInfo["msgType"]))
+                        {
+                            title = "你收到了一条讲解信息";
+                        }
+                        else 
+                        {
+                            title = "你收到了一条信息";
+                        }
+                        break;
+                    case (int)POIGlobalVar.resource.SERVICES:
+                        title = "你收到了一条系统消息";
+                        break;
+                    default:
+                        title = "新信息提醒";
+                        break;
+                }
+                TransmissionTemplate transMissionTemplate = transmissionTemplate(title,message);
                 IGtPush push = new IGtPush(HOST, APPKEY, MASTERSECRET);
                 ListMessage listMessage = new ListMessage();
                 listMessage.IsOffline = true;                                // 用户当前不在线时，是否离线存储,可选
@@ -65,7 +120,7 @@ namespace POIProxy
 
         public static void broadcast(string pushMsg)
         {
-            TransmissionTemplate template = transmissionTemplate(pushMsg);
+            TransmissionTemplate template = transmissionTemplate("有新题目啦,我来抢答!", pushMsg);
             NotificationTemplate notificationMsg = notificationTemplate(pushMsg);
 
             AppMessage message = new AppMessage();
@@ -87,6 +142,7 @@ namespace POIProxy
 
             List<String> tagList = new List<string>();
             //tagList.Add("开心");
+            tagList.Add("createSession");
 
             message.AppIdList = appIdList;
             message.PhoneTypeList = phoneTypeList;
@@ -98,7 +154,7 @@ namespace POIProxy
             PPLog.infoLog("[POIProxyPushNotifier] Session created broadcasted result: " + pushResult);
         }
 
-        public static TransmissionTemplate transmissionTemplate(String message)
+        public static TransmissionTemplate transmissionTemplate(String title, String message)
         {
             TransmissionTemplate template = new TransmissionTemplate();
             template.AppId = APPID;
@@ -107,7 +163,7 @@ namespace POIProxy
             template.TransmissionContent = message;  //透传内容
             //iOS推送需要的pushInfo字段
             //template.setPushInfo(actionLocKey, badge, message, sound, payload, locKey, locArgs, launchImage);
-            template.setPushInfo("", 1, "新题目提醒", "", "", "", "", "");
+            template.setPushInfo("", 1, title, "", "", "", "", "");
             return template;
         }
 

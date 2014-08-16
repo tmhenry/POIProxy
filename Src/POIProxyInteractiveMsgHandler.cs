@@ -224,16 +224,23 @@ namespace POIProxy
 
             string sessionId = dbManager.insertIntoTable("session", values);
 
-            if (filter != "") {
-                Dictionary<string, string> filterInfo = jsonHandler.Deserialize<Dictionary<string, string>>(filter);
-                values.Clear();
-                values["pid"] = presId;
-                values["gid"] = filterInfo["gid"];
-                values["sid"] = filterInfo["sid"];
-                values["cid"] = filterInfo["cid"];
-                PPLog.debugLog("filterInfo: " + values["gid"] + values["sid"] + values["cid"]);
-                dbManager.insertIntoTable("pres_category", values);
+            Dictionary<string, string> filterInfo = jsonHandler.Deserialize<Dictionary<string, string>>(filter);
+            values.Clear();
+            values["pid"] = presId;
+            if (filter != "")
+            {
+                values["gid"] = filterInfo.ContainsKey("gid") ? filterInfo["gid"] : null;
+                values["sid"] = filterInfo.ContainsKey("sid") ? filterInfo["sid"] : null;
+                values["cid"] = filterInfo.ContainsKey("cid") ? filterInfo["cid"] : null;
             }
+            else
+            {
+                values["gid"] = null;
+                values["sid"] = null;
+                values["cid"] = null;
+            }
+            dbManager.insertIntoTable("pres_category", values);
+            
 
             //Insert record into the database for the user to session relationship
             addUserToSessionRecord(userId, sessionId);
