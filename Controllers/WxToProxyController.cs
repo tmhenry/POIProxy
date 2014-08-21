@@ -98,6 +98,8 @@ namespace POIProxy.Controllers
                             POIProxyPushNotifier.send(userList, pushMsg);
                             await POIProxyToWxApi.illustrationMsgReceived(userList, sessionId, mediaId);
                             break;
+                        default:
+                            break;
                     }
 
                     var response = Request.CreateResponse(HttpStatusCode.OK);
@@ -232,6 +234,8 @@ namespace POIProxy.Controllers
                             broadCastCreateSession(newSessionId, pushMsg);
                             returnContent = jsonHandler.Serialize(new { sessionId = newSessionId, timestamp = timestamp });
                             break;
+                        default:
+                            break;
                     } 
                     var response = Request.CreateResponse(HttpStatusCode.OK);
                     response.StatusCode = HttpStatusCode.OK;
@@ -274,7 +278,11 @@ namespace POIProxy.Controllers
                         string deviceId = userInfo["deviceId"];
                         string userId = userInfo["userId"];
                         string system = userInfo["system"];
-                        POIProxySessionManager.updateUserDevice(userId, deviceId, system);
+                        int tag = userInfo.ContainsKey("tag") ? int.Parse(userInfo["tag"]) : 0;
+                        POIProxySessionManager.updateUserDevice(userId, deviceId, system, tag);
+                    break;
+
+                    default:
                     break;
                 }
                 var response = Request.CreateResponse(HttpStatusCode.OK);
@@ -298,7 +306,7 @@ namespace POIProxy.Controllers
             {
                 string content = request.Content.ReadAsStringAsync().Result;
                 Dictionary<string, string> serviceInfo = jsonHandler.Deserialize<Dictionary<string, string>>(content);
-                PPLog.infoLog("[ProxyController Sessions] " + DictToString(serviceInfo, null));
+                PPLog.infoLog("[ProxyController Services] " + DictToString(serviceInfo, null));
 
                 string serviceType = serviceInfo.ContainsKey("serviceType") ? serviceInfo["serviceType"] : "";
                 string msgId = serviceInfo.ContainsKey("msgId") ? serviceInfo["msgId"] : "";
@@ -349,7 +357,7 @@ namespace POIProxy.Controllers
                 PPLog.infoLog("Cannot join the session, not passing time limit");
                 //Notify the weixin user about the join failed
                 await POIProxyToWxApi.interactiveSessionJoinBeforeTimeLimit(userId, sessionId);
-                return (int) errorCode.TIME_LIMITED;
+                return (int)POIGlobalVar.errorCode.TIME_LIMITED;
             }
             else */if (!interMsgHandler.checkSessionOpen(sessionId))
             {

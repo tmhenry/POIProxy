@@ -104,23 +104,36 @@ namespace POIProxy
                         title = "新信息提醒";
                         break;
                 }
-                TransmissionTemplate transMissionTemplate = transmissionTemplate(title,message);
-                IGtPush push = new IGtPush(HOST, APPKEY, MASTERSECRET);
-                ListMessage listMessage = new ListMessage();
-                listMessage.IsOffline = true;                                // 用户当前不在线时，是否离线存储,可选
-                listMessage.OfflineExpireTime = 1000 * 3600 * 24 * 10;            // 离线有效时间，单位为毫秒，可选
-                listMessage.Data = transMissionTemplate;
-
-                String contentId = push.getContentId(listMessage);
-                String pushResult = push.pushMessageToList(contentId, targetList);
+                msgInfo["title"] = title;
+                message = jsonHandler.Serialize(msgInfo);
+                String pushResult = pushMessageToList(title, message, targetList);
                 PPLog.infoLog("[POIProxyPushNotifier]  push to app result: " + pushResult);
             }
 
         }
 
+        private static string pushMessageToList(string title, string message, List<com.igetui.api.openservice.igetui.Target> targetList)
+        {
+            TransmissionTemplate transMissionTemplate = transmissionTemplate(title, message);
+            IGtPush push = new IGtPush(HOST, APPKEY, MASTERSECRET);
+            ListMessage listMessage = new ListMessage();
+            listMessage.IsOffline = true;                                // 用户当前不在线时，是否离线存储,可选
+            listMessage.OfflineExpireTime = 1000 * 3600 * 24 * 10;            // 离线有效时间，单位为毫秒，可选
+            listMessage.Data = transMissionTemplate;
+
+            String contentId = push.getContentId(listMessage);
+            String pushResult = push.pushMessageToList(contentId, targetList);
+            return pushResult;
+        }
+
         public static void broadcast(string pushMsg)
         {
-            TransmissionTemplate template = transmissionTemplate("有新题目啦,我来抢答!", pushMsg);
+            String title = "有新题目啦,我来抢答!";
+            JavaScriptSerializer jsonHandler = new JavaScriptSerializer();
+            Dictionary<string, string> msgInfo = jsonHandler.Deserialize<Dictionary<string, string>>(pushMsg);
+            msgInfo["title"] = title;
+            pushMsg = jsonHandler.Serialize(msgInfo);
+            TransmissionTemplate template = transmissionTemplate(title, pushMsg);
             NotificationTemplate notificationMsg = notificationTemplate(pushMsg);
 
             AppMessage message = new AppMessage();
@@ -133,7 +146,7 @@ namespace POIProxy
 
             List<String> phoneTypeList = new List<string>();    //通知接收者的手机操作系统类型
             phoneTypeList.Add("ANDROID");
-            phoneTypeList.Add("IOS");
+            //phoneTypeList.Add("IOS");
 
             List<String> provinceList = new List<string>();     //通知接收者所在省份
             //provinceList.Add("浙江");
@@ -142,7 +155,6 @@ namespace POIProxy
 
             List<String> tagList = new List<string>();
             //tagList.Add("开心");
-            tagList.Add("createSession");
 
             message.AppIdList = appIdList;
             message.PhoneTypeList = phoneTypeList;
@@ -150,8 +162,19 @@ namespace POIProxy
             message.TagList = tagList;
 
             IGtPush push = new IGtPush(HOST, APPKEY, MASTERSECRET);
-            String pushResult = push.pushMessageToApp(message);
-            PPLog.infoLog("[POIProxyPushNotifier] Session created broadcasted result: " + pushResult);
+            String androidPushResult = push.pushMessageToApp(message);
+
+            List<string> deviceList = POIProxySessionManager.getDeviceBySystem("ios");
+            List<com.igetui.api.openservice.igetui.Target> targetList = new List<com.igetui.api.openservice.igetui.Target>();
+            foreach (string deviceId in deviceList)
+            {
+                com.igetui.api.openservice.igetui.Target target = new com.igetui.api.openservice.igetui.Target();
+                target.appId = APPID;
+                target.clientId = deviceId;
+                targetList.Add(target);
+            }
+            String iOSPushResult = pushMessageToList(title, pushMsg, targetList);
+            PPLog.infoLog("[POIProxyPushNotifier] Session created broadcasted result: (android)" + androidPushResult + " (iOS) " + iOSPushResult);
         }
 
         public static TransmissionTemplate transmissionTemplate(String title, String message)

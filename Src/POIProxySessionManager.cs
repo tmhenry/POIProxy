@@ -241,13 +241,30 @@ namespace POIProxy
             }
         }
 
-        public static void updateUserDevice(string userId, string deviceId, string system)
+        public static void updateUserDevice(string userId, string deviceId, string system, int tag)
         {
             using (var redisClient = redisManager.GetClient())
             {
                 var users = redisClient.Hashes["user_device:" + userId];
+                var device = redisClient.Sets["device_by_system:" + system];
+                if (users.ContainsKey("deviceId") && users["deviceId"] != "" && system == "ios") 
+                {
+                    device.Remove(users["deviceId"]);
+                }
                 users["deviceId"] = deviceId;
                 users["system"] = system;
+                users["tag"] = tag.ToString();
+
+                if (system == "ios") {
+                    if (tag == (int)POIGlobalVar.tag.SUBSCRIBED)
+                    {
+                        device.Add(deviceId);
+                    }
+                    else if (tag == (int)POIGlobalVar.tag.UNSUBSCRIBED)
+                    {
+                        device.Remove(deviceId);
+                    }
+                }
             }
         }
 
@@ -257,6 +274,14 @@ namespace POIProxy
             { 
                 var users = redisClient.Hashes["user_device:" + userId];
                 return users;
+            }
+        }
+
+        public static List<string> getDeviceBySystem(string system)
+        {
+            using (var redisClient = redisManager.GetClient())
+            {
+                return redisClient.Sets["device_by_system:" + system].ToList();
             }
         }
 
@@ -337,6 +362,8 @@ namespace POIProxy
                 }
             }
         }
+
+        
 
     }
 }
