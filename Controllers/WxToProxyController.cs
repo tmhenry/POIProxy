@@ -351,6 +351,7 @@ namespace POIProxy.Controllers
             var userInfo = POIProxySessionManager.getUserInfo(userId);
             string userInfoJson = jsonHandler.Serialize(userInfo);
 
+            PPLog.debugLog("create_at:" + sessionInfo["create_at"] + " limit time: " + DateTime.Now.AddSeconds(-60));
             if (double.Parse(sessionInfo["create_at"])
                 >= POITimestamp.ConvertToUnixTimestamp(DateTime.Now.AddSeconds(-60)))
             {
