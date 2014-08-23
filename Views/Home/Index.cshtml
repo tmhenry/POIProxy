@@ -1,0 +1,48 @@
+﻿@{
+    Layout = "IndexLayout.cshtml";
+    ViewBag.Title = "Index";
+}
+
+<!--form id="StatusForm">
+		<fieldset>
+			<legend>POI Proxy Server Status</legend>
+			<p>
+                <label for="ProxyServerIP">Proxy IP</label>
+                <input id="ProxyServerIP" name="ProxyServerIP" type="text" value="@(Model.ProxyServerIP)" disabled/>
+                <label for="ProxyServerPort">Proxy Port</label>
+                <input id="ProxyServerPort" name="ProxyServerPort" type="text" value="@(Model.ProxyServerPort)" />
+			</p>
+
+			<p>
+                <label for="DNSServer">DNS</label>
+                <input id="DNSServer" name="DNSServer" type="text" value="@(Model.DNSServer)"/>
+			</p>
+
+			<p>
+                <label for="ContentServer">Content</label>
+                <input id="ContentServer" name="ContentServer" type="text" value="@(Model.ContentServer)"/>
+			</p>
+
+			<p>
+                <label for="NumWebClients">Web Clients</label>
+                <input id="NumWebClients" name="NumWebClients" type="number" value="@(Model.NumWebClients)" disabled/>
+			</p>
+
+			<p>
+                <label for="NumMobileClients">Mobile Clients</label>
+                <input id="NumMobileClients" name="NumMobileClients" type="number" value="@(Model.NumMobileClients)" disabled/>
+			</p>
+
+            <p><input class="submit" type="submit" id="submit" name="submit" value="Submit Change" /></p>
+		</fieldset>
+</form-->
+
+<form id="LogForm">
+    <fieldset>
+        <legend>Server Log</legend>
+            <p>
+                <textarea id="ServerLog" name="ServerLog" disabled style="height: 800px;"></textarea>
+            </p>
+    </fieldset>
+
+</form>

@@ -1,0 +1,990 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<edmx:Edmx Version="3.0" xmlns:edmx="http://schemas.microsoft.com/ado/2009/11/edmx">
+  <!-- EF Runtime content -->
+  <edmx:Runtime>
+    <!-- SSDL content -->
+    <edmx:StorageModels>
+      <Schema Namespace="poiModel.Store" Alias="Self" Provider="MySql.Data.MySqlClient" ProviderManifestToken="5.5" xmlns:store="http://schemas.microsoft.com/ado/2007/12/edm/EntityStoreSchemaGenerator" xmlns="http://schemas.microsoft.com/ado/2009/11/edm/ssdl">
+        <EntityContainer Name="poiModelStoreContainer">
+          <EntitySet Name="activity" EntityType="poiModel.Store.activity" store:Type="Tables" Schema="poi" />
+          <EntitySet Name="category" EntityType="poiModel.Store.category" store:Type="Tables" Schema="poi" />
+          <EntitySet Name="content" EntityType="poiModel.Store.content" store:Type="Tables" Schema="poi" />
+          <EntitySet Name="course" EntityType="poiModel.Store.course" store:Type="Tables" Schema="poi" />
+          <EntitySet Name="device" EntityType="poiModel.Store.device" store:Type="Tables" Schema="poi" />
+          <EntitySet Name="groups" EntityType="poiModel.Store.groups" store:Type="Tables" Schema="poi" />
+          <EntitySet Name="keyword" EntityType="poiModel.Store.keyword" store:Type="Tables" Schema="poi" />
+          <EntitySet Name="login_attempts" EntityType="poiModel.Store.login_attempts" store:Type="Tables" Schema="poi" />
+          <EntitySet Name="organization" EntityType="poiModel.Store.organization" store:Type="Tables" Schema="poi" />
+          <EntitySet Name="presentation" EntityType="poiModel.Store.presentation" store:Type="Tables" Schema="poi" />
+          <EntitySet Name="relationships" EntityType="poiModel.Store.relationships" store:Type="Tables" Schema="poi" />
+          <EntitySet Name="schedule" EntityType="poiModel.Store.schedule" store:Type="Tables" Schema="poi" />
+          <EntitySet Name="server" EntityType="poiModel.Store.server" store:Type="Tables" Schema="poi" />
+          <EntitySet Name="session" EntityType="poiModel.Store.session" store:Type="Tables" Schema="poi" />
+          <EntitySet Name="sites" EntityType="poiModel.Store.sites" store:Type="Tables" Schema="poi" />
+          <EntitySet Name="tag" EntityType="poiModel.Store.tag" store:Type="Tables" Schema="poi" />
+          <EntitySet Name="tag_relationship" EntityType="poiModel.Store.tag_relationship" store:Type="Tables" Schema="poi" />
+          <EntitySet Name="token" EntityType="poiModel.Store.token" store:Type="Tables" Schema="poi" />
+          <EntitySet Name="tutor_status" EntityType="poiModel.Store.tutor_status" store:Type="Tables" Schema="poi" />
+          <EntitySet Name="user_device" EntityType="poiModel.Store.user_device" store:Type="Tables" Schema="poi" />
+          <EntitySet Name="user_match" EntityType="poiModel.Store.user_match" store:Type="Tables" Schema="poi" />
+          <EntitySet Name="user_profile" EntityType="poiModel.Store.user_profile" store:Type="Tables" Schema="poi" />
+          <EntitySet Name="user_right" EntityType="poiModel.Store.user_right" store:Type="Tables" Schema="poi" />
+          <EntitySet Name="users" EntityType="poiModel.Store.users" store:Type="Tables" Schema="poi" />
+          <EntitySet Name="users_groups" EntityType="poiModel.Store.users_groups" store:Type="Tables" Schema="poi" />
+        </EntityContainer>
+        <EntityType Name="activity">
+          <Key>
+            <PropertyRef Name="activity_id" />
+          </Key>
+          <Property Name="activity_id" Type="uint" Nullable="false" StoreGeneratedPattern="Identity" />
+          <Property Name="user_id" Type="varchar" MaxLength="32" />
+          <Property Name="type" Type="varchar" MaxLength="32" />
+          <Property Name="content_id" Type="int" />
+          <Property Name="data" Type="text" />
+          <Property Name="status" Type="char" MaxLength="1" />
+          <Property Name="create_at" Type="int" />
+          <Property Name="update_at" Type="int" />
+        </EntityType>
+        <EntityType Name="category">
+          <Key>
+            <PropertyRef Name="id" />
+          </Key>
+          <Property Name="id" Type="uint" Nullable="false" StoreGeneratedPattern="Identity" />
+          <Property Name="name" Type="varchar" MaxLength="100" />
+          <Property Name="pid" Type="int" />
+          <Property Name="amount" Type="int" />
+        </EntityType>
+        <EntityType Name="content">
+          <Key>
+            <PropertyRef Name="content_id" />
+          </Key>
+          <Property Name="content_id" Type="uint" Nullable="false" StoreGeneratedPattern="Identity" />
+          <Property Name="site_id" Type="int" />
+          <Property Name="parent_id" Type="int" />
+          <Property Name="category_id" Type="int" />
+          <Property Name="module" Type="varchar" MaxLength="32" />
+          <Property Name="type" Type="varchar" MaxLength="32" />
+          <Property Name="source" Type="char" MaxLength="16" />
+          <Property Name="order" Type="int" />
+          <Property Name="user_id" Type="varchar" MaxLength="32" />
+          <Property Name="title" Type="varchar" MaxLength="255" />
+          <Property Name="title_url" Type="varchar" MaxLength="255" />
+          <Property Name="content" Type="text" />
+          <Property Name="details" Type="varchar" MaxLength="512" />
+          <Property Name="canonical" Type="varchar" MaxLength="512" />
+          <Property Name="access" Type="char" MaxLength="1" />
+          <Property Name="comments_allow" Type="char" MaxLength="1" />
+          <Property Name="comments_count" Type="int" />
+          <Property Name="geo_lat" Type="varchar" MaxLength="16" />
+          <Property Name="geo_long" Type="varchar" MaxLength="16" />
+          <Property Name="viewed" Type="char" MaxLength="1" />
+          <Property Name="approval" Type="char" MaxLength="1" />
+          <Property Name="status" Type="char" MaxLength="1" />
+          <Property Name="created_at" Type="datetime" />
+          <Property Name="updated_at" Type="datetime" />
+        </EntityType>
+        <EntityType Name="course">
+          <Key>
+            <PropertyRef Name="id" />
+          </Key>
+          <Property Name="id" Type="uint" Nullable="false" StoreGeneratedPattern="Identity" />
+          <Property Name="title" Type="varchar" MaxLength="100" />
+          <Property Name="description" Type="text" />
+          <Property Name="user_id" Type="varchar" MaxLength="32" />
+          <Property Name="category_id" Type="int" />
+          <Property Name="instructor" Type="varchar" MaxLength="100" />
+          <Property Name="type" Type="varchar" MaxLength="10" />
+          <Property Name="create_at" Type="int" />
+          <Property Name="updated_at" Type="int" />
+        </EntityType>
+        <EntityType Name="device">
+          <Key>
+            <PropertyRef Name="id" />
+          </Key>
+          <Property Name="id" Type="bigint" Nullable="false" StoreGeneratedPattern="Identity" />
+          <Property Name="secret" Type="text" />
+          <Property Name="sessionId" Type="bigint" />
+          <Property Name="contentId" Type="bigint" />
+        </EntityType>
+        <EntityType Name="groups">
+          <Key>
+            <PropertyRef Name="id" />
+          </Key>
+          <Property Name="id" Type="umediumint" Nullable="false" StoreGeneratedPattern="Identity" />
+          <Property Name="name" Type="varchar" Nullable="false" MaxLength="20" />
+          <Property Name="description" Type="varchar" Nullable="false" MaxLength="100" />
+        </EntityType>
+        <EntityType Name="keyword">
+          <Key>
+            <PropertyRef Name="id" />
+          </Key>
+          <Property Name="id" Type="varchar" Nullable="false" MaxLength="65" />
+          <Property Name="keyword" Type="text" />
+        </EntityType>
+        <EntityType Name="login_attempts">
+          <Key>
+            <PropertyRef Name="id" />
+          </Key>
+          <Property Name="id" Type="varchar" Nullable="false" MaxLength="32" />
+          <Property Name="ip_address" Type="varbinary" Nullable="false" MaxLength="16" />
+          <Property Name="login" Type="varchar" Nullable="false" MaxLength="100" />
+          <Property Name="time" Type="uint" />
+        </EntityType>
+        <EntityType Name="organization">
+          <Key>
+            <PropertyRef Name="id" />
+          </Key>
+          <Property Name="id" Type="int" Nullable="false" StoreGeneratedPattern="Identity" />
+          <Property Name="name" Type="varchar" MaxLength="100" />
+          <Property Name="email" Type="varchar" MaxLength="100" />
+        </EntityType>
+        <EntityType Name="presentation">
+          <Key>
+            <PropertyRef Name="pid" />
+          </Key>
+          <Property Name="pid" Type="bigint" Nullable="false" StoreGeneratedPattern="Identity" />
+          <Property Name="course_id" Type="int" />
+          <Property Name="user_id" Type="varchar" MaxLength="32" />
+          <Property Name="type" Type="varchar" MaxLength="10" />
+          <Property Name="name" Type="varchar" MaxLength="50" />
+          <Property Name="description" Type="varchar" MaxLength="500" />
+          <Property Name="category" Type="int" />
+          <Property Name="creator" Type="varchar" MaxLength="100" />
+          <Property Name="reservation" Type="varchar" MaxLength="20" />
+          <Property Name="cover" Type="int" />
+          <Property Name="create_at" Type="int" />
+          <Property Name="update_at" Type="int" />
+          <Property Name="start_at" Type="int" />
+        </EntityType>
+        <EntityType Name="relationships">
+          <Key>
+            <PropertyRef Name="relationship_id" />
+          </Key>
+          <Property Name="relationship_id" Type="varchar" Nullable="false" MaxLength="32" />
+          <Property Name="site_id" Type="int" />
+          <Property Name="owner_id" Type="varchar" MaxLength="32" />
+          <Property Name="user_id" Type="varchar" MaxLength="32" />
+          <Property Name="module" Type="varchar" MaxLength="32" />
+          <Property Name="type" Type="varchar" MaxLength="32" />
+          <Property Name="status" Type="char" MaxLength="1" />
+          <Property Name="created_at" Type="int" />
+          <Property Name="updated_at" Type="int" />
+        </EntityType>
+        <EntityType Name="schedule">
+          <Key>
+            <PropertyRef Name="id" />
+          </Key>
+          <Property Name="id" Type="uint" Nullable="false" StoreGeneratedPattern="Identity" />
+          <Property Name="course_id" Type="int" />
+          <Property Name="date" Type="varchar" MaxLength="11" />
+          <Property Name="title" Type="varchar" MaxLength="50" />
+          <Property Name="detail" Type="text" />
+        </EntityType>
+        <EntityType Name="server">
+          <Key>
+            <PropertyRef Name="sid" />
+          </Key>
+          <Property Name="sid" Type="bigint" Nullable="false" StoreGeneratedPattern="Identity" />
+          <Property Name="type" Type="text" />
+          <Property Name="ip" Type="text" />
+          <Property Name="port" Type="int" />
+          <Property Name="name" Type="text" />
+          <Property Name="description" Type="text" />
+          <Property Name="image" Type="text" />
+          <Property Name="status" Type="text" />
+          <Property Name="audio_ip" Type="text" Nullable="false" />
+          <Property Name="audio_port" Type="int" Nullable="false" />
+        </EntityType>
+        <EntityType Name="session">
+          <Key>
+            <PropertyRef Name="id" />
+          </Key>
+          <Property Name="id" Type="bigint" Nullable="false" StoreGeneratedPattern="Identity" />
+          <Property Name="type" Type="text" />
+          <Property Name="presId" Type="bigint" />
+          <Property Name="creator" Type="varchar" MaxLength="32" />
+          <Property Name="status" Type="text" />
+          <Property Name="rating" Type="int" />
+          <Property Name="create_at" Type="int" />
+          <Property Name="end_at" Type="int" />
+        </EntityType>
+        <EntityType Name="sites">
+          <Key>
+            <PropertyRef Name="site_id" />
+          </Key>
+          <Property Name="site_id" Type="uint" Nullable="false" StoreGeneratedPattern="Identity" />
+          <Property Name="url" Type="varchar" MaxLength="255" />
+          <Property Name="module" Type="varchar" MaxLength="255" />
+          <Property Name="type" Type="varchar" MaxLength="255" />
+          <Property Name="title" Type="varchar" MaxLength="255" />
+          <Property Name="favicon" Type="varchar" MaxLength="255" />
+        </EntityType>
+        <EntityType Name="tag">
+          <Key>
+            <PropertyRef Name="id" />
+          </Key>
+          <Property Name="id" Type="int" Nullable="false" StoreGeneratedPattern="Identity" />
+          <Property Name="name" Type="varchar" MaxLength="100" />
+          <Property Name="type" Type="int" />
+          <Property Name="parent" Type="int" />
+        </EntityType>
+        <EntityType Name="tag_relationship">
+          <Key>
+            <PropertyRef Name="id" />
+          </Key>
+          <Property Name="id" Type="int" Nullable="false" StoreGeneratedPattern="Identity" />
+          <Property Name="tag_id" Type="int" />
+          <Property Name="type" Type="varchar" MaxLength="20" />
+          <Property Name="content_id" Type="int" />
+        </EntityType>
+        <EntityType Name="token">
+          <Key>
+            <PropertyRef Name="id" />
+          </Key>
+          <Property Name="id" Type="uint" Nullable="false" StoreGeneratedPattern="Identity" />
+          <Property Name="token" Type="varchar" MaxLength="50" />
+          <Property Name="type" Type="varchar" MaxLength="10" />
+          <Property Name="expiration" Type="int" />
+          <Property Name="update_at" Type="int" />
+        </EntityType>
+        <EntityType Name="tutor_status">
+          <Key>
+            <PropertyRef Name="id" />
+          </Key>
+          <Property Name="id" Type="bigint" Nullable="false" StoreGeneratedPattern="Identity" />
+          <Property Name="uid" Type="varchar" MaxLength="32" />
+          <Property Name="status" Type="varchar" MaxLength="32" />
+        </EntityType>
+        <EntityType Name="user_device">
+          <Key>
+            <PropertyRef Name="id" />
+          </Key>
+          <Property Name="id" Type="bigint" Nullable="false" StoreGeneratedPattern="Identity" />
+          <Property Name="uid" Type="varchar" MaxLength="32" />
+          <Property Name="tokens" Type="text" />
+        </EntityType>
+        <EntityType Name="user_match">
+          <Key>
+            <PropertyRef Name="id" />
+          </Key>
+          <Property Name="id" Type="bigint" Nullable="false" StoreGeneratedPattern="Identity" />
+          <Property Name="uid" Type="varchar" MaxLength="32" />
+          <Property Name="matched_uid" Type="varchar" MaxLength="32" />
+        </EntityType>
+        <EntityType Name="user_profile">
+          <Key>
+            <PropertyRef Name="id" />
+          </Key>
+          <Property Name="id" Type="uint" Nullable="false" StoreGeneratedPattern="Identity" />
+          <Property Name="user_id" Type="varchar" MaxLength="32" />
+          <Property Name="phone" Type="varchar" MaxLength="20" />
+          <Property Name="address" Type="varchar" MaxLength="100" />
+          <Property Name="biography" Type="varchar" MaxLength="140" />
+          <Property Name="optional" Type="varchar" MaxLength="200" />
+          <Property Name="type" Type="int" />
+        </EntityType>
+        <EntityType Name="user_right">
+          <Key>
+            <PropertyRef Name="id" />
+          </Key>
+          <Property Name="id" Type="int" Nullable="false" StoreGeneratedPattern="Identity" />
+          <Property Name="user_id" Type="varchar" MaxLength="32" />
+          <Property Name="type" Type="varchar" MaxLength="32" />
+          <Property Name="content_id" Type="int" />
+          <Property Name="user_right" Type="int" />
+          <Property Name="created_at" Type="int" />
+        </EntityType>
+        <EntityType Name="users">
+          <Key>
+            <PropertyRef Name="id" />
+          </Key>
+          <Property Name="id" Type="varchar" Nullable="false" MaxLength="32" />
+          <Property Name="ip_address" Type="varbinary" MaxLength="16" />
+          <Property Name="username" Type="varchar" MaxLength="100" />
+          <Property Name="password" Type="varchar" MaxLength="60" />
+          <Property Name="salt" Type="varchar" MaxLength="40" />
+          <Property Name="email" Type="varchar" MaxLength="100" />
+          <Property Name="activation_code" Type="varchar" MaxLength="40" />
+          <Property Name="forgotten_password_code" Type="varchar" MaxLength="40" />
+          <Property Name="forgotten_password_time" Type="uint" />
+          <Property Name="remember_code" Type="varchar" MaxLength="40" />
+          <Property Name="created_on" Type="uint" />
+          <Property Name="last_login" Type="uint" />
+          <Property Name="active" Type="bool" />
+          <Property Name="accessRight" Type="text" />
+          <Property Name="name" Type="text" />
+        </EntityType>
+        <EntityType Name="users_groups">
+          <Key>
+            <PropertyRef Name="id" />
+          </Key>
+          <Property Name="id" Type="umediumint" Nullable="false" StoreGeneratedPattern="Identity" />
+          <Property Name="user_id" Type="varchar" Nullable="false" MaxLength="32" />
+          <Property Name="group_id" Type="umediumint" Nullable="false" />
+        </EntityType>
+      </Schema>
+    </edmx:StorageModels>
+    <!-- CSDL content -->
+    <edmx:ConceptualModels>
+      <Schema Namespace="poiModel" Alias="Self" p1:UseStrongSpatialTypes="false" xmlns:annotation="http://schemas.microsoft.com/ado/2009/02/edm/annotation" xmlns:p1="http://schemas.microsoft.com/ado/2009/02/edm/annotation" xmlns="http://schemas.microsoft.com/ado/2009/11/edm">
+        <EntityContainer Name="poiEntities" p1:LazyLoadingEnabled="true">
+          <EntitySet Name="activities" EntityType="poiModel.activity" />
+          <EntitySet Name="categories" EntityType="poiModel.category" />
+          <EntitySet Name="contents" EntityType="poiModel.content" />
+          <EntitySet Name="courses" EntityType="poiModel.course" />
+          <EntitySet Name="devices" EntityType="poiModel.device" />
+          <EntitySet Name="groups" EntityType="poiModel.group" />
+          <EntitySet Name="keywords" EntityType="poiModel.keyword" />
+          <EntitySet Name="login_attempts" EntityType="poiModel.login_attempts" />
+          <EntitySet Name="organizations" EntityType="poiModel.organization" />
+          <EntitySet Name="presentations" EntityType="poiModel.presentation" />
+          <EntitySet Name="relationships" EntityType="poiModel.relationship" />
+          <EntitySet Name="schedules" EntityType="poiModel.schedule" />
+          <EntitySet Name="servers" EntityType="poiModel.server" />
+          <EntitySet Name="sessions" EntityType="poiModel.session" />
+          <EntitySet Name="sites" EntityType="poiModel.site" />
+          <EntitySet Name="tags" EntityType="poiModel.tag" />
+          <EntitySet Name="tag_relationship" EntityType="poiModel.tag_relationship" />
+          <EntitySet Name="tokens" EntityType="poiModel.token" />
+          <EntitySet Name="tutor_status" EntityType="poiModel.tutor_status" />
+          <EntitySet Name="user_device" EntityType="poiModel.user_device" />
+          <EntitySet Name="user_match" EntityType="poiModel.user_match" />
+          <EntitySet Name="user_profile" EntityType="poiModel.user_profile" />
+          <EntitySet Name="user_right" EntityType="poiModel.user_right" />
+          <EntitySet Name="users" EntityType="poiModel.user" />
+          <EntitySet Name="users_groups" EntityType="poiModel.users_groups" />
+        </EntityContainer>
+        <EntityType Name="activity">
+          <Key>
+            <PropertyRef Name="activity_id" />
+          </Key>
+          <Property Name="activity_id" Type="Int64" Nullable="false" p1:StoreGeneratedPattern="Identity" />
+          <Property Name="user_id" Type="String" MaxLength="32" Unicode="false" FixedLength="false" />
+          <Property Name="type" Type="String" MaxLength="32" Unicode="false" FixedLength="false" />
+          <Property Name="content_id" Type="Int32" />
+          <Property Name="data" Type="String" MaxLength="65535" Unicode="false" FixedLength="false" />
+          <Property Name="status" Type="String" MaxLength="1" Unicode="false" FixedLength="true" />
+          <Property Name="create_at" Type="Int32" />
+          <Property Name="update_at" Type="Int32" />
+        </EntityType>
+        <EntityType Name="category">
+          <Key>
+            <PropertyRef Name="id" />
+          </Key>
+          <Property Name="id" Type="Int64" Nullable="false" p1:StoreGeneratedPattern="Identity" />
+          <Property Name="name" Type="String" MaxLength="100" Unicode="false" FixedLength="false" />
+          <Property Name="pid" Type="Int32" />
+          <Property Name="amount" Type="Int32" />
+        </EntityType>
+        <EntityType Name="content">
+          <Key>
+            <PropertyRef Name="content_id" />
+          </Key>
+          <Property Name="content_id" Type="Int64" Nullable="false" p1:StoreGeneratedPattern="Identity" />
+          <Property Name="site_id" Type="Int32" />
+          <Property Name="parent_id" Type="Int32" />
+          <Property Name="category_id" Type="Int32" />
+          <Property Name="module" Type="String" MaxLength="32" Unicode="false" FixedLength="false" />
+          <Property Name="type" Type="String" MaxLength="32" Unicode="false" FixedLength="false" />
+          <Property Name="source" Type="String" MaxLength="16" Unicode="false" FixedLength="true" />
+          <Property Name="order" Type="Int32" />
+          <Property Name="user_id" Type="String" MaxLength="32" Unicode="false" FixedLength="false" />
+          <Property Name="title" Type="String" MaxLength="255" Unicode="false" FixedLength="false" />
+          <Property Name="title_url" Type="String" MaxLength="255" Unicode="false" FixedLength="false" />
+          <Property Name="content1" Type="String" MaxLength="65535" Unicode="false" FixedLength="false" />
+          <Property Name="details" Type="String" MaxLength="512" Unicode="false" FixedLength="false" />
+          <Property Name="canonical" Type="String" MaxLength="512" Unicode="false" FixedLength="false" />
+          <Property Name="access" Type="String" MaxLength="1" Unicode="false" FixedLength="true" />
+          <Property Name="comments_allow" Type="String" MaxLength="1" Unicode="false" FixedLength="true" />
+          <Property Name="comments_count" Type="Int32" />
+          <Property Name="geo_lat" Type="String" MaxLength="16" Unicode="false" FixedLength="false" />
+          <Property Name="geo_long" Type="String" MaxLength="16" Unicode="false" FixedLength="false" />
+          <Property Name="viewed" Type="String" MaxLength="1" Unicode="false" FixedLength="true" />
+          <Property Name="approval" Type="String" MaxLength="1" Unicode="false" FixedLength="true" />
+          <Property Name="status" Type="String" MaxLength="1" Unicode="false" FixedLength="true" />
+          <Property Name="created_at" Type="DateTime" Precision="0" />
+          <Property Name="updated_at" Type="DateTime" Precision="0" />
+        </EntityType>
+        <EntityType Name="course">
+          <Key>
+            <PropertyRef Name="id" />
+          </Key>
+          <Property Name="id" Type="Int64" Nullable="false" p1:StoreGeneratedPattern="Identity" />
+          <Property Name="title" Type="String" MaxLength="100" Unicode="false" FixedLength="false" />
+          <Property Name="description" Type="String" MaxLength="65535" Unicode="false" FixedLength="false" />
+          <Property Name="user_id" Type="String" MaxLength="32" Unicode="false" FixedLength="false" />
+          <Property Name="category_id" Type="Int32" />
+          <Property Name="instructor" Type="String" MaxLength="100" Unicode="false" FixedLength="false" />
+          <Property Name="type" Type="String" MaxLength="10" Unicode="false" FixedLength="false" />
+          <Property Name="create_at" Type="Int32" />
+          <Property Name="updated_at" Type="Int32" />
+        </EntityType>
+        <EntityType Name="device">
+          <Key>
+            <PropertyRef Name="id" />
+          </Key>
+          <Property Name="id" Type="Int64" Nullable="false" p1:StoreGeneratedPattern="Identity" />
+          <Property Name="secret" Type="String" MaxLength="65535" Unicode="false" FixedLength="false" />
+          <Property Name="sessionId" Type="Int64" />
+          <Property Name="contentId" Type="Int64" />
+        </EntityType>
+        <EntityType Name="group">
+          <Key>
+            <PropertyRef Name="id" />
+          </Key>
+          <Property Name="id" Type="Int32" Nullable="false" p1:StoreGeneratedPattern="Identity" />
+          <Property Name="name" Type="String" Nullable="false" MaxLength="20" Unicode="false" FixedLength="false" />
+          <Property Name="description" Type="String" Nullable="false" MaxLength="100" Unicode="false" FixedLength="false" />
+        </EntityType>
+        <EntityType Name="keyword">
+          <Key>
+            <PropertyRef Name="id" />
+          </Key>
+          <Property Name="id" Type="String" Nullable="false" MaxLength="65" Unicode="false" FixedLength="false" />
+          <Property Name="keyword1" Type="String" MaxLength="65535" Unicode="false" FixedLength="false" />
+        </EntityType>
+        <EntityType Name="login_attempts">
+          <Key>
+            <PropertyRef Name="id" />
+          </Key>
+          <Property Name="id" Type="String" Nullable="false" MaxLength="32" Unicode="false" FixedLength="false" />
+          <Property Name="ip_address" Type="Binary" Nullable="false" MaxLength="16" FixedLength="false" />
+          <Property Name="login" Type="String" Nullable="false" MaxLength="100" Unicode="false" FixedLength="false" />
+          <Property Name="time" Type="Int64" />
+        </EntityType>
+        <EntityType Name="organization">
+          <Key>
+            <PropertyRef Name="id" />
+          </Key>
+          <Property Name="id" Type="Int32" Nullable="false" p1:StoreGeneratedPattern="Identity" />
+          <Property Name="name" Type="String" MaxLength="100" Unicode="false" FixedLength="false" />
+          <Property Name="email" Type="String" MaxLength="100" Unicode="false" FixedLength="false" />
+        </EntityType>
+        <EntityType Name="presentation">
+          <Key>
+            <PropertyRef Name="pid" />
+          </Key>
+          <Property Name="pid" Type="Int64" Nullable="false" p1:StoreGeneratedPattern="Identity" />
+          <Property Name="course_id" Type="Int32" />
+          <Property Name="user_id" Type="String" MaxLength="32" Unicode="false" FixedLength="false" />
+          <Property Name="type" Type="String" MaxLength="10" Unicode="false" FixedLength="false" />
+          <Property Name="name" Type="String" MaxLength="50" Unicode="false" FixedLength="false" />
+          <Property Name="description" Type="String" MaxLength="500" Unicode="false" FixedLength="false" />
+          <Property Name="category" Type="Int32" />
+          <Property Name="creator" Type="String" MaxLength="100" Unicode="false" FixedLength="false" />
+          <Property Name="reservation" Type="String" MaxLength="20" Unicode="false" FixedLength="false" />
+          <Property Name="cover" Type="Int32" />
+          <Property Name="create_at" Type="Int32" />
+          <Property Name="update_at" Type="Int32" />
+          <Property Name="start_at" Type="Int32" />
+        </EntityType>
+        <EntityType Name="relationship">
+          <Key>
+            <PropertyRef Name="relationship_id" />
+          </Key>
+          <Property Name="relationship_id" Type="String" Nullable="false" MaxLength="32" Unicode="false" FixedLength="false" />
+          <Property Name="site_id" Type="Int32" />
+          <Property Name="owner_id" Type="String" MaxLength="32" Unicode="false" FixedLength="false" />
+          <Property Name="user_id" Type="String" MaxLength="32" Unicode="false" FixedLength="false" />
+          <Property Name="module" Type="String" MaxLength="32" Unicode="false" FixedLength="false" />
+          <Property Name="type" Type="String" MaxLength="32" Unicode="false" FixedLength="false" />
+          <Property Name="status" Type="String" MaxLength="1" Unicode="false" FixedLength="true" />
+          <Property Name="created_at" Type="Int32" />
+          <Property Name="updated_at" Type="Int32" />
+        </EntityType>
+        <EntityType Name="schedule">
+          <Key>
+            <PropertyRef Name="id" />
+          </Key>
+          <Property Name="id" Type="Int64" Nullable="false" p1:StoreGeneratedPattern="Identity" />
+          <Property Name="course_id" Type="Int32" />
+          <Property Name="date" Type="String" MaxLength="11" Unicode="false" FixedLength="false" />
+          <Property Name="title" Type="String" MaxLength="50" Unicode="false" FixedLength="false" />
+          <Property Name="detail" Type="String" MaxLength="65535" Unicode="false" FixedLength="false" />
+        </EntityType>
+        <EntityType Name="server">
+          <Key>
+            <PropertyRef Name="sid" />
+          </Key>
+          <Property Name="sid" Type="Int64" Nullable="false" p1:StoreGeneratedPattern="Identity" />
+          <Property Name="type" Type="String" MaxLength="65535" Unicode="false" FixedLength="false" />
+          <Property Name="ip" Type="String" MaxLength="65535" Unicode="false" FixedLength="false" />
+          <Property Name="port" Type="Int32" />
+          <Property Name="name" Type="String" MaxLength="65535" Unicode="false" FixedLength="false" />
+          <Property Name="description" Type="String" MaxLength="65535" Unicode="false" FixedLength="false" />
+          <Property Name="image" Type="String" MaxLength="65535" Unicode="false" FixedLength="false" />
+          <Property Name="status" Type="String" MaxLength="65535" Unicode="false" FixedLength="false" />
+          <Property Name="audio_ip" Type="String" Nullable="false" MaxLength="65535" Unicode="false" FixedLength="false" />
+          <Property Name="audio_port" Type="Int32" Nullable="false" />
+        </EntityType>
+        <EntityType Name="session">
+          <Key>
+            <PropertyRef Name="id" />
+          </Key>
+          <Property Name="id" Type="Int64" Nullable="false" p1:StoreGeneratedPattern="Identity" />
+          <Property Name="type" Type="String" MaxLength="65535" Unicode="false" FixedLength="false" />
+          <Property Name="presId" Type="Int64" />
+          <Property Name="creator" Type="String" MaxLength="32" Unicode="false" FixedLength="false" />
+          <Property Name="status" Type="String" MaxLength="65535" Unicode="false" FixedLength="false" />
+          <Property Name="rating" Type="Int32" />
+          <Property Name="create_at" Type="Int32" />
+          <Property Name="end_at" Type="Int32" />
+        </EntityType>
+        <EntityType Name="site">
+          <Key>
+            <PropertyRef Name="site_id" />
+          </Key>
+          <Property Name="site_id" Type="Int64" Nullable="false" p1:StoreGeneratedPattern="Identity" />
+          <Property Name="url" Type="String" MaxLength="255" Unicode="false" FixedLength="false" />
+          <Property Name="module" Type="String" MaxLength="255" Unicode="false" FixedLength="false" />
+          <Property Name="type" Type="String" MaxLength="255" Unicode="false" FixedLength="false" />
+          <Property Name="title" Type="String" MaxLength="255" Unicode="false" FixedLength="false" />
+          <Property Name="favicon" Type="String" MaxLength="255" Unicode="false" FixedLength="false" />
+        </EntityType>
+        <EntityType Name="tag">
+          <Key>
+            <PropertyRef Name="id" />
+          </Key>
+          <Property Name="id" Type="Int32" Nullable="false" p1:StoreGeneratedPattern="Identity" />
+          <Property Name="name" Type="String" MaxLength="100" Unicode="false" FixedLength="false" />
+          <Property Name="type" Type="Int32" />
+          <Property Name="parent" Type="Int32" />
+        </EntityType>
+        <EntityType Name="tag_relationship">
+          <Key>
+            <PropertyRef Name="id" />
+          </Key>
+          <Property Name="id" Type="Int32" Nullable="false" p1:StoreGeneratedPattern="Identity" />
+          <Property Name="tag_id" Type="Int32" />
+          <Property Name="type" Type="String" MaxLength="20" Unicode="false" FixedLength="false" />
+          <Property Name="content_id" Type="Int32" />
+        </EntityType>
+        <EntityType Name="token">
+          <Key>
+            <PropertyRef Name="id" />
+          </Key>
+          <Property Name="id" Type="Int64" Nullable="false" p1:StoreGeneratedPattern="Identity" />
+          <Property Name="token1" Type="String" MaxLength="50" Unicode="false" FixedLength="false" />
+          <Property Name="type" Type="String" MaxLength="10" Unicode="false" FixedLength="false" />
+          <Property Name="expiration" Type="Int32" />
+          <Property Name="update_at" Type="Int32" />
+        </EntityType>
+        <EntityType Name="tutor_status">
+          <Key>
+            <PropertyRef Name="id" />
+          </Key>
+          <Property Name="id" Type="Int64" Nullable="false" p1:StoreGeneratedPattern="Identity" />
+          <Property Name="uid" Type="String" MaxLength="32" Unicode="false" FixedLength="false" />
+          <Property Name="status" Type="String" MaxLength="32" Unicode="false" FixedLength="false" />
+        </EntityType>
+        <EntityType Name="user_device">
+          <Key>
+            <PropertyRef Name="id" />
+          </Key>
+          <Property Name="id" Type="Int64" Nullable="false" p1:StoreGeneratedPattern="Identity" />
+          <Property Name="uid" Type="String" MaxLength="32" Unicode="false" FixedLength="false" />
+          <Property Name="tokens" Type="String" MaxLength="65535" Unicode="false" FixedLength="false" />
+        </EntityType>
+        <EntityType Name="user_match">
+          <Key>
+            <PropertyRef Name="id" />
+          </Key>
+          <Property Name="id" Type="Int64" Nullable="false" p1:StoreGeneratedPattern="Identity" />
+          <Property Name="uid" Type="String" MaxLength="32" Unicode="false" FixedLength="false" />
+          <Property Name="matched_uid" Type="String" MaxLength="32" Unicode="false" FixedLength="false" />
+        </EntityType>
+        <EntityType Name="user_profile">
+          <Key>
+            <PropertyRef Name="id" />
+          </Key>
+          <Property Name="id" Type="Int64" Nullable="false" p1:StoreGeneratedPattern="Identity" />
+          <Property Name="user_id" Type="String" MaxLength="32" Unicode="false" FixedLength="false" />
+          <Property Name="phone" Type="String" MaxLength="20" Unicode="false" FixedLength="false" />
+          <Property Name="address" Type="String" MaxLength="100" Unicode="false" FixedLength="false" />
+          <Property Name="biography" Type="String" MaxLength="140" Unicode="false" FixedLength="false" />
+          <Property Name="optional" Type="String" MaxLength="200" Unicode="false" FixedLength="false" />
+          <Property Name="type" Type="Int32" />
+        </EntityType>
+        <EntityType Name="user_right">
+          <Key>
+            <PropertyRef Name="id" />
+          </Key>
+          <Property Name="id" Type="Int32" Nullable="false" p1:StoreGeneratedPattern="Identity" />
+          <Property Name="user_id" Type="String" MaxLength="32" Unicode="false" FixedLength="false" />
+          <Property Name="type" Type="String" MaxLength="32" Unicode="false" FixedLength="false" />
+          <Property Name="content_id" Type="Int32" />
+          <Property Name="user_right1" Type="Int32" />
+          <Property Name="created_at" Type="Int32" />
+        </EntityType>
+        <EntityType Name="user">
+          <Key>
+            <PropertyRef Name="id" />
+          </Key>
+          <Property Name="id" Type="String" Nullable="false" MaxLength="32" Unicode="false" FixedLength="false" />
+          <Property Name="ip_address" Type="Binary" MaxLength="16" FixedLength="false" />
+          <Property Name="username" Type="String" MaxLength="100" Unicode="false" FixedLength="false" />
+          <Property Name="password" Type="String" MaxLength="60" Unicode="false" FixedLength="false" />
+          <Property Name="salt" Type="String" MaxLength="40" Unicode="false" FixedLength="false" />
+          <Property Name="email" Type="String" MaxLength="100" Unicode="false" FixedLength="false" />
+          <Property Name="activation_code" Type="String" MaxLength="40" Unicode="false" FixedLength="false" />
+          <Property Name="forgotten_password_code" Type="String" MaxLength="40" Unicode="false" FixedLength="false" />
+          <Property Name="forgotten_password_time" Type="Int64" />
+          <Property Name="remember_code" Type="String" MaxLength="40" Unicode="false" FixedLength="false" />
+          <Property Name="created_on" Type="Int64" />
+          <Property Name="last_login" Type="Int64" />
+          <Property Name="active" Type="Boolean" />
+          <Property Name="accessRight" Type="String" MaxLength="65535" Unicode="false" FixedLength="false" />
+          <Property Name="name" Type="String" MaxLength="65535" Unicode="false" FixedLength="false" />
+        </EntityType>
+        <EntityType Name="users_groups">
+          <Key>
+            <PropertyRef Name="id" />
+          </Key>
+          <Property Name="id" Type="Int32" Nullable="false" p1:StoreGeneratedPattern="Identity" />
+          <Property Name="user_id" Type="String" Nullable="false" MaxLength="32" Unicode="false" FixedLength="false" />
+          <Property Name="group_id" Type="Int32" Nullable="false" />
+        </EntityType>
+      </Schema>
+    </edmx:ConceptualModels>
+    <!-- C-S mapping content -->
+    <edmx:Mappings>
+      <Mapping Space="C-S" xmlns="http://schemas.microsoft.com/ado/2009/11/mapping/cs">
+        <EntityContainerMapping StorageEntityContainer="poiModelStoreContainer" CdmEntityContainer="poiEntities">
+          <EntitySetMapping Name="activities">
+            <EntityTypeMapping TypeName="poiModel.activity">
+              <MappingFragment StoreEntitySet="activity">
+                <ScalarProperty Name="activity_id" ColumnName="activity_id" />
+                <ScalarProperty Name="user_id" ColumnName="user_id" />
+                <ScalarProperty Name="type" ColumnName="type" />
+                <ScalarProperty Name="content_id" ColumnName="content_id" />
+                <ScalarProperty Name="data" ColumnName="data" />
+                <ScalarProperty Name="status" ColumnName="status" />
+                <ScalarProperty Name="create_at" ColumnName="create_at" />
+                <ScalarProperty Name="update_at" ColumnName="update_at" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="categories">
+            <EntityTypeMapping TypeName="poiModel.category">
+              <MappingFragment StoreEntitySet="category">
+                <ScalarProperty Name="id" ColumnName="id" />
+                <ScalarProperty Name="name" ColumnName="name" />
+                <ScalarProperty Name="pid" ColumnName="pid" />
+                <ScalarProperty Name="amount" ColumnName="amount" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="contents">
+            <EntityTypeMapping TypeName="poiModel.content">
+              <MappingFragment StoreEntitySet="content">
+                <ScalarProperty Name="content_id" ColumnName="content_id" />
+                <ScalarProperty Name="site_id" ColumnName="site_id" />
+                <ScalarProperty Name="parent_id" ColumnName="parent_id" />
+                <ScalarProperty Name="category_id" ColumnName="category_id" />
+                <ScalarProperty Name="module" ColumnName="module" />
+                <ScalarProperty Name="type" ColumnName="type" />
+                <ScalarProperty Name="source" ColumnName="source" />
+                <ScalarProperty Name="order" ColumnName="order" />
+                <ScalarProperty Name="user_id" ColumnName="user_id" />
+                <ScalarProperty Name="title" ColumnName="title" />
+                <ScalarProperty Name="title_url" ColumnName="title_url" />
+                <ScalarProperty Name="content1" ColumnName="content" />
+                <ScalarProperty Name="details" ColumnName="details" />
+                <ScalarProperty Name="canonical" ColumnName="canonical" />
+                <ScalarProperty Name="access" ColumnName="access" />
+                <ScalarProperty Name="comments_allow" ColumnName="comments_allow" />
+                <ScalarProperty Name="comments_count" ColumnName="comments_count" />
+                <ScalarProperty Name="geo_lat" ColumnName="geo_lat" />
+                <ScalarProperty Name="geo_long" ColumnName="geo_long" />
+                <ScalarProperty Name="viewed" ColumnName="viewed" />
+                <ScalarProperty Name="approval" ColumnName="approval" />
+                <ScalarProperty Name="status" ColumnName="status" />
+                <ScalarProperty Name="created_at" ColumnName="created_at" />
+                <ScalarProperty Name="updated_at" ColumnName="updated_at" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="courses">
+            <EntityTypeMapping TypeName="poiModel.course">
+              <MappingFragment StoreEntitySet="course">
+                <ScalarProperty Name="id" ColumnName="id" />
+                <ScalarProperty Name="title" ColumnName="title" />
+                <ScalarProperty Name="description" ColumnName="description" />
+                <ScalarProperty Name="user_id" ColumnName="user_id" />
+                <ScalarProperty Name="category_id" ColumnName="category_id" />
+                <ScalarProperty Name="instructor" ColumnName="instructor" />
+                <ScalarProperty Name="type" ColumnName="type" />
+                <ScalarProperty Name="create_at" ColumnName="create_at" />
+                <ScalarProperty Name="updated_at" ColumnName="updated_at" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="devices">
+            <EntityTypeMapping TypeName="poiModel.device">
+              <MappingFragment StoreEntitySet="device">
+                <ScalarProperty Name="id" ColumnName="id" />
+                <ScalarProperty Name="secret" ColumnName="secret" />
+                <ScalarProperty Name="sessionId" ColumnName="sessionId" />
+                <ScalarProperty Name="contentId" ColumnName="contentId" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="groups">
+            <EntityTypeMapping TypeName="poiModel.group">
+              <MappingFragment StoreEntitySet="groups">
+                <ScalarProperty Name="id" ColumnName="id" />
+                <ScalarProperty Name="name" ColumnName="name" />
+                <ScalarProperty Name="description" ColumnName="description" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="keywords">
+            <EntityTypeMapping TypeName="poiModel.keyword">
+              <MappingFragment StoreEntitySet="keyword">
+                <ScalarProperty Name="id" ColumnName="id" />
+                <ScalarProperty Name="keyword1" ColumnName="keyword" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="login_attempts">
+            <EntityTypeMapping TypeName="poiModel.login_attempts">
+              <MappingFragment StoreEntitySet="login_attempts">
+                <ScalarProperty Name="id" ColumnName="id" />
+                <ScalarProperty Name="ip_address" ColumnName="ip_address" />
+                <ScalarProperty Name="login" ColumnName="login" />
+                <ScalarProperty Name="time" ColumnName="time" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="organizations">
+            <EntityTypeMapping TypeName="poiModel.organization">
+              <MappingFragment StoreEntitySet="organization">
+                <ScalarProperty Name="id" ColumnName="id" />
+                <ScalarProperty Name="name" ColumnName="name" />
+                <ScalarProperty Name="email" ColumnName="email" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="presentations">
+            <EntityTypeMapping TypeName="poiModel.presentation">
+              <MappingFragment StoreEntitySet="presentation">
+                <ScalarProperty Name="pid" ColumnName="pid" />
+                <ScalarProperty Name="course_id" ColumnName="course_id" />
+                <ScalarProperty Name="user_id" ColumnName="user_id" />
+                <ScalarProperty Name="type" ColumnName="type" />
+                <ScalarProperty Name="name" ColumnName="name" />
+                <ScalarProperty Name="description" ColumnName="description" />
+                <ScalarProperty Name="category" ColumnName="category" />
+                <ScalarProperty Name="creator" ColumnName="creator" />
+                <ScalarProperty Name="reservation" ColumnName="reservation" />
+                <ScalarProperty Name="cover" ColumnName="cover" />
+                <ScalarProperty Name="create_at" ColumnName="create_at" />
+                <ScalarProperty Name="update_at" ColumnName="update_at" />
+                <ScalarProperty Name="start_at" ColumnName="start_at" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="relationships">
+            <EntityTypeMapping TypeName="poiModel.relationship">
+              <MappingFragment StoreEntitySet="relationships">
+                <ScalarProperty Name="relationship_id" ColumnName="relationship_id" />
+                <ScalarProperty Name="site_id" ColumnName="site_id" />
+                <ScalarProperty Name="owner_id" ColumnName="owner_id" />
+                <ScalarProperty Name="user_id" ColumnName="user_id" />
+                <ScalarProperty Name="module" ColumnName="module" />
+                <ScalarProperty Name="type" ColumnName="type" />
+                <ScalarProperty Name="status" ColumnName="status" />
+                <ScalarProperty Name="created_at" ColumnName="created_at" />
+                <ScalarProperty Name="updated_at" ColumnName="updated_at" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="schedules">
+            <EntityTypeMapping TypeName="poiModel.schedule">
+              <MappingFragment StoreEntitySet="schedule">
+                <ScalarProperty Name="id" ColumnName="id" />
+                <ScalarProperty Name="course_id" ColumnName="course_id" />
+                <ScalarProperty Name="date" ColumnName="date" />
+                <ScalarProperty Name="title" ColumnName="title" />
+                <ScalarProperty Name="detail" ColumnName="detail" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="servers">
+            <EntityTypeMapping TypeName="poiModel.server">
+              <MappingFragment StoreEntitySet="server">
+                <ScalarProperty Name="sid" ColumnName="sid" />
+                <ScalarProperty Name="type" ColumnName="type" />
+                <ScalarProperty Name="ip" ColumnName="ip" />
+                <ScalarProperty Name="port" ColumnName="port" />
+                <ScalarProperty Name="name" ColumnName="name" />
+                <ScalarProperty Name="description" ColumnName="description" />
+                <ScalarProperty Name="image" ColumnName="image" />
+                <ScalarProperty Name="status" ColumnName="status" />
+                <ScalarProperty Name="audio_ip" ColumnName="audio_ip" />
+                <ScalarProperty Name="audio_port" ColumnName="audio_port" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="sessions">
+            <EntityTypeMapping TypeName="poiModel.session">
+              <MappingFragment StoreEntitySet="session">
+                <ScalarProperty Name="id" ColumnName="id" />
+                <ScalarProperty Name="type" ColumnName="type" />
+                <ScalarProperty Name="presId" ColumnName="presId" />
+                <ScalarProperty Name="creator" ColumnName="creator" />
+                <ScalarProperty Name="status" ColumnName="status" />
+                <ScalarProperty Name="rating" ColumnName="rating" />
+                <ScalarProperty Name="create_at" ColumnName="create_at" />
+                <ScalarProperty Name="end_at" ColumnName="end_at" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="sites">
+            <EntityTypeMapping TypeName="poiModel.site">
+              <MappingFragment StoreEntitySet="sites">
+                <ScalarProperty Name="site_id" ColumnName="site_id" />
+                <ScalarProperty Name="url" ColumnName="url" />
+                <ScalarProperty Name="module" ColumnName="module" />
+                <ScalarProperty Name="type" ColumnName="type" />
+                <ScalarProperty Name="title" ColumnName="title" />
+                <ScalarProperty Name="favicon" ColumnName="favicon" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="tags">
+            <EntityTypeMapping TypeName="poiModel.tag">
+              <MappingFragment StoreEntitySet="tag">
+                <ScalarProperty Name="id" ColumnName="id" />
+                <ScalarProperty Name="name" ColumnName="name" />
+                <ScalarProperty Name="type" ColumnName="type" />
+                <ScalarProperty Name="parent" ColumnName="parent" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="tag_relationship">
+            <EntityTypeMapping TypeName="poiModel.tag_relationship">
+              <MappingFragment StoreEntitySet="tag_relationship">
+                <ScalarProperty Name="id" ColumnName="id" />
+                <ScalarProperty Name="tag_id" ColumnName="tag_id" />
+                <ScalarProperty Name="type" ColumnName="type" />
+                <ScalarProperty Name="content_id" ColumnName="content_id" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="tokens">
+            <EntityTypeMapping TypeName="poiModel.token">
+              <MappingFragment StoreEntitySet="token">
+                <ScalarProperty Name="id" ColumnName="id" />
+                <ScalarProperty Name="token1" ColumnName="token" />
+                <ScalarProperty Name="type" ColumnName="type" />
+                <ScalarProperty Name="expiration" ColumnName="expiration" />
+                <ScalarProperty Name="update_at" ColumnName="update_at" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="tutor_status">
+            <EntityTypeMapping TypeName="poiModel.tutor_status">
+              <MappingFragment StoreEntitySet="tutor_status">
+                <ScalarProperty Name="id" ColumnName="id" />
+                <ScalarProperty Name="uid" ColumnName="uid" />
+                <ScalarProperty Name="status" ColumnName="status" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="user_device">
+            <EntityTypeMapping TypeName="poiModel.user_device">
+              <MappingFragment StoreEntitySet="user_device">
+                <ScalarProperty Name="id" ColumnName="id" />
+                <ScalarProperty Name="uid" ColumnName="uid" />
+                <ScalarProperty Name="tokens" ColumnName="tokens" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="user_match">
+            <EntityTypeMapping TypeName="poiModel.user_match">
+              <MappingFragment StoreEntitySet="user_match">
+                <ScalarProperty Name="id" ColumnName="id" />
+                <ScalarProperty Name="uid" ColumnName="uid" />
+                <ScalarProperty Name="matched_uid" ColumnName="matched_uid" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="user_profile">
+            <EntityTypeMapping TypeName="poiModel.user_profile">
+              <MappingFragment StoreEntitySet="user_profile">
+                <ScalarProperty Name="id" ColumnName="id" />
+                <ScalarProperty Name="user_id" ColumnName="user_id" />
+                <ScalarProperty Name="phone" ColumnName="phone" />
+                <ScalarProperty Name="address" ColumnName="address" />
+                <ScalarProperty Name="biography" ColumnName="biography" />
+                <ScalarProperty Name="optional" ColumnName="optional" />
+                <ScalarProperty Name="type" ColumnName="type" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="user_right">
+            <EntityTypeMapping TypeName="poiModel.user_right">
+              <MappingFragment StoreEntitySet="user_right">
+                <ScalarProperty Name="id" ColumnName="id" />
+                <ScalarProperty Name="user_id" ColumnName="user_id" />
+                <ScalarProperty Name="type" ColumnName="type" />
+                <ScalarProperty Name="content_id" ColumnName="content_id" />
+                <ScalarProperty Name="user_right1" ColumnName="user_right" />
+                <ScalarProperty Name="created_at" ColumnName="created_at" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="users">
+            <EntityTypeMapping TypeName="poiModel.user">
+              <MappingFragment StoreEntitySet="users">
+                <ScalarProperty Name="id" ColumnName="id" />
+                <ScalarProperty Name="ip_address" ColumnName="ip_address" />
+                <ScalarProperty Name="username" ColumnName="username" />
+                <ScalarProperty Name="password" ColumnName="password" />
+                <ScalarProperty Name="salt" ColumnName="salt" />
+                <ScalarProperty Name="email" ColumnName="email" />
+                <ScalarProperty Name="activation_code" ColumnName="activation_code" />
+                <ScalarProperty Name="forgotten_password_code" ColumnName="forgotten_password_code" />
+                <ScalarProperty Name="forgotten_password_time" ColumnName="forgotten_password_time" />
+                <ScalarProperty Name="remember_code" ColumnName="remember_code" />
+                <ScalarProperty Name="created_on" ColumnName="created_on" />
+                <ScalarProperty Name="last_login" ColumnName="last_login" />
+                <ScalarProperty Name="active" ColumnName="active" />
+                <ScalarProperty Name="accessRight" ColumnName="accessRight" />
+                <ScalarProperty Name="name" ColumnName="name" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="users_groups">
+            <EntityTypeMapping TypeName="poiModel.users_groups">
+              <MappingFragment StoreEntitySet="users_groups">
+                <ScalarProperty Name="id" ColumnName="id" />
+                <ScalarProperty Name="user_id" ColumnName="user_id" />
+                <ScalarProperty Name="group_id" ColumnName="group_id" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+        </EntityContainerMapping>
+      </Mapping>
+    </edmx:Mappings>
+  </edmx:Runtime>
+  <!-- EF Designer content (DO NOT EDIT MANUALLY BELOW HERE) -->
+  <Designer xmlns="http://schemas.microsoft.com/ado/2009/11/edmx">
+    <Connection>
+      <DesignerInfoPropertySet>
+        <DesignerProperty Name="MetadataArtifactProcessing" Value="EmbedInOutputAssembly" />
+      </DesignerInfoPropertySet>
+    </Connection>
+    <Options>
+      <DesignerInfoPropertySet>
+        <DesignerProperty Name="ValidateOnBuild" Value="true" />
+        <DesignerProperty Name="EnablePluralization" Value="True" />
+        <DesignerProperty Name="IncludeForeignKeysInModel" Value="True" />
+        <DesignerProperty Name="CodeGenerationStrategy" Value="None" />
+      </DesignerInfoPropertySet>
+    </Options>
+    <!-- Diagram content (shape and connector positions) -->
+    <Diagrams></Diagrams>
+  </Designer>
+</edmx:Edmx>

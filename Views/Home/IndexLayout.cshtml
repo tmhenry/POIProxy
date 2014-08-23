@@ -1,0 +1,58 @@
+﻿<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>@ViewBag.Title</title>
+
+    <script src="Scripts/jquery-1.6.4.min.js"></script> 
+    <script src="Scripts/jquery.signalR-2.0.3.min.js"></script>
+    <script src="@(Model.ProxyHost):@(Model.ProxyPort)/signalr/hubs"></script>
+
+    <link rel="stylesheet" href="css/screen.css" />
+ 
+    <script>
+        // wait for the DOM to be loaded 
+        $(document).ready(function () {
+            // bind 'myForm' and provide a simple callback function 
+            /*
+            $('form').ajaxForm(function () {
+                alert("Thank you for your comment!");
+                poiProxy.server.updateConfigFile(
+                    JSON.stringify(
+                        {
+                            'ContentServer': $('#ContentServer').val(),
+                            'DNSServer': $('#DNSServer').val(),
+                            'ProxyServerIP': $('#ProxyServerIP').val(),
+                            'ProxyServerPort': $('#ProxyServerPort').val()
+                        }
+                    )
+                );
+
+                //Force reload of current page
+                window.location.reload(true);
+            });*/
+
+            $.connection.hub.url = "@(Model.ProxyHost):@(Model.ProxyPort)/signalr/";
+            $.connection.hub.qs = {
+                'service': "log"
+            };
+
+            poiProxy = $.connection.poiProxy;
+            poiProxy.client.logMessage = function (message) {
+                var curLog = $('#ServerLog').val();
+                $('#ServerLog').val(message + "\\\n" + curLog);
+            };
+
+            $.connection.hub.start().done(function () {
+                alert("Start done!");
+            });
+        });
+    </script> 
+</head>
+<body>
+    <div>
+        @RenderBody()
+    </div>
+</body>
+</html>
