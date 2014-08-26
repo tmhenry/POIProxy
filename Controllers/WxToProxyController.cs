@@ -351,8 +351,7 @@ namespace POIProxy.Controllers
             var userInfo = POIProxySessionManager.getUserInfo(userId);
             string userInfoJson = jsonHandler.Serialize(userInfo);
 
-            PPLog.debugLog("create_at:" + sessionInfo["create_at"] + " limit time: " + DateTime.Now.AddSeconds(-60));
-            /*if (double.Parse(sessionInfo["create_at"])
+            if (double.Parse(sessionInfo["create_at"])
                 >= POITimestamp.ConvertToUnixTimestamp(DateTime.Now.AddSeconds(-60)))
             {
                 PPLog.infoLog("Cannot join the session, not passing time limit");
@@ -360,7 +359,7 @@ namespace POIProxy.Controllers
                 await POIProxyToWxApi.interactiveSessionJoinBeforeTimeLimit(userId, sessionId);
                 return (int)POIGlobalVar.errorCode.TIME_LIMITED;
             }
-            else */if (!interMsgHandler.checkSessionOpen(sessionId))
+            else if (!interMsgHandler.checkSessionOpen(sessionId))
             {
                 PPLog.infoLog("[POIProxyHub wxJoinInteractiveSession] session status is not open");
                 return (int)POIGlobalVar.errorCode.SESSION_NOT_OPEN;
