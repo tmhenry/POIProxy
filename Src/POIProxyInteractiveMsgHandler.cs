@@ -282,6 +282,7 @@ namespace POIProxy
             };
 
             POIProxySessionManager.archiveSessionEvent(sessionId, poiEvent);
+            POIProxySessionManager.createSessionEvent(sessionId, poiEvent);
 
             //Subscribe the user to the session
             POIProxySessionManager.subscribeSession(sessionId, userId);
@@ -422,6 +423,7 @@ namespace POIProxy
             };
 
             POIProxySessionManager.archiveSessionEvent(newSessionId, createEvent);
+            POIProxySessionManager.createSessionEvent(newSessionId, createEvent);
         }
 
         public bool checkAndProcessArchiveDuringSessionEnd(string sessionId)

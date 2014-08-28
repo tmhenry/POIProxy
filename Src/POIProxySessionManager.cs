@@ -139,6 +139,15 @@ namespace POIProxy
             }
         }
 
+        public static void createSessionEvent(string sessionId, POIInteractiveEvent poiEvent)
+        {
+            using (var redisClient = redisManager.GetClient())
+            {
+                var eventList = redisClient.Hashes["create_sessoin_event"];
+                eventList[poiEvent.EventId] = sessionId;
+            }
+        }
+
         public static List<POIInteractiveEvent> getSessionEventList(string sessionId)
         {
             using (var redisClient = redisManager.GetClient())
@@ -161,6 +170,30 @@ namespace POIProxy
                 {
                     return false;
                 }
+            }
+        }
+
+        public static bool checkDuplicatedCreatedSession(string eventId)
+        {
+            using (var redisClient = redisManager.GetClient())
+            {
+                var eventList = redisClient.Hashes["create_sessoin_event"];
+                if (eventList.ContainsKey(eventId))
+                {
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+        }
+
+        public static string getSessionByMsgId(string msgId)
+        {
+            using (var redisClient = redisManager.GetClient()) {
+                var sessionEvent = redisClient.Hashes["create_sessoin_event"];
+                return sessionEvent[msgId];
             }
         }
 

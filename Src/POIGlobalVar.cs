@@ -40,6 +40,8 @@ namespace POIProxy
         public enum errorCode
         {
             SUCCESS = 0,
+            DUPLICATED = 1,
+            FAIL = 2,
             TIME_LIMITED = 1001,
             ALREADY_JOINED = 1002,
             TAKEN_BY_OTHERS = 1003,
