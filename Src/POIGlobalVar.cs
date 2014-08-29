@@ -32,7 +32,7 @@ namespace POIProxy
         public static int MaxMobileClientCount { get; set; }
 
         public enum resource { SESSIONS, MESSAGES, USERS, SERVICES };
-        public enum sessionType { CREATE, JOIN, END, CANCEL, UPDATE, RERAISE, RATING };
+        public enum sessionType { CREATE, JOIN, END, CANCEL, UPDATE, RERAISE, RATING, GET };
         public enum messageType { TEXT, IMAGE, VOICE, ILLUSTRATION };
         public enum serviceType { SYSTEM, ACTION, NEWS, EXTRA };
         public enum userType { UPDATE };
@@ -50,6 +50,8 @@ namespace POIProxy
             STUDENT_CANNOT_END = 1006,
             SESSION_NOT_OPEN = 1007
         };
+
+        public enum sessionAction { JOIN, VOTES, WATCH };
 
         //public static POIUIScheduler Scheduler { get; set; }
     }

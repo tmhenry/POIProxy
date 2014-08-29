@@ -180,8 +180,13 @@ namespace POIProxy.Controllers
                             break;
 
                         case (int)POIGlobalVar.sessionType.UPDATE:
-                            desc = msgInfo["description"];
-                            mediaId = msgInfo["mediaId"];
+                            desc = msgInfo.ContainsKey("description") ? msgInfo["description"] : "";
+                            mediaId = msgInfo.ContainsKey("mediaId") ? msgInfo["mediaId"] : "";
+
+                            Dictionary<string, string> infoDict = new Dictionary<string, string>();
+                            infoDict["vote"] = msgInfo.ContainsKey("vote") ? msgInfo["vote"] : "0";
+                            infoDict["watch"] = msgInfo.ContainsKey("watch") ? msgInfo["watch"] : "0";
+                            POIProxySessionManager.updateSessionInfo(sessionId, infoDict);
 
                             if (desc != "") interMsgHandler.updateQuestionDescription(sessionId, desc);
                             if (mediaId != "") interMsgHandler.updateQuestionMediaId(sessionId, mediaId);
@@ -233,12 +238,19 @@ namespace POIProxy.Controllers
                             await POIProxyToWxApi.interactiveSessionReraised(userId, sessionId, newSessionId);
                             returnContent = jsonHandler.Serialize(new { sessionId = newSessionId, timestamp = timestamp });
                             break;
+
+                        case (int)POIGlobalVar.sessionType.GET:
+                            string sessionList = msgInfo["sessionList"];
+                            List<string> session = jsonHandler.Deserialize<List<string>>(sessionList);
+                            var sessionDetail = POIProxySessionManager.getSessionDetail(session, userId);
+                            returnContent = jsonHandler.Serialize(sessionDetail);
+                            break;
                         default:
                             break;
                     } 
                     var response = Request.CreateResponse(HttpStatusCode.OK);
                     response.StatusCode = HttpStatusCode.OK;
-                    response.Content = new StringContent(jsonHandler.Serialize(new { status = POIGlobalVar.errorCode.SUCCESS, type = type, errcode = errcode, content = returnContent }));
+                    response.Content = new StringContent(jsonHandler.Serialize(new { status = "success", type = type, errcode = errcode, content = returnContent }));
                     return response;
                 }
                 else
