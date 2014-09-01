@@ -62,7 +62,7 @@ namespace POIProxy
                 var sessions = redisClient.Hashes["session_by_user:" + userId];
                 var users = redisClient.Sets["user_by_session:" + sessionId];
 
-                sessions[sessionId] = POIGlobalVar.sessionAction.JOIN.ToString();
+                sessions[sessionId] = (0).ToString();
                 users.Add(userId);
             }
         }
@@ -358,7 +358,7 @@ namespace POIProxy
                 {
                     var sessionInfo = getSessionInfo(sessionId);
                     var session_vote_by_user = redisClient.Hashes["session_vote_by_user:" + userId];
-                    if (session_vote_by_user.ContainsKey(sessionId) && session_vote_by_user[sessionId] == POIGlobalVar.sessionAction.VOTES.ToString())
+                    if (session_vote_by_user.ContainsKey(sessionId) && session_vote_by_user[sessionId] == (0).ToString())
                         sessionInfo["isVoted"] = "1";
                     else
                         sessionInfo["isVoted"] = "0";
@@ -368,7 +368,7 @@ namespace POIProxy
             }
         }
 
-        public static void updateSessionInfo(string sessionId, Dictionary<string, string> update, string userId = null)
+        public static void updateSessionInfo(string sessionId, Dictionary<string, string> update, string userId = "")
         {
             using (var redisClient = redisManager.GetClient())
             {
@@ -378,19 +378,25 @@ namespace POIProxy
                 {
                     if (key == "vote" || key == "watch")
                     {
-                        update[key] = (int.Parse(sessionInfo[key]) + int.Parse(update[key]) > 1 ? 1 : int.Parse(update[key])).ToString();
+                        if (sessionInfo[key] == null) {
+                            sessionInfo[key] = (0).ToString();
+                        }
+                        sessionInfo[key] = (int.Parse(sessionInfo[key]) + (int.Parse(update[key]) > 1 ? 1 : int.Parse(update[key]))).ToString();
                     }
-                    sessionInfo[key] = update[key];
+                    else 
+                    { 
+                        sessionInfo[key] = update[key];
+                    }
                 }
 
-                if (userId != null) 
+                if (userId != null && userId != "")
                 {
                     var session_vote_by_user = redisClient.Hashes["session_vote_by_user:" + userId];
                     foreach (string key in update.Keys)
                     {
                         if (key == "vote" && update[key] != "")
                         {
-                            session_vote_by_user[sessionId] = (POIGlobalVar.sessionAction.VOTES).ToString();
+                            session_vote_by_user[sessionId] = (0).ToString();
                         }
                     }
 
@@ -399,7 +405,7 @@ namespace POIProxy
                     {
                         if (key == "watch" && update[key] != "")
                         {
-                            session_watch_by_user[sessionId] = (POIGlobalVar.sessionAction.WATCH).ToString();
+                            session_watch_by_user[sessionId] = (0).ToString();
                         }
                     }
                 }

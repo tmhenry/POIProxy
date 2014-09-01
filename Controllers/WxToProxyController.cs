@@ -186,7 +186,7 @@ namespace POIProxy.Controllers
                             Dictionary<string, string> infoDict = new Dictionary<string, string>();
                             infoDict["vote"] = msgInfo.ContainsKey("vote") ? msgInfo["vote"] : "0";
                             infoDict["watch"] = msgInfo.ContainsKey("watch") ? msgInfo["watch"] : "0";
-                            POIProxySessionManager.updateSessionInfo(sessionId, infoDict);
+                            POIProxySessionManager.updateSessionInfo(sessionId, infoDict, userId);
 
                             if (desc != "") interMsgHandler.updateQuestionDescription(sessionId, desc);
                             if (mediaId != "") interMsgHandler.updateQuestionMediaId(sessionId, mediaId);
