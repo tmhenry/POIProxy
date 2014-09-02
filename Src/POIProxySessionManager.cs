@@ -357,12 +357,16 @@ namespace POIProxy
                 foreach (string sessionId in sessionList)
                 {
                     var sessionInfo = getSessionInfo(sessionId);
+                    Dictionary<string, string> sessionTempDic = new Dictionary<string, string>();
+                    sessionTempDic["sessionId"] = sessionInfo["session_id"];
+                    sessionTempDic["vote"] = sessionInfo.ContainsKey("vote") ? sessionInfo["vote"] : "0";
+                    sessionTempDic["watch"] = sessionInfo.ContainsKey("watch") ? sessionInfo["watch"] : "0";
                     var session_vote_by_user = redisClient.Hashes["session_vote_by_user:" + userId];
                     if (session_vote_by_user.ContainsKey(sessionId) && session_vote_by_user[sessionId] == (0).ToString())
-                        sessionInfo["isVoted"] = "1";
+                        sessionTempDic["isVoted"] = "1";
                     else
-                        sessionInfo["isVoted"] = "0";
-                    detailList.Add(sessionInfo);
+                        sessionTempDic["isVoted"] = "0";
+                    detailList.Add(sessionTempDic);
                 }
                 return detailList;
             }
