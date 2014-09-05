@@ -104,14 +104,14 @@ namespace POIProxy.Controllers
 
                     var response = Request.CreateResponse(HttpStatusCode.OK);
                     response.StatusCode = HttpStatusCode.OK;
-                    response.Content = new StringContent(jsonHandler.Serialize(new { status = "success" }));
+                    response.Content = new StringContent(jsonHandler.Serialize(new { status = POIGlobalVar.errorCode.SUCCESS }));
                     return response;
                 }
                 else 
                 {
                     var response = Request.CreateResponse(HttpStatusCode.OK);
                     response.StatusCode = HttpStatusCode.OK;
-                    response.Content = new StringContent(jsonHandler.Serialize(new { status = "duplicated" }));
+                    response.Content = new StringContent(jsonHandler.Serialize(new { status = POIGlobalVar.errorCode.DUPLICATED }));
                     return response;
                 }
                 
@@ -120,7 +120,7 @@ namespace POIProxy.Controllers
             {
                 var response = Request.CreateResponse(HttpStatusCode.OK);
                 response.StatusCode = HttpStatusCode.ExpectationFailed;
-                response.Content = new StringContent(jsonHandler.Serialize(new { status = "fail", content = e.Message }));
+                response.Content = new StringContent(jsonHandler.Serialize(new { status = POIGlobalVar.errorCode.FAIL, content = e.Message }));
                 return response;
             }
             
@@ -155,7 +155,7 @@ namespace POIProxy.Controllers
                     timestamp = timestamp,
                 });
 
-                if (!POIProxySessionManager.checkEventExists(sessionId, msgId))
+                if (!POIProxySessionManager.checkEventExists(sessionId, msgId) && !POIProxySessionManager.checkDuplicatedCreatedSession(msgId))
                 {
                     List<string> userList = POIProxySessionManager.getUsersBySessionId(sessionId);
                     userList.Remove(userId);
@@ -180,8 +180,13 @@ namespace POIProxy.Controllers
                             break;
 
                         case (int)POIGlobalVar.sessionType.UPDATE:
-                            desc = msgInfo["description"];
-                            mediaId = msgInfo["mediaId"];
+                            desc = msgInfo.ContainsKey("description") ? msgInfo["description"] : "";
+                            mediaId = msgInfo.ContainsKey("mediaId") ? msgInfo["mediaId"] : "";
+
+                            Dictionary<string, string> infoDict = new Dictionary<string, string>();
+                            infoDict["vote"] = msgInfo.ContainsKey("vote") ? msgInfo["vote"] : "0";
+                            infoDict["watch"] = msgInfo.ContainsKey("watch") ? msgInfo["watch"] : "0";
+                            POIProxySessionManager.updateSessionInfo(sessionId, infoDict, userId);
 
                             if (desc != "") interMsgHandler.updateQuestionDescription(sessionId, desc);
                             if (mediaId != "") interMsgHandler.updateQuestionMediaId(sessionId, mediaId);
@@ -199,9 +204,8 @@ namespace POIProxy.Controllers
                                 break;
                             }
                             interMsgHandler.endInteractiveSession(msgId, userId, sessionId);
-                            sessionInfo = POIProxySessionManager.getSessionInfo(sessionId);
-                            await POIProxyToWxApi.interactiveSessionEnded(sessionInfo["creator"], sessionId);
                             POIProxyPushNotifier.send(userList, pushMsg);
+                            await POIProxyToWxApi.interactiveSessionEnded(sessionInfo["creator"], sessionId);
 
                             break;
 
@@ -210,7 +214,7 @@ namespace POIProxy.Controllers
                             sessionId = msgInfo["sessionId"];
                             sessionInfo = POIProxySessionManager.getSessionInfo(sessionId);
                             errcode = await wxJoinInteractiveSession(msgInfo, sessionInfo, pushMsg, userList);
-                            if (errcode == (int)POIGlobalVar.errorCode.SUCCESS)
+                            if (errcode == (int)POIGlobalVar.errorCode.SUCCESS || errcode == (int)POIGlobalVar.errorCode.ALREADY_JOINED)
                                 returnContent = jsonHandler.Serialize(POIProxySessionManager.getSessionArchive(sessionId));
                             break;
 
@@ -227,12 +231,19 @@ namespace POIProxy.Controllers
                         case (int)POIGlobalVar.sessionType.RERAISE:
                             string newSessionId = interMsgHandler.duplicateInteractiveSession(sessionId, timestamp);
                             interMsgHandler.reraiseInteractiveSession(msgId, userId, sessionId, newSessionId, timestamp);
-                            //Notify the student about interactive session reraised
-                            await POIProxyToWxApi.interactiveSessionReraised(userId, sessionId, newSessionId);
 
                             POIProxyPushNotifier.send(userList, pushMsg);
                             broadCastCreateSession(newSessionId, pushMsg);
+                            //Notify the student about interactive session reraised
+                            await POIProxyToWxApi.interactiveSessionReraised(userId, sessionId, newSessionId);
                             returnContent = jsonHandler.Serialize(new { sessionId = newSessionId, timestamp = timestamp });
+                            break;
+
+                        case (int)POIGlobalVar.sessionType.GET:
+                            string sessionList = msgInfo["sessionList"];
+                            List<string> session = jsonHandler.Deserialize<List<string>>(sessionList);
+                            var sessionDetail = POIProxySessionManager.getSessionDetail(session, userId);
+                            returnContent = jsonHandler.Serialize(sessionDetail);
                             break;
                         default:
                             break;
@@ -244,9 +255,40 @@ namespace POIProxy.Controllers
                 }
                 else
                 {
+                    errcode = (int)POIGlobalVar.errorCode.DUPLICATED;
+                    switch (type)
+                    {
+                        case (int)POIGlobalVar.sessionType.RATING:
+                            break;
+
+                        case (int)POIGlobalVar.sessionType.UPDATE:
+                            break;
+
+                        case (int)POIGlobalVar.sessionType.CANCEL:
+                            break;
+
+                        case (int)POIGlobalVar.sessionType.END:
+                            break;
+
+                        //Join and create operation received from weixin 
+                        case (int)POIGlobalVar.sessionType.JOIN:
+                            break;
+
+                        case (int)POIGlobalVar.sessionType.CREATE:
+                            sessionId = POIProxySessionManager.getSessionByMsgId(msgId);
+                            returnContent = jsonHandler.Serialize(new { sessionId = sessionId, timestamp = timestamp });
+                            break;
+
+                        case (int)POIGlobalVar.sessionType.RERAISE:
+                            sessionId = POIProxySessionManager.getSessionByMsgId(msgId);
+                            returnContent = jsonHandler.Serialize(new { sessionId = sessionId, timestamp = timestamp });
+                            break;
+                        default:
+                            break;
+                    }
                     var response = Request.CreateResponse(HttpStatusCode.OK);
                     response.StatusCode = HttpStatusCode.OK;
-                    response.Content = new StringContent(jsonHandler.Serialize(new { status = "duplicated" }));
+                    response.Content = new StringContent(jsonHandler.Serialize(new { status = POIGlobalVar.errorCode.DUPLICATED, type = type, errcode = errcode, content = returnContent }));
                     return response;
                 }
             }
@@ -255,7 +297,7 @@ namespace POIProxy.Controllers
                 PPLog.errorLog("In wx to proxy post session: " + e.Message);
                 var response = Request.CreateResponse(HttpStatusCode.OK);
                 response.StatusCode = HttpStatusCode.ExpectationFailed;
-                response.Content = new StringContent(jsonHandler.Serialize(new { status = "fail", content = e.Message }));
+                response.Content = new StringContent(jsonHandler.Serialize(new { status = POIGlobalVar.errorCode.FAIL, content = e.Message }));
                 return response;
             }
             
@@ -287,7 +329,7 @@ namespace POIProxy.Controllers
                 }
                 var response = Request.CreateResponse(HttpStatusCode.OK);
                 response.StatusCode = HttpStatusCode.OK;
-                response.Content = new StringContent(jsonHandler.Serialize(new { status = "success" }));
+                response.Content = new StringContent(jsonHandler.Serialize(new { status = POIGlobalVar.errorCode.SUCCESS }));
                 return response;
             }
             catch (Exception e)
@@ -295,7 +337,7 @@ namespace POIProxy.Controllers
                 PPLog.errorLog("error in users operation received: " + e.Message);
                 var response = Request.CreateResponse(HttpStatusCode.OK);
                 response.StatusCode = HttpStatusCode.ExpectationFailed;
-                response.Content = new StringContent(jsonHandler.Serialize(new { status = "fail", content = e.Message }));
+                response.Content = new StringContent(jsonHandler.Serialize(new { status = POIGlobalVar.errorCode.FAIL, content = e.Message }));
                 return response;
             }
         }
@@ -329,7 +371,7 @@ namespace POIProxy.Controllers
                 POIProxyPushNotifier.broadcast(pushMsg);
                 var response = Request.CreateResponse(HttpStatusCode.OK);
                 response.StatusCode = HttpStatusCode.OK;
-                response.Content = new StringContent(jsonHandler.Serialize(new { status = "success", type = POIGlobalVar.resource.SERVICES }));
+                response.Content = new StringContent(jsonHandler.Serialize(new { status = POIGlobalVar.errorCode.SUCCESS, type = POIGlobalVar.resource.SERVICES }));
                 return response;
             }
             catch (Exception e)
@@ -337,7 +379,7 @@ namespace POIProxy.Controllers
                 PPLog.errorLog("error in users operation received: " + e.Message);
                 var response = Request.CreateResponse(HttpStatusCode.OK);
                 response.StatusCode = HttpStatusCode.ExpectationFailed;
-                response.Content = new StringContent(jsonHandler.Serialize(new { status = "fail", content = e.Message }));
+                response.Content = new StringContent(jsonHandler.Serialize(new { status = POIGlobalVar.errorCode.FAIL, content = e.Message }));
                 return response;
             }
         }
@@ -385,14 +427,15 @@ namespace POIProxy.Controllers
 
                 POIProxySessionManager.subscribeSession(sessionId, userId);
 
+                //Send push notification
+                POIProxyPushNotifier.send(userList, pushMsg);
+
                 //Notify the weixin users about the join operation
                 await POIProxyToWxApi.interactiveSessionJoined(userId, sessionId);
 
                 //Notify the wexin server about the join operation
                 await POIProxyToWxApi.interactiveSessionNewUserJoined(sessionInfo["creator"], sessionId, userInfoJson);
 
-                //Send push notification
-                POIProxyPushNotifier.send(userList, pushMsg);
                 return 0;
             }
             else

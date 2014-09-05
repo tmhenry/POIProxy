@@ -139,6 +139,15 @@ namespace POIProxy
             }
         }
 
+        public static void createSessionEvent(string sessionId, POIInteractiveEvent poiEvent)
+        {
+            using (var redisClient = redisManager.GetClient())
+            {
+                var eventList = redisClient.Hashes["create_sessoin_event"];
+                eventList[poiEvent.EventId] = sessionId;
+            }
+        }
+
         public static List<POIInteractiveEvent> getSessionEventList(string sessionId)
         {
             using (var redisClient = redisManager.GetClient())
@@ -161,6 +170,30 @@ namespace POIProxy
                 {
                     return false;
                 }
+            }
+        }
+
+        public static bool checkDuplicatedCreatedSession(string eventId)
+        {
+            using (var redisClient = redisManager.GetClient())
+            {
+                var eventList = redisClient.Hashes["create_sessoin_event"];
+                if (eventList.ContainsKey(eventId))
+                {
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+        }
+
+        public static string getSessionByMsgId(string msgId)
+        {
+            using (var redisClient = redisManager.GetClient()) {
+                var sessionEvent = redisClient.Hashes["create_sessoin_event"];
+                return sessionEvent[msgId];
             }
         }
 
@@ -312,12 +345,34 @@ namespace POIProxy
                     sessionInfo["cover"] = presRecord["media_id"] as string;
                     sessionInfo["description"] = presRecord["description"] as string;
                 }
-
                 return redisClient.GetAllEntriesFromHash("session:" + sessionId);
             }
         }
 
-        public static void updateSessionInfo(string sessionId, Dictionary<string, string> update)
+        public static List<Dictionary<string, string>> getSessionDetail(List<string> sessionList, string userId)
+        {
+            using (var redisClient = redisManager.GetClient())
+            {
+                var detailList = new List<Dictionary<string, string>>();
+                foreach (string sessionId in sessionList)
+                {
+                    var sessionInfo = getSessionInfo(sessionId);
+                    Dictionary<string, string> sessionTempDic = new Dictionary<string, string>();
+                    sessionTempDic["sessionId"] = sessionInfo["session_id"];
+                    sessionTempDic["vote"] = sessionInfo.ContainsKey("vote") ? sessionInfo["vote"] : "0";
+                    sessionTempDic["watch"] = sessionInfo.ContainsKey("watch") ? sessionInfo["watch"] : "0";
+                    var session_vote_by_user = redisClient.Hashes["session_vote_by_user:" + userId];
+                    if (session_vote_by_user.ContainsKey(sessionId) && session_vote_by_user[sessionId] == (0).ToString())
+                        sessionTempDic["isVoted"] = "1";
+                    else
+                        sessionTempDic["isVoted"] = "0";
+                    detailList.Add(sessionTempDic);
+                }
+                return detailList;
+            }
+        }
+
+        public static void updateSessionInfo(string sessionId, Dictionary<string, string> update, string userId = "")
         {
             using (var redisClient = redisManager.GetClient())
             {
@@ -325,7 +380,38 @@ namespace POIProxy
 
                 foreach (string key in update.Keys)
                 {
-                    sessionInfo[key] = update[key];
+                    if (key == "vote" || key == "watch")
+                    {
+                        if (sessionInfo[key] == null) {
+                            sessionInfo[key] = (0).ToString();
+                        }
+                        sessionInfo[key] = (int.Parse(sessionInfo[key]) + (int.Parse(update[key]) > 1 ? 1 : int.Parse(update[key]))).ToString();
+                    }
+                    else 
+                    { 
+                        sessionInfo[key] = update[key];
+                    }
+                }
+
+                if (userId != null && userId != "")
+                {
+                    var session_vote_by_user = redisClient.Hashes["session_vote_by_user:" + userId];
+                    foreach (string key in update.Keys)
+                    {
+                        if (key == "vote" && update[key] != "")
+                        {
+                            session_vote_by_user[sessionId] = (0).ToString();
+                        }
+                    }
+
+                    var session_watch_by_user = redisClient.Hashes["session_watch_by_user:" + userId];
+                    foreach (string key in update.Keys)
+                    {
+                        if (key == "watch" && update[key] != "")
+                        {
+                            session_watch_by_user[sessionId] = (0).ToString();
+                        }
+                    }
                 }
             }
         }
