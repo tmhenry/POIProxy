@@ -126,9 +126,10 @@ namespace POIProxy
             return pushResult;
         }
 
-        public static void broadcast(string pushMsg)
+        public static void broadcast(string pushMsg, string title = null)
         {
-            String title = "有新题目啦,我来抢答!";
+            if(title == null)
+                title = "有新题目啦,我来抢答!";
             JavaScriptSerializer jsonHandler = new JavaScriptSerializer();
             Dictionary<string, string> msgInfo = jsonHandler.Deserialize<Dictionary<string, string>>(pushMsg);
             msgInfo["title"] = title;

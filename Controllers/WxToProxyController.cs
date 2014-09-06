@@ -368,7 +368,7 @@ namespace POIProxy.Controllers
                     url = url,
                     timestamp = timestamp,
                 });
-                POIProxyPushNotifier.broadcast(pushMsg);
+                POIProxyPushNotifier.broadcast(pushMsg, title);
                 var response = Request.CreateResponse(HttpStatusCode.OK);
                 response.StatusCode = HttpStatusCode.OK;
                 response.Content = new StringContent(jsonHandler.Serialize(new { status = POIGlobalVar.errorCode.SUCCESS, type = POIGlobalVar.resource.SERVICES }));
