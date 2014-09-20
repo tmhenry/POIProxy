@@ -224,7 +224,7 @@ namespace POIProxy.Controllers
                             string presId = result.Item1;
                             sessionId = result.Item2;
 
-                            broadCastCreateSession(sessionId, pushMsg);
+                            //broadCastCreateSession(sessionId, pushMsg);
                             returnContent = jsonHandler.Serialize(new { sessionId = sessionId, timestamp = timestamp });
                             break;
 
@@ -233,7 +233,7 @@ namespace POIProxy.Controllers
                             interMsgHandler.reraiseInteractiveSession(msgId, userId, sessionId, newSessionId, timestamp);
 
                             POIProxyPushNotifier.send(userList, pushMsg);
-                            broadCastCreateSession(newSessionId, pushMsg);
+                            //broadCastCreateSession(newSessionId, pushMsg);
                             //Notify the student about interactive session reraised
                             await POIProxyToWxApi.interactiveSessionReraised(userId, sessionId, newSessionId);
                             returnContent = jsonHandler.Serialize(new { sessionId = newSessionId, timestamp = timestamp });
@@ -317,11 +317,18 @@ namespace POIProxy.Controllers
                 switch (type)
                 {
                     case (int)POIGlobalVar.userType.UPDATE:
-                        string deviceId = userInfo["deviceId"];
-                        string userId = userInfo["userId"];
-                        string system = userInfo["system"];
+                        string deviceId = userInfo.ContainsKey("deviceId") ? userInfo["deviceId"] : "";
+                        string userId = userInfo.ContainsKey("userId") ? userInfo["userId"] : "";
+                        string system = userInfo.ContainsKey("system") ? userInfo["system"] : "";
                         int tag = userInfo.ContainsKey("tag") ? int.Parse(userInfo["tag"]) : 0;
-                        POIProxySessionManager.updateUserDevice(userId, deviceId, system, tag);
+                        if (deviceId != "" && userId != "" && system != "")
+                        {
+                            POIProxySessionManager.updateUserDevice(userId, deviceId, system, tag);
+                        }
+                        else
+                        {
+                            POIProxySessionManager.updateUserInfoFromDb(userId);
+                        }
                     break;
 
                     default:

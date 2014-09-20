@@ -205,73 +205,83 @@ namespace POIProxy
 
                 if (userInfo.Count == 0 || !userInfo.ContainsKey("user_id") || !userInfo.ContainsKey("username") || !userInfo.ContainsKey("avatar") || !userInfo.ContainsKey("accessRight"))
                 {
-                    Dictionary<string, object> conditions = new Dictionary<string, object>();
-                    List<string> cols = new List<string>();
-
-                    conditions["id"] = userId;
-                    cols.Add("username");
-                    cols.Add("avatar");
-                    cols.Add("accessRight");
-                    DataRow user = dbManager.selectSingleRowFromTable("users", cols, conditions);
-                    if (user != null)
-                    {
-                        PPLog.infoLog("Read user info from mysql");
-                        //Read user info from db and save into redis
-                        userInfo["user_id"] = userId;
-                        userInfo["username"] = user["username"].ToString();
-                        userInfo["avatar"] = user["avatar"].ToString();
-                        userInfo["accessRight"] = user["accessRight"].ToString();
-
-                        //Find the user profile 
-                        conditions.Clear();
-                        cols.Clear();
-                        conditions["user_id"] = userId;
-                        cols.Add("school");
-                        cols.Add("department");
-                        cols.Add("rating");
-
-                        DataRow profile = dbManager.selectSingleRowFromTable("user_profile", cols, conditions);
-                        if (profile != null)
-                        {
-                            userInfo["rating"] = profile["rating"].ToString();
-
-                            conditions.Clear();
-                            cols.Clear();
-
-                            conditions["sid"] = profile["school"];
-                            cols.Add("name");
-                            DataRow school = dbManager.selectSingleRowFromTable("school", cols, conditions);
-
-                            if (school != null)
-                            {
-                                userInfo["school"] = school["name"] as string;
-                            }
-                            else
-                            {
-                                userInfo["school"] = "";
-                            }
-
-                            conditions.Clear();
-                            cols.Clear();
-
-                            conditions["did"] = profile["department"];
-                            cols.Add("name");
-                            DataRow dept = dbManager.selectSingleRowFromTable("department", cols, conditions);
-
-                            if (dept != null)
-                            {
-                                userInfo["department"] = dept["name"] as string;
-                            }
-                            else
-                            {
-                                userInfo["department"] = "";
-                            }
-                        }
-                    }
+                    updateUserInfoFromDb(userId);
                 }
 
                 return redisClient.GetAllEntriesFromHash("user:" + userId);
             }
+        }
+
+        public static void updateUserInfoFromDb(string userId)
+        {
+            using (var redisClient = redisManager.GetClient())
+            {
+                var userInfo = redisClient.Hashes["user:" + userId];
+                Dictionary<string, object> conditions = new Dictionary<string, object>();
+                List<string> cols = new List<string>();
+
+                conditions["id"] = userId;
+                cols.Add("username");
+                cols.Add("avatar");
+                cols.Add("accessRight");
+                DataRow user = dbManager.selectSingleRowFromTable("users", cols, conditions);
+                if (user != null)
+                {
+                    PPLog.infoLog("Read user info from mysql");
+                    //Read user info from db and save into redis
+                    userInfo["user_id"] = userId;
+                    userInfo["username"] = user["username"].ToString();
+                    userInfo["avatar"] = user["avatar"].ToString();
+                    userInfo["accessRight"] = user["accessRight"].ToString();
+
+                    //Find the user profile 
+                    conditions.Clear();
+                    cols.Clear();
+                    conditions["user_id"] = userId;
+                    cols.Add("school");
+                    cols.Add("department");
+                    cols.Add("rating");
+
+                    DataRow profile = dbManager.selectSingleRowFromTable("user_profile", cols, conditions);
+                    if (profile != null)
+                    {
+                        userInfo["rating"] = profile["rating"].ToString();
+
+                        conditions.Clear();
+                        cols.Clear();
+
+                        conditions["sid"] = profile["school"];
+                        cols.Add("name");
+                        DataRow school = dbManager.selectSingleRowFromTable("school", cols, conditions);
+
+                        if (school != null)
+                        {
+                            userInfo["school"] = school["name"] as string;
+                        }
+                        else
+                        {
+                            userInfo["school"] = "";
+                        }
+
+                        conditions.Clear();
+                        cols.Clear();
+
+                        conditions["did"] = profile["department"];
+                        cols.Add("name");
+                        DataRow dept = dbManager.selectSingleRowFromTable("department", cols, conditions);
+
+                        if (dept != null)
+                        {
+                            userInfo["department"] = dept["name"] as string;
+                        }
+                        else
+                        {
+                            userInfo["department"] = "";
+                        }
+                    }
+                }
+            }
+
         }
 
         public static void updateUserDevice(string userId, string deviceId, string system, int tag)
