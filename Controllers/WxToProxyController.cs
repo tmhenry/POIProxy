@@ -224,7 +224,7 @@ namespace POIProxy.Controllers
                             string presId = result.Item1;
                             sessionId = result.Item2;
 
-                            //broadCastCreateSession(sessionId, pushMsg);
+                            broadCastCreateSession(sessionId, pushMsg);
                             returnContent = jsonHandler.Serialize(new { sessionId = sessionId, timestamp = timestamp });
                             break;
 
@@ -233,7 +233,7 @@ namespace POIProxy.Controllers
                             interMsgHandler.reraiseInteractiveSession(msgId, userId, sessionId, newSessionId, timestamp);
 
                             POIProxyPushNotifier.send(userList, pushMsg);
-                            //broadCastCreateSession(newSessionId, pushMsg);
+                            broadCastCreateSession(newSessionId, pushMsg);
                             //Notify the student about interactive session reraised
                             await POIProxyToWxApi.interactiveSessionReraised(userId, sessionId, newSessionId);
                             returnContent = jsonHandler.Serialize(new { sessionId = newSessionId, timestamp = timestamp });
@@ -400,7 +400,7 @@ namespace POIProxy.Controllers
             var userInfo = POIProxySessionManager.getUserInfo(userId);
             string userInfoJson = jsonHandler.Serialize(userInfo);
 
-            /*if (double.Parse(sessionInfo["create_at"])
+            if (double.Parse(sessionInfo["create_at"])
                 >= POITimestamp.ConvertToUnixTimestamp(DateTime.Now.AddSeconds(-60)))
             {
                 PPLog.infoLog("Cannot join the session, not passing time limit");
@@ -408,7 +408,7 @@ namespace POIProxy.Controllers
                 await POIProxyToWxApi.interactiveSessionJoinBeforeTimeLimit(userId, sessionId);
                 return (int)POIGlobalVar.errorCode.TIME_LIMITED;
             }
-            else */if (!interMsgHandler.checkSessionOpen(sessionId))
+            else if (!interMsgHandler.checkSessionOpen(sessionId))
             {
                 PPLog.infoLog("[POIProxyHub wxJoinInteractiveSession] session status is not open");
                 return (int)POIGlobalVar.errorCode.SESSION_NOT_OPEN;
