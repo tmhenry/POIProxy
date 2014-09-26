@@ -225,7 +225,7 @@ namespace POIProxy.Controllers
                             sessionId = result.Item2;
 
                             //broadCastCreateSession(sessionId, pushMsg);
-                            returnContent = jsonHandler.Serialize(new { sessionId = sessionId, timestamp = timestamp });
+                            returnContent = jsonHandler.Serialize(new { sessionId = sessionId, presId = presId, timestamp = timestamp });
                             break;
 
                         case (int)POIGlobalVar.sessionType.RERAISE:
