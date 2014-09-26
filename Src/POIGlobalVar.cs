@@ -36,6 +36,7 @@ namespace POIProxy
         public enum messageType { TEXT, IMAGE, VOICE, ILLUSTRATION };
         public enum serviceType { SYSTEM, ACTION, NEWS, EXTRA };
         public enum userType { UPDATE };
+        public enum taskType { GET };
         public enum tag { UNSUBSCRIBED, SUBSCRIBED};
         public enum errorCode
         {

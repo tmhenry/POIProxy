@@ -375,7 +375,7 @@ namespace POIProxy.Controllers
                     url = url,
                     timestamp = timestamp,
                 });
-                POIProxyPushNotifier.broadcast(pushMsg, title);
+                //POIProxyPushNotifier.broadcast(pushMsg, title);
                 var response = Request.CreateResponse(HttpStatusCode.OK);
                 response.StatusCode = HttpStatusCode.OK;
                 response.Content = new StringContent(jsonHandler.Serialize(new { status = POIGlobalVar.errorCode.SUCCESS, type = POIGlobalVar.resource.SERVICES }));
@@ -384,6 +384,48 @@ namespace POIProxy.Controllers
             catch (Exception e)
             {
                 PPLog.errorLog("error in users operation received: " + e.Message);
+                var response = Request.CreateResponse(HttpStatusCode.OK);
+                response.StatusCode = HttpStatusCode.ExpectationFailed;
+                response.Content = new StringContent(jsonHandler.Serialize(new { status = POIGlobalVar.errorCode.FAIL, content = e.Message }));
+                return response;
+            }
+        }
+
+        public HttpResponseMessage Tasks(HttpRequestMessage request)
+        {
+            try
+            {
+                string content = request.Content.ReadAsStringAsync().Result;
+                Dictionary<string, string> taskInfo = jsonHandler.Deserialize<Dictionary<string, string>>(content);
+                PPLog.infoLog("[ProxyController Tasks] " + DictToString(taskInfo, null));
+
+                string taskId = taskInfo.ContainsKey("id") ? taskInfo["id"] : "";
+                string taskName = taskInfo.ContainsKey("name") ? taskInfo["name"] : "";
+                string taskScore = taskInfo.ContainsKey("score") ? taskInfo["score"] : "";
+                string taskType = taskInfo.ContainsKey("type") ? taskInfo["type"] : "";
+                string userId = taskInfo.ContainsKey("userId") ? taskInfo["userId"] : "";
+                double timestamp = POITimestamp.ConvertToUnixTimestamp(DateTime.Now);
+                string pushMsg = jsonHandler.Serialize(new
+                {
+                    resource = POIGlobalVar.taskType.GET,
+                    taskId = taskId,
+                    taskType = taskType,
+                    taskScore = taskScore,
+                    timestamp = timestamp,
+                });
+
+                List<string> userList = new List<string>();
+                userList.Add(userId);
+                POIProxyPushNotifier.send(userList, pushMsg);
+
+                var response = Request.CreateResponse(HttpStatusCode.OK);
+                response.StatusCode = HttpStatusCode.OK;
+                response.Content = new StringContent(jsonHandler.Serialize(new { status = POIGlobalVar.errorCode.SUCCESS, type = POIGlobalVar.taskType.GET}));
+                return response;
+            }
+            catch (Exception e)
+            {
+                PPLog.errorLog("error in task operation received: " + e.Message);
                 var response = Request.CreateResponse(HttpStatusCode.OK);
                 response.StatusCode = HttpStatusCode.ExpectationFailed;
                 response.Content = new StringContent(jsonHandler.Serialize(new { status = POIGlobalVar.errorCode.FAIL, content = e.Message }));
