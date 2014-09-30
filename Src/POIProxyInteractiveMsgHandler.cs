@@ -334,7 +334,7 @@ namespace POIProxy
 
             //Upload the session archive to the qiniu cdn
             string mediaId = POICdnHelper.generateCdnKeyForSessionArchive(sessionId);
-            POICdnHelper.uploadStrToQiniuCDN(mediaId, "");
+            POICdnHelper.uploadStrToQiniuCDN(mediaId, jsonHandler.Serialize(POIProxySessionManager.getSessionArchive(sessionId)));
 
             //Update the database given the media id
             Dictionary<string, object> conditions = new Dictionary<string, object>();
@@ -383,7 +383,7 @@ namespace POIProxy
 
             //Upload the session archive
             string mediaId = POICdnHelper.generateCdnKeyForSessionArchive(sessionId);
-            POICdnHelper.uploadStrToQiniuCDN(mediaId, jsonHandler.Serialize(""));
+            POICdnHelper.uploadStrToQiniuCDN(mediaId, jsonHandler.Serialize(POIProxySessionManager.getSessionArchive(sessionId)));
 
             //Update the database given the media id
             Dictionary<string, object> conditions = new Dictionary<string, object>();
@@ -666,6 +666,18 @@ namespace POIProxy
                 Timestamp = timestamp,
             };
 
+            POIProxySessionManager.archiveSessionEvent(sessionId, poiEvent);
+        }
+
+        public void systemMsgReceived(string msgId, string userId, string sessionId, string message, double timestamp)
+        {
+            POIInteractiveEvent poiEvent = new POIInteractiveEvent { 
+                EventType = "system",
+                EventId = msgId,
+                UserId = userId,
+                Message = message,
+                Timestamp = timestamp,
+            };
             POIProxySessionManager.archiveSessionEvent(sessionId, poiEvent);
         }
 

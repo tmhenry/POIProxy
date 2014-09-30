@@ -98,7 +98,14 @@ namespace POIProxy
                         }
                         break;
                     case (int)POIGlobalVar.resource.SERVICES:
-                        title = "你收到了一条系统消息";
+                        if (msgInfo["title"] != "")
+                        {
+                            title = msgInfo["title"];
+                        }
+                        else 
+                        {
+                            title = "你收到了一条系统消息";
+                        }
                         break;
                     default:
                         title = "新信息提醒";

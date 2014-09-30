@@ -33,10 +33,9 @@ namespace POIProxy
 
         public enum resource { SESSIONS, MESSAGES, USERS, SERVICES };
         public enum sessionType { CREATE, JOIN, END, CANCEL, UPDATE, RERAISE, RATING, GET };
-        public enum messageType { TEXT, IMAGE, VOICE, ILLUSTRATION };
-        public enum serviceType { SYSTEM, ACTION, NEWS, EXTRA };
+        public enum messageType { TEXT, IMAGE, VOICE, ILLUSTRATION, SYSTEM };
         public enum userType { UPDATE };
-        public enum taskType { GET };
+        public enum serviceType { SYSTEM, ACTION, NEWS, EXTRA, TASK};
         public enum tag { UNSUBSCRIBED, SUBSCRIBED};
         public enum errorCode
         {

@@ -51,8 +51,8 @@ namespace POIProxy.Controllers
                 string userId = msgInfo["userId"];
                 string sessionId = msgInfo["sessionId"];
                 int msgType = int.Parse(msgInfo["msgType"]);
-                string message = msgInfo["message"];
-                string mediaId = msgInfo["mediaId"];
+                string message = msgInfo.ContainsKey("message") ? msgInfo["message"] : "";
+                string mediaId = msgInfo.ContainsKey("mediaId") ? msgInfo["mediaId"] : "";
                 float mediaDuration = msgInfo.ContainsKey("mediaDuration") ? float.Parse(msgInfo["mediaDuration"]) : 0;
                 //double timestamp = double.Parse(msgInfo["timestamp"]);
                 double timestamp = POITimestamp.ConvertToUnixTimestamp(DateTime.Now);
@@ -98,6 +98,13 @@ namespace POIProxy.Controllers
                             POIProxyPushNotifier.send(userList, pushMsg);
                             await POIProxyToWxApi.illustrationMsgReceived(userList, sessionId, mediaId);
                             break;
+
+                        case (int)POIGlobalVar.messageType.SYSTEM:
+                            interMsgHandler.systemMsgReceived(msgId, userId, sessionId, message, timestamp);
+                            POIProxyPushNotifier.send(userList, pushMsg);
+                            await POIProxyToWxApi.illustrationMsgReceived(userList, sessionId, message);
+                            break;
+
                         default:
                             break;
                     }
@@ -357,12 +364,14 @@ namespace POIProxy.Controllers
                 Dictionary<string, string> serviceInfo = jsonHandler.Deserialize<Dictionary<string, string>>(content);
                 PPLog.infoLog("[ProxyController Services] " + DictToString(serviceInfo, null));
 
-                string serviceType = serviceInfo.ContainsKey("serviceType") ? serviceInfo["serviceType"] : "";
-                string msgId = serviceInfo.ContainsKey("msgId") ? serviceInfo["msgId"] : "";
+                string serviceType = serviceInfo["serviceType"];
+                string msgId = serviceInfo["msgId"];
                 string title = serviceInfo.ContainsKey("title") ? serviceInfo["title"] : "";
                 string mediaId = serviceInfo.ContainsKey("mediaId") ? serviceInfo["mediaId"] : "";
                 string url = serviceInfo.ContainsKey("url") ? serviceInfo["url"] : "";
                 string message = serviceInfo.ContainsKey("message") ? serviceInfo["message"] : "";
+                string userId = serviceInfo.ContainsKey("userId") ? serviceInfo["userId"] : "";
+                string taskScore = serviceInfo.ContainsKey("taskScore") ? serviceInfo["taskScore"] : "0";
                 double timestamp = POITimestamp.ConvertToUnixTimestamp(DateTime.Now);
                 string pushMsg = jsonHandler.Serialize(new
                 {
@@ -375,7 +384,25 @@ namespace POIProxy.Controllers
                     url = url,
                     timestamp = timestamp,
                 });
-                //POIProxyPushNotifier.broadcast(pushMsg, title);
+
+                if (int.Parse(serviceType) == (int)POIGlobalVar.serviceType.TASK)
+                {
+                    Dictionary<string, object> pushDic = jsonHandler.Deserialize<Dictionary<string, object>>(pushMsg);
+                    pushDic["extra"] = jsonHandler.Serialize(new { taskScore = taskScore });
+                    pushMsg = jsonHandler.Serialize(pushDic);
+                }
+
+                if (userId != "")
+                {
+                    List<string> userList = new List<string>();
+                    userList.Add(userId);
+                    POIProxyPushNotifier.send(userList, pushMsg);
+                }
+                else 
+                {
+                    //POIProxyPushNotifier.broadcast(pushMsg, title);
+                }
+
                 var response = Request.CreateResponse(HttpStatusCode.OK);
                 response.StatusCode = HttpStatusCode.OK;
                 response.Content = new StringContent(jsonHandler.Serialize(new { status = POIGlobalVar.errorCode.SUCCESS, type = POIGlobalVar.resource.SERVICES }));
@@ -390,49 +417,6 @@ namespace POIProxy.Controllers
                 return response;
             }
         }
-
-        public HttpResponseMessage Tasks(HttpRequestMessage request)
-        {
-            try
-            {
-                string content = request.Content.ReadAsStringAsync().Result;
-                Dictionary<string, string> taskInfo = jsonHandler.Deserialize<Dictionary<string, string>>(content);
-                PPLog.infoLog("[ProxyController Tasks] " + DictToString(taskInfo, null));
-
-                string taskId = taskInfo.ContainsKey("id") ? taskInfo["id"] : "";
-                string taskName = taskInfo.ContainsKey("name") ? taskInfo["name"] : "";
-                string taskScore = taskInfo.ContainsKey("score") ? taskInfo["score"] : "";
-                string taskType = taskInfo.ContainsKey("type") ? taskInfo["type"] : "";
-                string userId = taskInfo.ContainsKey("userId") ? taskInfo["userId"] : "";
-                double timestamp = POITimestamp.ConvertToUnixTimestamp(DateTime.Now);
-                string pushMsg = jsonHandler.Serialize(new
-                {
-                    resource = POIGlobalVar.taskType.GET,
-                    taskId = taskId,
-                    taskType = taskType,
-                    taskScore = taskScore,
-                    timestamp = timestamp,
-                });
-
-                List<string> userList = new List<string>();
-                userList.Add(userId);
-                POIProxyPushNotifier.send(userList, pushMsg);
-
-                var response = Request.CreateResponse(HttpStatusCode.OK);
-                response.StatusCode = HttpStatusCode.OK;
-                response.Content = new StringContent(jsonHandler.Serialize(new { status = POIGlobalVar.errorCode.SUCCESS, type = POIGlobalVar.taskType.GET}));
-                return response;
-            }
-            catch (Exception e)
-            {
-                PPLog.errorLog("error in task operation received: " + e.Message);
-                var response = Request.CreateResponse(HttpStatusCode.OK);
-                response.StatusCode = HttpStatusCode.ExpectationFailed;
-                response.Content = new StringContent(jsonHandler.Serialize(new { status = POIGlobalVar.errorCode.FAIL, content = e.Message }));
-                return response;
-            }
-        }
-
 
         private async Task<int> wxJoinInteractiveSession(Dictionary<string, string> msgInfo, Dictionary<string, string> sessionInfo, string pushMsg, List<string> userList)
         {
