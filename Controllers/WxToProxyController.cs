@@ -458,8 +458,6 @@ namespace POIProxy.Controllers
                 double timestamp = POITimestamp.ConvertToUnixTimestamp(DateTime.Now);
                 interMsgHandler.joinInteractiveSession(msgId, userId, sessionId, timestamp);
 
-                POIProxySessionManager.subscribeSession(sessionId, userId);
-
                 //Send push notification
                 POIProxyPushNotifier.send(userList, pushMsg);
 
