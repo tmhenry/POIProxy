@@ -199,6 +199,165 @@ namespace POIProxy
             return dbManager.selectSingleRowFromTable("session", null, conditions);
         }
 
+        public void addSessionScore(string userId, string type) {
+            Dictionary<string, object> conditions = new Dictionary<string, object>();
+            conditions["tutor"] = userId;
+
+            List<string> cols = new List<string>();
+            cols.Add("start_at");
+            cols.Add("type");
+
+            DataTable result = dbManager.selectFromTable("session", cols, conditions);
+            if (result.Rows.Count > 0)
+            {
+                bool isPersistent = false;
+
+                int interactiveSessionNum = 0;
+                int tutorialSessionNum = 0;
+
+                double today = POITimestamp.ConvertToUnixTimestamp(DateTime.Today);
+                double yesterday =  today - 24 * 60 * 60;
+                for (int i = 0; i < result.Rows.Count; i++)
+                {
+                    if ((double)result.Rows[i]["start_at"] > today) {
+                        if ((string)result.Rows[i]["type"] == "interactive")
+                        {
+                            interactiveSessionNum++;
+                        }
+                        else if ((string)result.Rows[i]["type"] == "public")
+                        { 
+                            tutorialSessionNum++;
+                        }
+                    }
+                    if ((double)result.Rows[i]["start_at"] > yesterday && (double)result.Rows[i]["start_at"] < today)
+                    {
+                        isPersistent = true;
+                    }
+                }
+                PPLog.debugLog("interactiveSessionNum: " + interactiveSessionNum + " tutorialSessionNum: " + tutorialSessionNum + " isPersistent: " + isPersistent);
+
+                Dictionary<string, object> userConditions = new Dictionary<string, object>();
+                userConditions["user_id"] = userId;
+
+                List<string> userCols = new List<string>();
+                userCols.Add("persistent_time");
+                userCols.Add("persistent_score");
+                userCols.Add("interactive_score_reward");
+                userCols.Add("tutorial_score_reward");
+                userCols.Add("tutorial_score");
+
+                DataRow userResult = getByUserId(userConditions, userCols, "user_score");
+                int persistentTime = (int)userResult["persistent_time"];
+                int persistentScore = (int)userResult["persistent_score"];
+                int interactiveScoreReward = (int)userResult["interactive_score_reward"];
+                int tutorialScoreReward = (int)userResult["tutorial_score_reward"];
+                int tutorialScore = (int)userResult["tutorial_score"];
+
+                List<string> userList = new List<string>();
+                userList.Add(userId);
+
+                string pushMsg = jsonHandler.Serialize(new
+                {
+                    resource = POIGlobalVar.resource.SERVICES,
+                    serviceType = (int)POIGlobalVar.serviceType.TASK,
+                    msgId = POITimestamp.ConvertToUnixTimestamp(DateTime.Now).ToString(),
+                    mediaId = "",
+                    url = "",
+                    timestamp = POITimestamp.ConvertToUnixTimestamp(DateTime.Now)
+                });
+
+                if (isPersistent)
+                {
+                    if ((interactiveSessionNum + tutorialSessionNum) == 1)
+                    {
+                        updateByUserId(userId, "persistent_time", persistentTime + 1, "user_score");
+                        persistentTime = persistentTime > 5 ? 5 : persistentTime;
+                        updateByUserId(userId, "persistent_score", persistentScore + 10 * persistentTime, "user_score");
+                        insertUserTask(userId, "1");
+
+                        Dictionary<string, object> pushDic = jsonHandler.Deserialize<Dictionary<string, object>>(pushMsg);
+                        pushDic["title"] = "完成任务-我来守护者";
+                        pushDic["message"] = "持续活跃" + userResult["persistent_time"].ToString() + "天奖励" + (10 * persistentTime).ToString() + "分";
+                        pushDic["extra"] = jsonHandler.Serialize(new { taskScore = (10 * persistentTime).ToString() });
+                        pushMsg = jsonHandler.Serialize(pushDic);
+                        POIProxyPushNotifier.send(userList, pushMsg);
+                    }
+                }
+                else
+                {
+                    updateByUserId(userId, "persistent_time", 1, "user_score");
+                }
+
+                if (interactiveSessionNum == 2 && type == "interactive")
+                {
+                    updateByUserId(userId, "interactive_score_reward", interactiveScoreReward + 100, "user_score");
+                    insertUserTask(userId, "2");
+
+                    Dictionary<string, object> pushDic = jsonHandler.Deserialize<Dictionary<string, object>>(pushMsg);
+                    pushDic["title"] = "完成任务-答疑超人";
+                    pushDic["message"] = "今日完成十个答疑奖励100分";
+                    pushDic["extra"] = jsonHandler.Serialize(new { taskScore = (100).ToString() });
+                    pushMsg = jsonHandler.Serialize(pushDic);
+                    POIProxyPushNotifier.send(userList, pushMsg);
+                }
+
+                if (tutorialSessionNum == 2 && type == "tutorial")
+                {
+                    updateByUserId(userId, "tutorial_score_reward", tutorialScoreReward + 100, "user_score");
+                    insertUserTask(userId, "3");
+
+                    Dictionary<string, object> pushDic = jsonHandler.Deserialize<Dictionary<string, object>>(pushMsg);
+                    pushDic["title"] = "完成任务-小课堂名师";
+                    pushDic["message"] = "今日完成十个小课堂奖励100分";
+                    pushDic["extra"] = jsonHandler.Serialize(new { taskScore = (100).ToString() });
+                    pushMsg = jsonHandler.Serialize(pushDic);
+                    POIProxyPushNotifier.send(userList, pushMsg);
+                }
+
+                if (type == "tutorial")
+                {
+                    updateByUserId(userId, "tutorial_score", tutorialScore + 10, "user_score");
+                }
+
+            }
+        }
+
+        private void updateByUserId(string userId, string colName, int value, string table){
+            Dictionary<string, object> values = new Dictionary<string, object>();
+            values["user_id"] = userId;
+            values[colName] = value;
+
+            Dictionary<string, object> conditions = new Dictionary<string, object>();
+            conditions["user_id"] = userId;
+
+            dbManager.updateTable(table, values, conditions);
+        }
+
+        private void insertUserTask(string userId, string taskId) {
+            Dictionary<string, object> values = new Dictionary<string, object>();
+            values["updated_at"] = POITimestamp.ConvertToUnixTimestamp(DateTime.Now).ToString();
+            values["user_id"] = userId;
+            values["task_id"] = taskId;
+
+            dbManager.insertIntoTable("user_task", values);
+        }
+
+        private DataRow getByUserId(Dictionary<string, object> conditions, List<string> cols, string table)
+        {
+            DataTable userResult = dbManager.selectFromTable("user_score", cols, conditions);
+            if (userResult.Rows.Count > 0)
+            {
+                return userResult.Rows[0];
+            }
+            else 
+            {
+                Dictionary<string, object> values = new Dictionary<string, object>();
+                values["user_id"] = conditions["user_id"];
+                string userScoreId = dbManager.insertIntoTable("user_score", values);
+                return dbManager.selectFromTable(table, cols, conditions).Rows[0];
+            }
+        }
+
         public Tuple<string,string> createInteractiveSession(string msgId, string userId, string mediaId, 
             string desc, string accessType = "private", string filter = "")
         {
@@ -297,6 +456,7 @@ namespace POIProxy
         {
             //add the current user into the session table
             addUserToSessionRecord(userId, sessionId);
+            
 
             //Turn the session to serving status
             updateSessionStatusWithTutorJoin(userId, sessionId);
@@ -320,6 +480,9 @@ namespace POIProxy
 
             //Add the activity record
             addAnswerActivity(userId, sessionId);
+
+            //add user score.
+            addSessionScore(userId, "interactive");
         }
 
         public void cancelInteractiveSession(Dictionary<string,string>msgInfo)
@@ -548,6 +711,10 @@ namespace POIProxy
             string msgId = msgInfo["msgId"];
             string userId = msgInfo["userId"];
             string sessionId = msgInfo["sessionId"];
+            List<string> userList = POIProxySessionManager.getUsersBySessionId(sessionId);
+            userList.Remove(userId);
+            var tutorId = userList[0];
+
             int rating = Convert.ToInt32(msgInfo["rating"]);
             //PPLog.debugLog("rateInteractiveSession: userId: " + userId + " sessionId: " + sessionId + " rating: " + rating);
             if (POIProxySessionManager.checkPrivateTutoring(sessionId))
@@ -557,6 +724,8 @@ namespace POIProxy
                 {
                     //Session end initated by rating event
                     updateSessionStatusWithRating(sessionId, rating, true);
+
+                    
                 }
                 else
                 {
@@ -605,7 +774,18 @@ namespace POIProxy
             uploadSessionArchive(sessionId);
 
             //Update the answer activity
-            updateAnswerActivity(userId, sessionId, rating);
+            updateAnswerActivity(tutorId, sessionId, rating);
+
+            //update user score.
+            Dictionary<string, object> userConditions = new Dictionary<string, object>();
+            userConditions["user_id"] = tutorId;
+
+            List<string> userCols = new List<string>();
+            userCols.Add("interactive_score");
+
+            DataRow userResult = getByUserId(userConditions, userCols, "user_score");
+
+            updateByUserId(tutorId, "interactive_score", (int)userResult["interactive_score"] + rating * 10, "user_score");
         }
 
         //Functions for sending messages
@@ -667,6 +847,7 @@ namespace POIProxy
             };
 
             POIProxySessionManager.archiveSessionEvent(sessionId, poiEvent);
+
         }
 
         public void systemMsgReceived(string msgId, string userId, string sessionId, string message, double timestamp)

@@ -102,7 +102,7 @@ namespace POIProxy.Controllers
                         case (int)POIGlobalVar.messageType.SYSTEM:
                             interMsgHandler.systemMsgReceived(msgId, userId, sessionId, message, timestamp);
                             POIProxyPushNotifier.send(userList, pushMsg);
-                            await POIProxyToWxApi.illustrationMsgReceived(userList, sessionId, message);
+                            await POIProxyToWxApi.textMsgReceived(userList, sessionId, message);
                             break;
 
                         default:
@@ -170,7 +170,8 @@ namespace POIProxy.Controllers
                     {
                         case (int)POIGlobalVar.sessionType.RATING:
                             var sessionInfo = POIProxySessionManager.getSessionInfo(sessionId);
-                            if (sessionInfo["creator"] != userId) 
+                            string role = msgInfo.ContainsKey("role") ? msgInfo["role"] : "members";
+                            if (sessionInfo["creator"] != userId && role != "admin")
                             {
                                 errcode = (int)POIGlobalVar.errorCode.TUTOR_CANNOT_RATING;
                                 break;
@@ -181,7 +182,23 @@ namespace POIProxy.Controllers
                             Dictionary<string, string> pushDic = jsonHandler.Deserialize<Dictionary<string, string>>(pushMsg);
                             pushDic["rating"] = rating.ToString();
                             pushMsg = jsonHandler.Serialize(pushDic);
-                            POIProxyPushNotifier.send(userList, pushMsg);
+                            if (role == "members"){
+                                POIProxyPushNotifier.send(userList, pushMsg);
+                            }
+                            else { 
+                                pushMsg = jsonHandler.Serialize(new
+                                {
+                                    resource = POIGlobalVar.resource.MESSAGES,
+                                    msgId = msgId,
+                                    userId = sessionInfo["creator"],
+                                    sessionId = sessionId,
+                                    msgType = (int)POIGlobalVar.messageType.SYSTEM,
+                                    message = "由于对方长时间未评分，系统自动评为5分",
+                                    timestamp = timestamp
+                                });
+                                userList.Remove(sessionInfo["creator"]);
+                                POIProxyPushNotifier.send(userList, pushMsg);
+                            }
                             //need to write for weixin tutor notifier.
 
                             break;
@@ -247,7 +264,7 @@ namespace POIProxy.Controllers
                             break;
 
                         case (int)POIGlobalVar.sessionType.GET:
-                            string sessionList = msgInfo["sessionList"];
+                            string sessionList = msgInfo.ContainsKey("sessionList") ? msgInfo["sessionList"] : "[]";
                             List<string> session = jsonHandler.Deserialize<List<string>>(sessionList);
                             var sessionDetail = POIProxySessionManager.getSessionDetail(session, userId);
                             returnContent = jsonHandler.Serialize(sessionDetail);
@@ -319,15 +336,17 @@ namespace POIProxy.Controllers
             PPLog.infoLog("[ProxyController users] " + DictToString(userInfo, null));
 
             int type = int.Parse(userInfo["type"]);
+            string deviceId = userInfo.ContainsKey("deviceId") ? userInfo["deviceId"] : "";
+            string userId = userInfo.ContainsKey("userId") ? userInfo["userId"] : "";
+            string system = userInfo.ContainsKey("system") ? userInfo["system"] : "";
+            int tag = userInfo.ContainsKey("tag") ? int.Parse(userInfo["tag"]) : 0;
+
             try
             {
                 switch (type)
                 {
                     case (int)POIGlobalVar.userType.UPDATE:
-                        string deviceId = userInfo.ContainsKey("deviceId") ? userInfo["deviceId"] : "";
-                        string userId = userInfo.ContainsKey("userId") ? userInfo["userId"] : "";
-                        string system = userInfo.ContainsKey("system") ? userInfo["system"] : "";
-                        int tag = userInfo.ContainsKey("tag") ? int.Parse(userInfo["tag"]) : 0;
+                        
                         if (deviceId != "" && userId != "" && system != "")
                         {
                             POIProxySessionManager.updateUserDevice(userId, deviceId, system, tag);
@@ -336,6 +355,9 @@ namespace POIProxy.Controllers
                         {
                             POIProxySessionManager.updateUserInfoFromDb(userId);
                         }
+                    break;
+                    case (int)POIGlobalVar.userType.SCORE:
+                        interMsgHandler.addSessionScore(userId, "tutorial");
                     break;
 
                     default:
