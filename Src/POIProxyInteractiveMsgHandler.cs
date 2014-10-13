@@ -275,12 +275,14 @@ namespace POIProxy
                         updateByUserId(userId, "persistent_score", persistentScore + 10 * persistentTime, "user_score");
                         insertUserTask(userId, "1");
 
-                        Dictionary<string, object> pushDic = jsonHandler.Deserialize<Dictionary<string, object>>(pushMsg);
-                        pushDic["title"] = "完成任务-我来守护者";
-                        pushDic["message"] = "持续活跃" + userResult["persistent_time"].ToString() + "天奖励" + (10 * persistentTime).ToString() + "分";
-                        pushDic["extra"] = jsonHandler.Serialize(new { taskScore = (10 * persistentTime).ToString() });
-                        pushMsg = jsonHandler.Serialize(pushDic);
-                        POIProxyPushNotifier.send(userList, pushMsg);
+                        if (persistentTime > 0) {
+                            Dictionary<string, object> pushDic = jsonHandler.Deserialize<Dictionary<string, object>>(pushMsg);
+                            pushDic["title"] = "完成任务-我来守护者";
+                            pushDic["message"] = "持续活跃" + userResult["persistent_time"].ToString() + "天奖励" + (10 * persistentTime).ToString() + "分";
+                            pushDic["extra"] = jsonHandler.Serialize(new { taskScore = (10 * persistentTime).ToString() });
+                            pushMsg = jsonHandler.Serialize(pushDic);
+                            POIProxyPushNotifier.send(userList, pushMsg);
+                        }
                     }
                 }
                 else
