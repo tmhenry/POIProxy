@@ -153,7 +153,14 @@ namespace POIProxy
             using (var redisClient = redisManager.GetClient())
             {
                 var eventList = redisClient.As<POIInteractiveEvent>().GetHash<string>("archive:event_list:" + sessionId);
-                return eventList.Values.ToList();
+                var eventByTimestampList = new SortedDictionary<Double, POIInteractiveEvent>();
+                
+                foreach (string eventId in eventList.Keys)
+                {
+                    //PPLog.debugLog("[Session ID]"+sessionId+"  [eventId]"+eventId+"  [Timestamp]"+eventTimestampList[eventId]);
+                    eventByTimestampList[eventList[eventId].Timestamp] = eventList[eventId];
+                }
+                return eventByTimestampList.Values.ToList();
             }
         }
 
@@ -390,6 +397,7 @@ namespace POIProxy
 
                 foreach (string key in update.Keys)
                 {
+                    //PPLog.infoLog("[DEBUG] userId: " + userId + " Key: " + key + " KeyValue: " + update[key]);
                     if (key == "vote" || key == "watch")
                     {
                         if (sessionInfo[key] == null) {
@@ -405,19 +413,20 @@ namespace POIProxy
 
                 if (userId != null && userId != "")
                 {
+                    
                     var session_vote_by_user = redisClient.Hashes["session_vote_by_user:" + userId];
                     foreach (string key in update.Keys)
                     {
-                        if (key == "vote" && update[key] != "")
+                        if (key == "vote" && update[key] != "0")
                         {
                             session_vote_by_user[sessionId] = (0).ToString();
                         }
                     }
-
+                    
                     var session_watch_by_user = redisClient.Hashes["session_watch_by_user:" + userId];
                     foreach (string key in update.Keys)
                     {
-                        if (key == "watch" && update[key] != "")
+                        if (key == "watch" && update[key] != "0")
                         {
                             session_watch_by_user[sessionId] = (0).ToString();
                         }

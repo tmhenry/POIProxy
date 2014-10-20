@@ -378,7 +378,7 @@ namespace POIProxy
 
             values.Clear();
             values["type"] = "interactive";
-            values["presId"] = presId;
+            values["presId"] = (presId == "-1") ? "0" : presId;
             values["creator"] = userId;
             values["create_at"] = timestamp;
             values["status"] = "open";
