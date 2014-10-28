@@ -31,7 +31,7 @@ namespace POIProxy
 
         public static int MaxMobileClientCount { get; set; }
 
-        public enum resource { SESSIONS, MESSAGES, USERS, SERVICES };
+        public enum resource { SESSIONS, MESSAGES, USERS, SERVICES, ALERTS };
         public enum sessionType { CREATE, JOIN, END, CANCEL, UPDATE, RERAISE, RATING, GET };
         public enum messageType { TEXT, IMAGE, VOICE, ILLUSTRATION, SYSTEM };
         public enum userType { UPDATE, SCORE };

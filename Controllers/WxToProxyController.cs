@@ -432,7 +432,57 @@ namespace POIProxy.Controllers
             }
             catch (Exception e)
             {
-                PPLog.errorLog("error in users operation received: " + e.Message);
+                PPLog.errorLog("error in service received: " + e.Message);
+                var response = Request.CreateResponse(HttpStatusCode.OK);
+                response.StatusCode = HttpStatusCode.ExpectationFailed;
+                response.Content = new StringContent(jsonHandler.Serialize(new { status = POIGlobalVar.errorCode.FAIL, content = e.Message }));
+                return response;
+            }
+        }
+
+        public HttpResponseMessage Alerts(HttpRequestMessage request)
+        {
+            try
+            {
+                string content = request.Content.ReadAsStringAsync().Result;
+                Dictionary<string, string> alertInfo = jsonHandler.Deserialize<Dictionary<string, string>>(content);
+                PPLog.infoLog("[ProxyController Alerts] " + DictToString(alertInfo, null));
+
+                string serviceType = alertInfo["alertType"];
+                string msgId = alertInfo["msgId"];
+                string title = alertInfo.ContainsKey("title") ? alertInfo["title"] : "";
+                string message = alertInfo.ContainsKey("message") ? alertInfo["message"] : "";
+                string userId = alertInfo.ContainsKey("userId") ? alertInfo["userId"] : "";
+                double timestamp = POITimestamp.ConvertToUnixTimestamp(DateTime.Now);
+                string pushMsg = jsonHandler.Serialize(new
+                {
+                    resource = POIGlobalVar.resource.SERVICES,
+                    serviceType = serviceType,
+                    msgId = msgId,
+                    title = title,
+                    message = message,
+                    timestamp = timestamp,
+                });
+
+                if (userId != "")
+                {
+                    List<string> userList = new List<string>();
+                    userList.Add(userId);
+                    POIProxyPushNotifier.send(userList, pushMsg);
+                }
+                else
+                {
+                    //POIProxyPushNotifier.broadcast(pushMsg, title);
+                }
+
+                var response = Request.CreateResponse(HttpStatusCode.OK);
+                response.StatusCode = HttpStatusCode.OK;
+                response.Content = new StringContent(jsonHandler.Serialize(new { status = POIGlobalVar.errorCode.SUCCESS, type = POIGlobalVar.resource.ALERTS }));
+                return response;
+            }
+            catch (Exception e)
+            {
+                PPLog.errorLog("error in alert received: " + e.Message);
                 var response = Request.CreateResponse(HttpStatusCode.OK);
                 response.StatusCode = HttpStatusCode.ExpectationFailed;
                 response.Content = new StringContent(jsonHandler.Serialize(new { status = POIGlobalVar.errorCode.FAIL, content = e.Message }));
