@@ -248,7 +248,9 @@ namespace POIProxy.Controllers
                             string presId = result.Item1;
                             sessionId = result.Item2;
 
-                            //broadCastCreateSession(sessionId, pushMsg);
+                            if (WebConfigurationManager.AppSettings["ENV"] == "production") { 
+                                broadCastCreateSession(sessionId, pushMsg);
+                            }
                             returnContent = jsonHandler.Serialize(new { sessionId = sessionId, presId = presId, timestamp = timestamp });
                             break;
 
@@ -257,7 +259,9 @@ namespace POIProxy.Controllers
                             interMsgHandler.reraiseInteractiveSession(msgId, userId, sessionId, newSessionId, timestamp);
 
                             POIProxyPushNotifier.send(userList, pushMsg);
-                            //broadCastCreateSession(newSessionId, pushMsg);
+                            if (WebConfigurationManager.AppSettings["ENV"] == "production") { 
+                                broadCastCreateSession(newSessionId, pushMsg);
+                            }
                             //Notify the student about interactive session reraised
                             await POIProxyToWxApi.interactiveSessionReraised(userId, sessionId, newSessionId);
                             returnContent = jsonHandler.Serialize(new { sessionId = newSessionId, timestamp = timestamp });
@@ -422,7 +426,9 @@ namespace POIProxy.Controllers
                 }
                 else 
                 {
-                    //POIProxyPushNotifier.broadcast(pushMsg, title);
+                    if (WebConfigurationManager.AppSettings["ENV"] == "production") { 
+                        POIProxyPushNotifier.broadcast(pushMsg, title);
+                    }
                 }
 
                 var response = Request.CreateResponse(HttpStatusCode.OK);
@@ -448,7 +454,7 @@ namespace POIProxy.Controllers
                 Dictionary<string, string> alertInfo = jsonHandler.Deserialize<Dictionary<string, string>>(content);
                 PPLog.infoLog("[ProxyController Alerts] " + DictToString(alertInfo, null));
 
-                string serviceType = alertInfo["alertType"];
+                string alertType = alertInfo["alertType"];
                 string msgId = alertInfo["msgId"];
                 string title = alertInfo.ContainsKey("title") ? alertInfo["title"] : "";
                 string message = alertInfo.ContainsKey("message") ? alertInfo["message"] : "";
@@ -457,7 +463,7 @@ namespace POIProxy.Controllers
                 string pushMsg = jsonHandler.Serialize(new
                 {
                     resource = POIGlobalVar.resource.SERVICES,
-                    serviceType = serviceType,
+                    alertType = alertType,
                     msgId = msgId,
                     title = title,
                     message = message,
@@ -472,7 +478,9 @@ namespace POIProxy.Controllers
                 }
                 else
                 {
-                    //POIProxyPushNotifier.broadcast(pushMsg, title);
+                    if (WebConfigurationManager.AppSettings["ENV"] == "production") { 
+                        POIProxyPushNotifier.broadcast(pushMsg, title);
+                    }
                 }
 
                 var response = Request.CreateResponse(HttpStatusCode.OK);
@@ -498,15 +506,15 @@ namespace POIProxy.Controllers
             var userInfo = POIProxySessionManager.getUserInfo(userId);
             string userInfoJson = jsonHandler.Serialize(userInfo);
 
-            /*if (double.Parse(sessionInfo["create_at"])
-                >= POITimestamp.ConvertToUnixTimestamp(DateTime.Now.AddSeconds(-60)))
+            if (double.Parse(sessionInfo["create_at"])
+                >= POITimestamp.ConvertToUnixTimestamp(DateTime.Now.AddSeconds(-60)) && WebConfigurationManager.AppSettings["ENV"] == "production")
             {
                 PPLog.infoLog("Cannot join the session, not passing time limit");
                 //Notify the weixin user about the join failed
                 await POIProxyToWxApi.interactiveSessionJoinBeforeTimeLimit(userId, sessionId);
                 return (int)POIGlobalVar.errorCode.TIME_LIMITED;
             }
-            else */if (!interMsgHandler.checkSessionOpen(sessionId))
+            else if (!interMsgHandler.checkSessionOpen(sessionId))
             {
                 PPLog.infoLog("[POIProxyHub wxJoinInteractiveSession] session status is not open");
                 return (int)POIGlobalVar.errorCode.SESSION_NOT_OPEN;

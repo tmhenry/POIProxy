@@ -8,6 +8,7 @@ using System.Web.Mvc;
 using Microsoft.AspNet.SignalR;
 using System.Data;
 using System.Web.Script.Serialization;
+using System.Web.Configuration;
 
 using System.Threading.Tasks;
 
@@ -215,6 +216,14 @@ namespace POIProxy
                 int interactiveSessionNum = 0;
                 int tutorialSessionNum = 0;
 
+                int TUTORIALRULE = 2;
+                int INTERACTIVERULE = 2;
+
+                if (WebConfigurationManager.AppSettings["ENV"] == "production") {
+                    TUTORIALRULE = 10;
+                    INTERACTIVERULE = 10;
+                }
+
                 double today = POITimestamp.ConvertToUnixTimestamp(DateTime.Today);
                 double yesterday =  today - 24 * 60 * 60;
                 for (int i = 0; i < result.Rows.Count; i++)
@@ -290,7 +299,7 @@ namespace POIProxy
                     updateByUserId(userId, "persistent_time", 1, "user_score");
                 }
 
-                if (interactiveSessionNum == 2 && type == "interactive")
+                if (interactiveSessionNum == TUTORIALRULE && type == "interactive")
                 {
                     updateByUserId(userId, "interactive_score_reward", interactiveScoreReward + 100, "user_score");
                     insertUserTask(userId, "2");
@@ -303,7 +312,7 @@ namespace POIProxy
                     POIProxyPushNotifier.send(userList, pushMsg);
                 }
 
-                if (tutorialSessionNum == 2 && type == "tutorial")
+                if (tutorialSessionNum == INTERACTIVERULE && type == "tutorial")
                 {
                     updateByUserId(userId, "tutorial_score_reward", tutorialScoreReward + 100, "user_score");
                     insertUserTask(userId, "3");
@@ -384,6 +393,7 @@ namespace POIProxy
             values["status"] = "open";
 
             string sessionId = dbManager.insertIntoTable("session", values);
+            PPLog.debugLog("[POIProxyInteractiveMsgHandler createInteractiveSession] session created! session id: "+ sessionId);
 
             Dictionary<string, string> filterInfo = jsonHandler.Deserialize<Dictionary<string, string>>(filter);
             values.Clear();
@@ -404,7 +414,7 @@ namespace POIProxy
             
 
             //Insert record into the database for the user to session relationship
-            addUserToSessionRecord(userId, sessionId);
+            //addUserToSessionRecord(userId, sessionId);
 
             //Get the information about the activity
             var userInfo = POIProxySessionManager.getUserInfo(userId);
