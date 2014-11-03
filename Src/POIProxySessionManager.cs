@@ -298,7 +298,8 @@ namespace POIProxy
             using (var redisClient = redisManager.GetClient())
             {
                 var users = redisClient.Hashes["user_device:" + userId];
-                if (users.ContainsKey("deviceId") && users["deviceId"] != "") {
+                if (users.ContainsKey("deviceId") && users["deviceId"] != "" && users["deviceId"] != deviceId)
+                {
                     double timestamp = POITimestamp.ConvertToUnixTimestamp(DateTime.Now);
                     string pushMsg = jsonHandler.Serialize(new
                     {
