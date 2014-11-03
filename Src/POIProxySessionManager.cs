@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Web;
+using System.Web.Script.Serialization;
 
 using ServiceStack.Redis;
 using ServiceStack.Redis.Generic;
@@ -15,6 +16,7 @@ namespace POIProxy
     {
         private static PooledRedisClientManager redisManager = new PooledRedisClientManager(POIGlobalVar.RedisHost + ":" + POIGlobalVar.RedisPort);
         private static POIProxyDbManager dbManager = POIProxyDbManager.Instance;
+        private static JavaScriptSerializer jsonHandler = new JavaScriptSerializer();
 
         public static void refreshSessionTokenPool(string sessionId)
         {
@@ -296,16 +298,31 @@ namespace POIProxy
             using (var redisClient = redisManager.GetClient())
             {
                 var users = redisClient.Hashes["user_device:" + userId];
-                var device = redisClient.Sets["device_by_system:" + system];
-                if (users.ContainsKey("deviceId") && users["deviceId"] != "" && system == "ios") 
-                {
-                    device.Remove(users["deviceId"]);
+                if (users.ContainsKey("deviceId") && users["deviceId"] != "") {
+                    double timestamp = POITimestamp.ConvertToUnixTimestamp(DateTime.Now);
+                    string pushMsg = jsonHandler.Serialize(new
+                    {
+                        resource = POIGlobalVar.resource.USERS,
+                        userType = POIGlobalVar.userType.LOGOUT,
+                        userId = userId,
+                        title="由于您的账号在其他设备上成功登录，即时消息会发送到其他设备上，如果想继续使用，请再次登录",
+                        timestamp = timestamp,
+                    });
+                    List<string> userList = new List<string>();
+                    userList.Add(userId);
+                    POIProxyPushNotifier.send(userList, pushMsg);
                 }
                 users["deviceId"] = deviceId;
                 users["system"] = system;
                 users["tag"] = tag.ToString();
 
-                if (system == "ios") {
+                if (system == "ios")
+                {
+                    var device = redisClient.Sets["device_by_system:" + system];
+                    if (users.ContainsKey("deviceId") && users["deviceId"] != "")
+                    {
+                        device.Remove(users["deviceId"]);
+                    }
                     if (tag == (int)POIGlobalVar.tag.SUBSCRIBED)
                     {
                         device.Add(deviceId);

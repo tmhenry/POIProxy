@@ -361,6 +361,7 @@ namespace POIProxy.Controllers
                         }
                     break;
                     case (int)POIGlobalVar.userType.SCORE:
+                        //upload tutorial without interactive session.
                         interMsgHandler.addSessionScore(userId, "tutorial");
                     break;
 
