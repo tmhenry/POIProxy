@@ -462,7 +462,7 @@ namespace POIProxy.Controllers
                 double timestamp = POITimestamp.ConvertToUnixTimestamp(DateTime.Now);
                 string pushMsg = jsonHandler.Serialize(new
                 {
-                    resource = POIGlobalVar.resource.SERVICES,
+                    resource = POIGlobalVar.resource.ALERTS,
                     alertType = alertType,
                     msgId = msgId,
                     title = title,
