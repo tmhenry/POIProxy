@@ -282,6 +282,7 @@ namespace POIProxy
                         updateByUserId(userId, "persistent_time", persistentTime + 1, "user_score");
                         persistentTime = persistentTime > 5 ? 5 : persistentTime;
                         updateByUserId(userId, "persistent_score", persistentScore + 10 * persistentTime, "user_score");
+                        POIProxySessionManager.updateUserScoreRanking(userId, persistentTime * 10);
                         insertUserTask(userId, "1");
 
                         if (persistentTime > 0) {
@@ -302,6 +303,7 @@ namespace POIProxy
                 if (interactiveSessionNum == TUTORIALRULE && type == "interactive")
                 {
                     updateByUserId(userId, "interactive_score_reward", interactiveScoreReward + 100, "user_score");
+                    POIProxySessionManager.updateUserScoreRanking(userId, 100);
                     insertUserTask(userId, "2");
 
                     Dictionary<string, object> pushDic = jsonHandler.Deserialize<Dictionary<string, object>>(pushMsg);
@@ -315,6 +317,7 @@ namespace POIProxy
                 if (tutorialSessionNum == INTERACTIVERULE && type == "tutorial")
                 {
                     updateByUserId(userId, "tutorial_score_reward", tutorialScoreReward + 100, "user_score");
+                    POIProxySessionManager.updateUserScoreRanking(userId, 100);
                     insertUserTask(userId, "3");
 
                     Dictionary<string, object> pushDic = jsonHandler.Deserialize<Dictionary<string, object>>(pushMsg);
@@ -328,6 +331,7 @@ namespace POIProxy
                 if (type == "tutorial")
                 {
                     updateByUserId(userId, "tutorial_score", tutorialScore + 10, "user_score");
+                    POIProxySessionManager.updateUserScoreRanking(userId, 100);
                 }
 
             }
@@ -798,6 +802,7 @@ namespace POIProxy
             DataRow userResult = getByUserId(userConditions, userCols, "user_score");
 
             updateByUserId(tutorId, "interactive_score", (int)userResult["interactive_score"] + rating * 10, "user_score");
+            POIProxySessionManager.updateUserScoreRanking(tutorId, rating * 10);
         }
 
         //Functions for sending messages

@@ -486,7 +486,53 @@ namespace POIProxy
             }
         }
 
-        
+        public static void updateUserScoreRanking(string userId, int value)
+        {
+            //get user school and team info from MySQL
+            Dictionary<string, object> userConditions = new Dictionary<string, object>();
+            userConditions["user_id"] = userId;
+            List<string> userCols = new List<string>();
+            userCols.Add("school");
+            userCols.Add("team");
+            DataRow userInfo = dbManager.selectSingleRowFromTable("user_profile", userCols, userConditions);
 
+            if (userInfo == null)
+            {
+                return;
+            }
+
+            /*
+            PPLog.debugLog("[DEBUG: updateuserScoreRanking] userId:" + userId + " value:" + value.ToString());
+            if (userInfo["school"].ToString().Equals(null))
+            {
+                PPLog.debugLog("[DEBUG: updateuserScoreRanking] school:" + userInfo["school"].ToString());  
+            }
+            if (userInfo["team"].ToString().Equals(null))
+            {
+                PPLog.debugLog("[DEBUG: updateuserScoreRanking] team:" + userInfo["team"].ToString());
+            }
+            */
+
+            using (var redisClient = redisManager.GetClient())
+            {
+                redisClient.IncrementItemInSortedSet("user_ranking", userId, value);
+                redisClient.IncrementItemInSortedSet("user_ranking_weekly", userId, value);
+                if (!userInfo["school"].ToString().Equals(null))
+                {
+                    redisClient.IncrementItemInSortedSet("user_ranking_by_school:" + userInfo["school"].ToString(), userId, value);
+                    redisClient.IncrementItemInSortedSet("user_ranking_weekly_by_school:" + userInfo["school"].ToString(), userId, value);
+                    redisClient.IncrementItemInSortedSet("ranking_by_school", userInfo["school"].ToString(), value);
+                    redisClient.IncrementItemInSortedSet("ranking_weekly_by_school", userInfo["school"].ToString(), value);
+                }
+                if (!userInfo["team"].ToString().Equals(null))
+                {
+                    redisClient.IncrementItemInSortedSet("user_ranking_by_team:" + userInfo["team"].ToString(), userId, value);
+                    redisClient.IncrementItemInSortedSet("user_ranking_weekly_by_team:" + userInfo["team"].ToString(), userId, value);
+                    redisClient.IncrementItemInSortedSet("ranking_by_team", userInfo["team"].ToString(), value);
+                    redisClient.IncrementItemInSortedSet("ranking_weekly_by_team", userInfo["team"].ToString(), value);
+                }
+            }
+            return;
+        }
     }
 }
