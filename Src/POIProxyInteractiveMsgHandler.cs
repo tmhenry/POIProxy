@@ -727,12 +727,16 @@ namespace POIProxy
             string msgId = msgInfo["msgId"];
             string userId = msgInfo["userId"];
             string sessionId = msgInfo["sessionId"];
+
             List<string> userList = POIProxySessionManager.Instance.getUsersBySessionId(sessionId);
-            userList.Remove(userId);
-            var tutorId = userList[0];
+            string tutorId = null;
+            if (userList.Count != 0)
+            {
+                userList.Remove(userId);
+                tutorId = userList[0];
+            }
 
             int rating = Convert.ToInt32(msgInfo["rating"]);
-            //PPLog.debugLog("rateInteractiveSession: userId: " + userId + " sessionId: " + sessionId + " rating: " + rating);
             if (POIProxySessionManager.Instance.checkPrivateTutoring(sessionId))
             {
                 //Check if the session is in serving status
@@ -790,19 +794,21 @@ namespace POIProxy
             uploadSessionArchive(sessionId);
 
             //Update the answer activity
-            updateAnswerActivity(tutorId, sessionId, rating);
+            if (tutorId != null) {
+                updateAnswerActivity(tutorId, sessionId, rating);
 
-            //update user score.
-            Dictionary<string, object> userConditions = new Dictionary<string, object>();
-            userConditions["user_id"] = tutorId;
+                //update user score.
+                Dictionary<string, object> userConditions = new Dictionary<string, object>();
+                userConditions["user_id"] = tutorId;
 
-            List<string> userCols = new List<string>();
-            userCols.Add("interactive_score");
+                List<string> userCols = new List<string>();
+                userCols.Add("interactive_score");
 
-            DataRow userResult = getByUserId(userConditions, userCols, "user_score");
+                DataRow userResult = getByUserId(userConditions, userCols, "user_score");
 
-            updateByUserId(tutorId, "interactive_score", (int)userResult["interactive_score"] + rating * 10, "user_score");
-            POIProxySessionManager.Instance.updateUserScoreRanking(tutorId, rating * 10);
+                updateByUserId(tutorId, "interactive_score", (int)userResult["interactive_score"] + rating * 10, "user_score");
+                POIProxySessionManager.Instance.updateUserScoreRanking(tutorId, rating * 10);
+            }
         }
 
         //Functions for sending messages
