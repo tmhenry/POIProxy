@@ -31,13 +31,13 @@ namespace POIProxy
             bool needToPushApp = false;
             foreach (string userId in userList)
             {
-                string system = POIProxySessionManager.getUserDevice(userId)["system"];
+                string system = POIProxySessionManager.Instance.getUserDevice(userId)["system"];
                 if (system == "ios" || system == "android")
                 {
                     needToPushApp = true;
                     com.igetui.api.openservice.igetui.Target target = new com.igetui.api.openservice.igetui.Target();
                     target.appId = APPID;
-                    target.clientId = POIProxySessionManager.getUserDevice(userId)["deviceId"];
+                    target.clientId = POIProxySessionManager.Instance.getUserDevice(userId)["deviceId"];
                     targetList.Add(target);
                 }
                 else
@@ -172,7 +172,7 @@ namespace POIProxy
             IGtPush push = new IGtPush(HOST, APPKEY, MASTERSECRET);
             String androidPushResult = push.pushMessageToApp(message);
 
-            List<string> deviceList = POIProxySessionManager.getDeviceBySystem("ios");
+            List<string> deviceList = POIProxySessionManager.Instance.getDeviceBySystem("ios");
             List<com.igetui.api.openservice.igetui.Target> targetList = new List<com.igetui.api.openservice.igetui.Target>();
             foreach (string deviceId in deviceList)
             {

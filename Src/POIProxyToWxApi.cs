@@ -20,7 +20,7 @@ namespace POIProxy
         private async static Task sendReq(NameValueCollection postVal)
         {
             string userId = postVal["userId"];
-            string system = POIProxySessionManager.getUserDevice(userId)["system"];
+            string system = POIProxySessionManager.Instance.getUserDevice(userId)["system"];
             if (system != "ios" && system != "android")
             {
                 postVal["appProxy"] = "Yes";

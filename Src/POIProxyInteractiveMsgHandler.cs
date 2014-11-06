@@ -35,8 +35,8 @@ namespace POIProxy
 
         public void addQuestionActivity(string userId, string sessionId)
         {
-            var studentInfo = POIProxySessionManager.getUserInfo(userId);
-            var sessionInfo = POIProxySessionManager.getSessionInfo(sessionId);
+            var studentInfo = POIProxySessionManager.Instance.getUserInfo(userId);
+            var sessionInfo = POIProxySessionManager.Instance.getSessionInfo(sessionId);
 
             Dictionary<string, object> values = new Dictionary<string, object>();
             values["user_id"] = userId;
@@ -56,9 +56,9 @@ namespace POIProxy
 
         public void addAnswerActivity(string userId, string sessionId)
         {
-            var sessionInfo = POIProxySessionManager.getSessionInfo(sessionId);
-            var studentInfo = POIProxySessionManager.getUserInfo(sessionInfo["creator"]);
-            var tutorInfo = POIProxySessionManager.getUserInfo(userId);
+            var sessionInfo = POIProxySessionManager.Instance.getSessionInfo(sessionId);
+            var studentInfo = POIProxySessionManager.Instance.getUserInfo(sessionInfo["creator"]);
+            var tutorInfo = POIProxySessionManager.Instance.getUserInfo(userId);
 
             Dictionary<string, object> values = new Dictionary<string, object>();
             values["user_id"] = userId;
@@ -84,9 +84,9 @@ namespace POIProxy
             conditions["content_id"] = sessionId;
             conditions["type"] = "int_session_answer";
 
-            var sessionInfo = POIProxySessionManager.getSessionInfo(sessionId);
-            var studentInfo = POIProxySessionManager.getUserInfo(sessionInfo["creator"]);
-            var tutorInfo = POIProxySessionManager.getUserInfo(userId);
+            var sessionInfo = POIProxySessionManager.Instance.getSessionInfo(sessionId);
+            var studentInfo = POIProxySessionManager.Instance.getUserInfo(sessionInfo["creator"]);
+            var tutorInfo = POIProxySessionManager.Instance.getUserInfo(userId);
 
             Dictionary<string, object> values = new Dictionary<string, object>();
             values["data"] = jsonHandler.Serialize(
@@ -282,7 +282,7 @@ namespace POIProxy
                         updateByUserId(userId, "persistent_time", persistentTime + 1, "user_score");
                         persistentTime = persistentTime > 5 ? 5 : persistentTime;
                         updateByUserId(userId, "persistent_score", persistentScore + 10 * persistentTime, "user_score");
-                        POIProxySessionManager.updateUserScoreRanking(userId, persistentTime * 10);
+                        POIProxySessionManager.Instance.updateUserScoreRanking(userId, persistentTime * 10);
                         insertUserTask(userId, "1");
 
                         if (persistentTime > 0) {
@@ -303,7 +303,7 @@ namespace POIProxy
                 if (interactiveSessionNum == TUTORIALRULE && type == "interactive")
                 {
                     updateByUserId(userId, "interactive_score_reward", interactiveScoreReward + 100, "user_score");
-                    POIProxySessionManager.updateUserScoreRanking(userId, 100);
+                    POIProxySessionManager.Instance.updateUserScoreRanking(userId, 100);
                     insertUserTask(userId, "2");
 
                     Dictionary<string, object> pushDic = jsonHandler.Deserialize<Dictionary<string, object>>(pushMsg);
@@ -317,7 +317,7 @@ namespace POIProxy
                 if (tutorialSessionNum == INTERACTIVERULE && type == "tutorial")
                 {
                     updateByUserId(userId, "tutorial_score_reward", tutorialScoreReward + 100, "user_score");
-                    POIProxySessionManager.updateUserScoreRanking(userId, 100);
+                    POIProxySessionManager.Instance.updateUserScoreRanking(userId, 100);
                     insertUserTask(userId, "3");
 
                     Dictionary<string, object> pushDic = jsonHandler.Deserialize<Dictionary<string, object>>(pushMsg);
@@ -331,7 +331,7 @@ namespace POIProxy
                 if (type == "tutorial")
                 {
                     updateByUserId(userId, "tutorial_score", tutorialScore + 10, "user_score");
-                    POIProxySessionManager.updateUserScoreRanking(userId, 100);
+                    POIProxySessionManager.Instance.updateUserScoreRanking(userId, 100);
                 }
 
             }
@@ -421,7 +421,7 @@ namespace POIProxy
             //addUserToSessionRecord(userId, sessionId);
 
             //Get the information about the activity
-            var userInfo = POIProxySessionManager.getUserInfo(userId);
+            var userInfo = POIProxySessionManager.Instance.getUserInfo(userId);
             Dictionary<string, string> infoDict = new Dictionary<string, string>();
             infoDict["session_id"] = sessionId;
             infoDict["pres_id"] = presId;
@@ -435,7 +435,7 @@ namespace POIProxy
             infoDict["avatar"] = userInfo["avatar"];
 
             try {
-                POIProxySessionManager.updateSessionInfo(sessionId, infoDict);
+                POIProxySessionManager.Instance.updateSessionInfo(sessionId, infoDict);
             }
             catch (Exception e)
             {
@@ -456,11 +456,11 @@ namespace POIProxy
                 Data = infoDict
             };
 
-            POIProxySessionManager.archiveSessionEvent(sessionId, poiEvent);
-            POIProxySessionManager.createSessionEvent(sessionId, poiEvent);
+            POIProxySessionManager.Instance.archiveSessionEvent(sessionId, poiEvent);
+            POIProxySessionManager.Instance.createSessionEvent(sessionId, poiEvent);
 
             //Subscribe the user to the session
-            POIProxySessionManager.subscribeSession(sessionId, userId);
+            POIProxySessionManager.Instance.subscribeSession(sessionId, userId);
             
             //Insert the question activity into the activity table
             addQuestionActivity(userId, sessionId);
@@ -486,13 +486,13 @@ namespace POIProxy
                 UserId = userId,
                 Timestamp = timestamp,
                 Message = "",
-                Data = POIProxySessionManager.getUserInfo(userId)
+                Data = POIProxySessionManager.Instance.getUserInfo(userId)
             };
 
-            POIProxySessionManager.archiveSessionEvent(sessionId, poiEvent);
+            POIProxySessionManager.Instance.archiveSessionEvent(sessionId, poiEvent);
 
             //Subscribe the user to the session
-            POIProxySessionManager.subscribeSession(sessionId, userId);
+            POIProxySessionManager.Instance.subscribeSession(sessionId, userId);
 
             //Add the activity record
             addAnswerActivity(userId, sessionId);
@@ -513,7 +513,7 @@ namespace POIProxy
 
             //Upload the session archive to the qiniu cdn
             string mediaId = POICdnHelper.generateCdnKeyForSessionArchive(sessionId);
-            POICdnHelper.uploadStrToQiniuCDN(mediaId, jsonHandler.Serialize(POIProxySessionManager.getSessionArchive(sessionId)));
+            POICdnHelper.uploadStrToQiniuCDN(mediaId, jsonHandler.Serialize(POIProxySessionManager.Instance.getSessionArchive(sessionId)));
 
             //Update the database given the media id
             Dictionary<string, object> conditions = new Dictionary<string, object>();
@@ -525,7 +525,7 @@ namespace POIProxy
             dbManager.updateTable("session", values, conditions);
 
             //Unsubscribe the old session
-            POIProxySessionManager.unsubscribeSession(sessionId, userId);
+            POIProxySessionManager.Instance.unsubscribeSession(sessionId, userId);
 
             //Archive the cancel event
             POIInteractiveEvent cancelEvent = new POIInteractiveEvent
@@ -536,7 +536,7 @@ namespace POIProxy
                 Timestamp = timestamp,
             };
 
-            POIProxySessionManager.archiveSessionEvent(sessionId, cancelEvent);
+            POIProxySessionManager.Instance.archiveSessionEvent(sessionId, cancelEvent);
         }
 
         public void reraiseInteractiveSession(string msgId, string userId, string sessionId, string newSessionId, double timestamp)
@@ -545,7 +545,7 @@ namespace POIProxy
             updateSessionStatus(sessionId, "cancelled");
 
             //Unsubscribe the old session
-            POIProxySessionManager.unsubscribeSession(sessionId, userId);
+            POIProxySessionManager.Instance.unsubscribeSession(sessionId, userId);
 
             //Archive the cancel event
             POIInteractiveEvent cancelEvent = new POIInteractiveEvent
@@ -556,13 +556,13 @@ namespace POIProxy
                 Timestamp = timestamp,
             };
 
-            POIProxySessionManager.archiveSessionEvent(sessionId, cancelEvent);
+            POIProxySessionManager.Instance.archiveSessionEvent(sessionId, cancelEvent);
 
-            Dictionary<string, string> info = POIProxySessionManager.getSessionInfo(sessionId);
+            Dictionary<string, string> info = POIProxySessionManager.Instance.getSessionInfo(sessionId);
 
             //Upload the session archive
             string mediaId = POICdnHelper.generateCdnKeyForSessionArchive(sessionId);
-            POICdnHelper.uploadStrToQiniuCDN(mediaId, jsonHandler.Serialize(POIProxySessionManager.getSessionArchive(sessionId)));
+            POICdnHelper.uploadStrToQiniuCDN(mediaId, jsonHandler.Serialize(POIProxySessionManager.Instance.getSessionArchive(sessionId)));
 
             //Update the database given the media id
             Dictionary<string, object> conditions = new Dictionary<string, object>();
@@ -574,7 +574,7 @@ namespace POIProxy
             dbManager.updateTable("session", values, conditions);
 
             //Update the new session info
-            POIProxySessionManager.updateSessionInfo(sessionId,
+            POIProxySessionManager.Instance.updateSessionInfo(sessionId,
                 new Dictionary<string, string>
                 {
                     {"session_id", newSessionId},
@@ -586,7 +586,7 @@ namespace POIProxy
             );
 
             //Subscribe the user to the session
-            POIProxySessionManager.subscribeSession(newSessionId, userId);
+            POIProxySessionManager.Instance.subscribeSession(newSessionId, userId);
 
             //Archive the create event
             POIInteractiveEvent createEvent = new POIInteractiveEvent
@@ -598,11 +598,11 @@ namespace POIProxy
                 UserId = userId,
                 Timestamp = timestamp,
                 Message = "",
-                Data = POIProxySessionManager.getSessionInfo(newSessionId)
+                Data = POIProxySessionManager.Instance.getSessionInfo(newSessionId)
             };
 
-            POIProxySessionManager.archiveSessionEvent(newSessionId, createEvent);
-            POIProxySessionManager.createSessionEvent(newSessionId, createEvent);
+            POIProxySessionManager.Instance.archiveSessionEvent(newSessionId, createEvent);
+            POIProxySessionManager.Instance.createSessionEvent(newSessionId, createEvent);
         }
 
         public bool checkAndProcessArchiveDuringSessionEnd(string sessionId)
@@ -640,7 +640,7 @@ namespace POIProxy
 
             string mediaId = POICdnHelper.generateCdnKeyForSessionArchive(sessionId);
             POICdnHelper.uploadStrToQiniuCDN(mediaId, 
-                jsonHandler.Serialize(POIProxySessionManager.getSessionArchive(sessionId))
+                jsonHandler.Serialize(POIProxySessionManager.Instance.getSessionArchive(sessionId))
             );
 
             //Update the database given the media id
@@ -682,14 +682,14 @@ namespace POIProxy
 
         public void updateQuestionDescription(string sessionId, string description)
         {
-            POIProxySessionManager.updateSessionInfo(sessionId,
+            POIProxySessionManager.Instance.updateSessionInfo(sessionId,
                 new Dictionary<string,string>{ { "description", description } }
             );
         }
 
         public void updateQuestionMediaId(string sessionId, string mediaId)
         {
-            POIProxySessionManager.updateSessionInfo(sessionId,
+            POIProxySessionManager.Instance.updateSessionInfo(sessionId,
                 new Dictionary<string, string> { { "cover", mediaId } }
             );
         }
@@ -698,7 +698,7 @@ namespace POIProxy
 
         public void endInteractiveSession(string msgId, string userId, string sessionId)
         {
-            if (POIProxySessionManager.checkPrivateTutoring(sessionId))
+            if (POIProxySessionManager.Instance.checkPrivateTutoring(sessionId))
             {
                 //Upload the session archive
                 uploadSessionArchive(sessionId);
@@ -719,7 +719,7 @@ namespace POIProxy
                 Timestamp = timestamp
             };
 
-            POIProxySessionManager.archiveSessionEvent(sessionId, endEvent);
+            POIProxySessionManager.Instance.archiveSessionEvent(sessionId, endEvent);
         }
 
         public void rateInteractiveSession(Dictionary<string,string> msgInfo)
@@ -727,13 +727,13 @@ namespace POIProxy
             string msgId = msgInfo["msgId"];
             string userId = msgInfo["userId"];
             string sessionId = msgInfo["sessionId"];
-            List<string> userList = POIProxySessionManager.getUsersBySessionId(sessionId);
+            List<string> userList = POIProxySessionManager.Instance.getUsersBySessionId(sessionId);
             userList.Remove(userId);
             var tutorId = userList[0];
 
             int rating = Convert.ToInt32(msgInfo["rating"]);
             //PPLog.debugLog("rateInteractiveSession: userId: " + userId + " sessionId: " + sessionId + " rating: " + rating);
-            if (POIProxySessionManager.checkPrivateTutoring(sessionId))
+            if (POIProxySessionManager.Instance.checkPrivateTutoring(sessionId))
             {
                 //Check if the session is in serving status
                 if (checkSessionServing(sessionId))
@@ -777,10 +777,10 @@ namespace POIProxy
                 }
             };
 
-            POIProxySessionManager.archiveSessionEvent(sessionId, rateEvent);
+            POIProxySessionManager.Instance.archiveSessionEvent(sessionId, rateEvent);
 
             //Update the session info with rating
-            POIProxySessionManager.updateSessionInfo(sessionId, new Dictionary<string, string>
+            POIProxySessionManager.Instance.updateSessionInfo(sessionId, new Dictionary<string, string>
             {
                 {"rating", rating.ToString()}
             });
@@ -802,7 +802,7 @@ namespace POIProxy
             DataRow userResult = getByUserId(userConditions, userCols, "user_score");
 
             updateByUserId(tutorId, "interactive_score", (int)userResult["interactive_score"] + rating * 10, "user_score");
-            POIProxySessionManager.updateUserScoreRanking(tutorId, rating * 10);
+            POIProxySessionManager.Instance.updateUserScoreRanking(tutorId, rating * 10);
         }
 
         //Functions for sending messages
@@ -817,7 +817,7 @@ namespace POIProxy
                 Message = message
             };
 
-            POIProxySessionManager.archiveSessionEvent(sessionId, poiEvent);
+            POIProxySessionManager.Instance.archiveSessionEvent(sessionId, poiEvent);
         }
 
         public void imageMsgReceived(string msgId, string userId, string sessionId, string mediaId, double timestamp)
@@ -832,7 +832,7 @@ namespace POIProxy
                 Timestamp = timestamp,
             };
 
-            POIProxySessionManager.archiveSessionEvent(sessionId, poiEvent);
+            POIProxySessionManager.Instance.archiveSessionEvent(sessionId, poiEvent);
         }
 
         public void voiceMsgReceived(string msgId, string userId, string sessionId, string mediaId, double timestamp, float mediaDuration)
@@ -848,7 +848,7 @@ namespace POIProxy
                 Timestamp = timestamp,
             };
 
-            POIProxySessionManager.archiveSessionEvent(sessionId, poiEvent);
+            POIProxySessionManager.Instance.archiveSessionEvent(sessionId, poiEvent);
         }
 
         public void illustrationMsgReceived(string msgId, string userId, string sessionId, string mediaId, double timestamp)
@@ -863,7 +863,7 @@ namespace POIProxy
                 Timestamp = timestamp,
             };
 
-            POIProxySessionManager.archiveSessionEvent(sessionId, poiEvent);
+            POIProxySessionManager.Instance.archiveSessionEvent(sessionId, poiEvent);
 
         }
 
@@ -876,7 +876,7 @@ namespace POIProxy
                 Message = message,
                 Timestamp = timestamp,
             };
-            POIProxySessionManager.archiveSessionEvent(sessionId, poiEvent);
+            POIProxySessionManager.Instance.archiveSessionEvent(sessionId, poiEvent);
         }
 
         public List<POIInteractiveEvent> getMissedEventsInSession(string sessionId, double timestamp)
@@ -886,7 +886,7 @@ namespace POIProxy
 
             try
             {
-                var eventList = POIProxySessionManager.getSessionEventList(sessionId);
+                var eventList = POIProxySessionManager.Instance.getSessionEventList(sessionId);
 
                 //Get all event with timestamp larger than the given timestamp
                 if (eventList != null)

@@ -24,7 +24,7 @@ namespace POIProxy
 
         public async Task textMsgReceived(string sessionId, string message, double timestamp, string messageId)
         {
-            if (!POIProxySessionManager.checkEventExists(sessionId, messageId))
+            if (!POIProxySessionManager.Instance.checkEventExists(sessionId, messageId))
             {
                 interMsgHandler.textMsgReceived(messageId, Clients.Caller.userId, sessionId, message, timestamp);
 
@@ -38,7 +38,7 @@ namespace POIProxy
                 await POIProxyToWxApi.textMsgReceived(Clients.Caller.userId, sessionId, message);
 
                 //Send push notification
-                //POIProxyPushNotifier.textMsgReceived(POIProxySessionManager.getUsersBySessionId(sessionId),sessionId, message, timestamp);
+                //POIProxyPushNotifier.textMsgReceived(POIProxySessionManager.Instance.getUsersBySessionId(sessionId),sessionId, message, timestamp);
             }
             else
             {
@@ -51,7 +51,7 @@ namespace POIProxy
 
         public async Task imageMsgReceived(string sessionId, string mediaId, double timestamp, string messageId)
         {
-            if (!POIProxySessionManager.checkEventExists(sessionId, messageId))
+            if (!POIProxySessionManager.Instance.checkEventExists(sessionId, messageId))
             {
                 interMsgHandler.imageMsgReceived(messageId, Clients.Caller.userId, sessionId, mediaId, timestamp);
 
@@ -64,7 +64,7 @@ namespace POIProxy
                 await POIProxyToWxApi.imageMsgReceived(Clients.Caller.userId, sessionId, mediaId);
 
                 //Send push notification
-                //POIProxyPushNotifier.imageMsgReceived(POIProxySessionManager.getUsersBySessionId(sessionId), sessionId, mediaId, timestamp);
+                //POIProxyPushNotifier.imageMsgReceived(POIProxySessionManager.Instance.getUsersBySessionId(sessionId), sessionId, mediaId, timestamp);
             }
             else
             {
@@ -76,7 +76,7 @@ namespace POIProxy
 
         public async Task voiceMsgReceived(string sessionId, string mediaId, double timestamp, string messageId)
         {
-            if (!POIProxySessionManager.checkEventExists(sessionId, messageId))
+            if (!POIProxySessionManager.Instance.checkEventExists(sessionId, messageId))
             {
                 //interMsgHandler.voiceMsgReceived(messageId, Clients.Caller.userId, sessionId, mediaId, timestamp);
 
@@ -89,7 +89,7 @@ namespace POIProxy
                 await POIProxyToWxApi.voiceMsgReceived(Clients.Caller.userId, sessionId, mediaId);
 
                 //Send push notification
-                //POIProxyPushNotifier.voiceMsgReceived(POIProxySessionManager.getUsersBySessionId(sessionId), sessionId, mediaId, timestamp);
+                //POIProxyPushNotifier.voiceMsgReceived(POIProxySessionManager.Instance.getUsersBySessionId(sessionId), sessionId, mediaId, timestamp);
             }
             else
             {
@@ -101,7 +101,7 @@ namespace POIProxy
 
         public async Task illustrationMsgReceived(string sessionId, string mediaId, double timestamp, string messageId)
         {
-            if (!POIProxySessionManager.checkEventExists(sessionId, messageId))
+            if (!POIProxySessionManager.Instance.checkEventExists(sessionId, messageId))
             {
                 interMsgHandler.illustrationMsgReceived(messageId, Clients.Caller.userId, sessionId, mediaId, timestamp);
 
@@ -114,7 +114,7 @@ namespace POIProxy
                 await POIProxyToWxApi.illustrationMsgReceived(Clients.Caller.userId, sessionId, mediaId);
 
                 //Send push notification
-                //POIProxyPushNotifier.illustrationMsgReceived(POIProxySessionManager.getUsersBySessionId(sessionId), sessionId, mediaId, timestamp);
+                //POIProxyPushNotifier.illustrationMsgReceived(POIProxySessionManager.Instance.getUsersBySessionId(sessionId), sessionId, mediaId, timestamp);
             }
             else
             {
@@ -151,7 +151,7 @@ namespace POIProxy
 
         public async Task joinInteractiveSession(string sessionId, string msgId)
         {
-            var archiveInfo = POIProxySessionManager.getSessionInfo(sessionId);
+            var archiveInfo = POIProxySessionManager.Instance.getSessionInfo(sessionId);
             if (string.IsNullOrEmpty(Clients.Caller.userId))
                 PPLog.errorLog("[POIProxyHub joinInteractiveSession] miss parameters: userId");
             if (string.IsNullOrEmpty(sessionId))
@@ -163,13 +163,13 @@ namespace POIProxy
                 PPLog.infoLog("[POIProxyHub joinInteractiveSession] Cannot join the session, not passing time limit");
                 Clients.Caller.interactiveSessionJoinBeforeStarted(sessionId);
             }
-            else if (POIProxySessionManager.checkUserInSession(sessionId, Clients.Caller.userId))
+            else if (POIProxySessionManager.Instance.checkUserInSession(sessionId, Clients.Caller.userId))
             {
                 //User already in the session
                 PPLog.infoLog("[POIProxyHub joinInteractiveSession] Session already joined");
 
                 double timestamp = POITimestamp.ConvertToUnixTimestamp(DateTime.Now);
-                string archiveJson = jsonHandler.Serialize(POIProxySessionManager.getSessionArchive(sessionId));
+                string archiveJson = jsonHandler.Serialize(POIProxySessionManager.Instance.getSessionArchive(sessionId));
 
                 await Groups.Add(Context.ConnectionId, "session_" + sessionId);
 
@@ -178,16 +178,16 @@ namespace POIProxy
                 //Send the archive to the user
                 Clients.Caller.interactiveSessionJoined(sessionId, archiveJson, timestamp);
             }
-            else if (POIProxySessionManager.acquireSessionToken(sessionId))
+            else if (POIProxySessionManager.Instance.acquireSessionToken(sessionId))
             {
                 
                 double timestamp = POITimestamp.ConvertToUnixTimestamp(DateTime.Now);
 
                 interMsgHandler.joinInteractiveSession(msgId, Clients.Caller.userId, sessionId, timestamp);
                 //var userInfo = interMsgHandler.getUserInfoById(Clients.Caller.userId);
-                var userInfo = POIProxySessionManager.getUserInfo(Clients.Caller.userId);
+                var userInfo = POIProxySessionManager.Instance.getUserInfo(Clients.Caller.userId);
 
-                string archiveJson = jsonHandler.Serialize(POIProxySessionManager.getSessionArchive(sessionId));
+                string archiveJson = jsonHandler.Serialize(POIProxySessionManager.Instance.getSessionArchive(sessionId));
                 string userInfoJson = jsonHandler.Serialize(userInfo);
 
                 await Groups.Add(Context.ConnectionId, "session_" + sessionId);
@@ -283,7 +283,7 @@ namespace POIProxy
                 foreach (string sid in sessionList.Keys)
                 {
                     //Update sync time reference
-                    POIProxySessionManager.updateSyncReference(sid, userId, sessionList[sid]);
+                    POIProxySessionManager.Instance.updateSyncReference(sid, userId, sessionList[sid]);
                 }
             }
             catch (Exception e)
@@ -293,7 +293,7 @@ namespace POIProxy
 
             try
             {
-                var serverState = POIProxySessionManager.getSessionsByUserId(userId);
+                var serverState = POIProxySessionManager.Instance.getSessionsByUserId(userId);
 
                 foreach (string sessionId in serverState.Keys)
                 {
@@ -331,7 +331,7 @@ namespace POIProxy
             Groups.Remove(Context.ConnectionId, "session_" + sessionId);
 
             //Remove server state
-            POIProxySessionManager.unsubscribeSession(sessionId, Clients.Caller.userId);
+            POIProxySessionManager.Instance.unsubscribeSession(sessionId, Clients.Caller.userId);
             PPLog.infoLog("[POIProxyHub unsubscribeSession] sessionId: " + sessionId + " userid:" + Clients.Caller.userId);
         }
 

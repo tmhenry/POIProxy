@@ -68,9 +68,9 @@ namespace POIProxy.Controllers
                     timestamp = timestamp
                 });
 
-                if (!POIProxySessionManager.checkEventExists(sessionId, msgId))
+                if (!POIProxySessionManager.Instance.checkEventExists(sessionId, msgId))
                 {
-                    List<string> userList = POIProxySessionManager.getUsersBySessionId(sessionId);
+                    List<string> userList = POIProxySessionManager.Instance.getUsersBySessionId(sessionId);
                     userList.Remove(userId);
 
                     switch (msgType)
@@ -157,19 +157,19 @@ namespace POIProxy.Controllers
                     sessionType = type,
                     msgId = msgId,
                     userId = userId,
-                    userInfo = jsonHandler.Serialize(POIProxySessionManager.getUserInfo(userId)),
+                    userInfo = jsonHandler.Serialize(POIProxySessionManager.Instance.getUserInfo(userId)),
                     sessionId = sessionId,
                     timestamp = timestamp,
                 });
 
-                if (!POIProxySessionManager.checkEventExists(sessionId, msgId) && !POIProxySessionManager.checkDuplicatedCreatedSession(msgId))
+                if (!POIProxySessionManager.Instance.checkEventExists(sessionId, msgId) && !POIProxySessionManager.Instance.checkDuplicatedCreatedSession(msgId))
                 {
-                    List<string> userList = POIProxySessionManager.getUsersBySessionId(sessionId);
+                    List<string> userList = POIProxySessionManager.Instance.getUsersBySessionId(sessionId);
                     userList.Remove(userId);
                     switch (type)
                     {
                         case (int)POIGlobalVar.sessionType.RATING:
-                            var sessionInfo = POIProxySessionManager.getSessionInfo(sessionId);
+                            var sessionInfo = POIProxySessionManager.Instance.getSessionInfo(sessionId);
                             string role = msgInfo.ContainsKey("role") ? msgInfo["role"] : "members";
                             if (sessionInfo["creator"] != userId && role != "admin")
                             {
@@ -210,7 +210,7 @@ namespace POIProxy.Controllers
                             Dictionary<string, string> infoDict = new Dictionary<string, string>();
                             infoDict["vote"] = msgInfo.ContainsKey("vote") ? msgInfo["vote"] : "0";
                             infoDict["watch"] = msgInfo.ContainsKey("watch") ? msgInfo["watch"] : "0";
-                            POIProxySessionManager.updateSessionInfo(sessionId, infoDict, userId);
+                            POIProxySessionManager.Instance.updateSessionInfo(sessionId, infoDict, userId);
 
                             if (desc != "") interMsgHandler.updateQuestionDescription(sessionId, desc);
                             if (mediaId != "") interMsgHandler.updateQuestionMediaId(sessionId, mediaId);
@@ -221,7 +221,7 @@ namespace POIProxy.Controllers
                             break;
 
                         case (int)POIGlobalVar.sessionType.END:
-                            sessionInfo = POIProxySessionManager.getSessionInfo(sessionId);
+                            sessionInfo = POIProxySessionManager.Instance.getSessionInfo(sessionId);
                             if (sessionInfo["creator"] == userId) 
                             {
                                 errcode = (int)POIGlobalVar.errorCode.STUDENT_CANNOT_END;
@@ -236,10 +236,10 @@ namespace POIProxy.Controllers
                         //Join and create operation received from weixin 
                         case (int)POIGlobalVar.sessionType.JOIN:
                             sessionId = msgInfo["sessionId"];
-                            sessionInfo = POIProxySessionManager.getSessionInfo(sessionId);
+                            sessionInfo = POIProxySessionManager.Instance.getSessionInfo(sessionId);
                             errcode = await wxJoinInteractiveSession(msgInfo, sessionInfo, pushMsg, userList);
                             if (errcode == (int)POIGlobalVar.errorCode.SUCCESS || errcode == (int)POIGlobalVar.errorCode.ALREADY_JOINED)
-                                returnContent = jsonHandler.Serialize(POIProxySessionManager.getSessionArchive(sessionId));
+                                returnContent = jsonHandler.Serialize(POIProxySessionManager.Instance.getSessionArchive(sessionId));
                             break;
 
                         case (int)POIGlobalVar.sessionType.CREATE:
@@ -270,7 +270,7 @@ namespace POIProxy.Controllers
                         case (int)POIGlobalVar.sessionType.GET:
                             string sessionList = msgInfo.ContainsKey("sessionList") ? msgInfo["sessionList"] : "[]";
                             List<string> session = jsonHandler.Deserialize<List<string>>(sessionList);
-                            var sessionDetail = POIProxySessionManager.getSessionDetail(session, userId);
+                            var sessionDetail = POIProxySessionManager.Instance.getSessionDetail(session, userId);
                             returnContent = jsonHandler.Serialize(sessionDetail);
                             break;
                         default:
@@ -303,12 +303,12 @@ namespace POIProxy.Controllers
                             break;
 
                         case (int)POIGlobalVar.sessionType.CREATE:
-                            sessionId = POIProxySessionManager.getSessionByMsgId(msgId);
+                            sessionId = POIProxySessionManager.Instance.getSessionByMsgId(msgId);
                             returnContent = jsonHandler.Serialize(new { sessionId = sessionId, timestamp = timestamp });
                             break;
 
                         case (int)POIGlobalVar.sessionType.RERAISE:
-                            sessionId = POIProxySessionManager.getSessionByMsgId(msgId);
+                            sessionId = POIProxySessionManager.Instance.getSessionByMsgId(msgId);
                             returnContent = jsonHandler.Serialize(new { sessionId = sessionId, timestamp = timestamp });
                             break;
                         default:
@@ -353,11 +353,11 @@ namespace POIProxy.Controllers
                         
                         if (deviceId != "" && userId != "" && system != "")
                         {
-                            POIProxySessionManager.updateUserDevice(userId, deviceId, system, tag);
+                            POIProxySessionManager.Instance.updateUserDevice(userId, deviceId, system, tag);
                         }
                         else
                         {
-                            POIProxySessionManager.updateUserInfoFromDb(userId);
+                            POIProxySessionManager.Instance.updateUserInfoFromDb(userId);
                         }
                     break;
                     case (int)POIGlobalVar.userType.SCORE:
@@ -504,7 +504,7 @@ namespace POIProxy.Controllers
             string msgId = msgInfo["msgId"];
             string sessionId = msgInfo["sessionId"];
             string userId = msgInfo["userId"];
-            var userInfo = POIProxySessionManager.getUserInfo(userId);
+            var userInfo = POIProxySessionManager.Instance.getUserInfo(userId);
             string userInfoJson = jsonHandler.Serialize(userInfo);
 
             if (double.Parse(sessionInfo["create_at"])
@@ -520,7 +520,7 @@ namespace POIProxy.Controllers
                 PPLog.infoLog("[POIProxyHub wxJoinInteractiveSession] session status is not open");
                 return (int)POIGlobalVar.errorCode.SESSION_NOT_OPEN;
             }
-            else if (POIProxySessionManager.checkUserInSession(sessionId, userId))
+            else if (POIProxySessionManager.Instance.checkUserInSession(sessionId, userId))
             {
                 //User already in the session
                 PPLog.infoLog("[POIProxyHub wxJoinInteractiveSession] Session already joined");
@@ -533,7 +533,7 @@ namespace POIProxy.Controllers
                 PPLog.infoLog("[POIProxyHub wxJoinInteractiveSession] forbidden join");
                 return (int)POIGlobalVar.errorCode.STUDENT_CANNOT_JOIN;
             }
-            else if (POIProxySessionManager.acquireSessionToken(sessionId))
+            else if (POIProxySessionManager.Instance.acquireSessionToken(sessionId))
             {
                 PPLog.infoLog("[POIProxyHub wxJoinInteractiveSession] Session is open, joined!");
                 double timestamp = POITimestamp.ConvertToUnixTimestamp(DateTime.Now);

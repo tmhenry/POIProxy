@@ -18,7 +18,21 @@ namespace POIProxy
         private static POIProxyDbManager dbManager = POIProxyDbManager.Instance;
         private static JavaScriptSerializer jsonHandler = new JavaScriptSerializer();
 
-        public static void refreshSessionTokenPool(string sessionId)
+        private static POIProxySessionManager instance;
+        private POIProxySessionManager() { }
+        public static POIProxySessionManager Instance
+        {
+            get
+            {
+                if (instance == null)
+                {
+                    instance = new POIProxySessionManager();
+                }
+                return instance;
+            }
+        }
+
+        public void refreshSessionTokenPool(string sessionId)
         {
             using (var redisClient = redisManager.GetClient())
             {
@@ -28,7 +42,7 @@ namespace POIProxy
         }
 
 
-        public static bool acquireSessionToken(string sessionId)
+        public bool acquireSessionToken(string sessionId)
         {
             using (var redisClient = redisManager.GetClient())
             {
@@ -49,7 +63,7 @@ namespace POIProxy
             }
         }
 
-        public static void releaseSessionToken(string sessionId)
+        public void releaseSessionToken(string sessionId)
         {
             using (var redisClient = redisManager.GetClient())
             {
@@ -57,7 +71,7 @@ namespace POIProxy
             }
         }
 
-        public static void subscribeSession(string sessionId, string userId)
+        public void subscribeSession(string sessionId, string userId)
         {
             using (var redisClient = redisManager.GetClient())
             {
@@ -69,7 +83,7 @@ namespace POIProxy
             }
         }
 
-        public static void unsubscribeSession(string sessionId, string userId)
+        public void unsubscribeSession(string sessionId, string userId)
         {
             using (var redisClient = redisManager.GetClient())
             {
@@ -83,7 +97,7 @@ namespace POIProxy
             releaseSessionToken(sessionId);
         }
 
-        public static IRedisHash getSessionsByUserId(string userId)
+        public IRedisHash getSessionsByUserId(string userId)
         {
             using (var redisClient = redisManager.GetClient())
             {
@@ -91,7 +105,7 @@ namespace POIProxy
             }
         }
 
-        public static List<string> getUsersBySessionId(string sessionId)
+        public List<string> getUsersBySessionId(string sessionId)
         {
             using (var redisClient = redisManager.GetClient())
             {
@@ -99,7 +113,7 @@ namespace POIProxy
             }
         }
 
-        public static List<Dictionary<string, string>> getUserListDetailsBySessionId(string sessionId)
+        public List<Dictionary<string, string>> getUserListDetailsBySessionId(string sessionId)
         {
             using (var redisClient = redisManager.GetClient())
             {
@@ -115,7 +129,7 @@ namespace POIProxy
             }
         }
 
-        public static bool checkUserInSession(string sessionId, string userId)
+        public bool checkUserInSession(string sessionId, string userId)
         {
             using (var redisClient = redisManager.GetClient())
             {
@@ -123,7 +137,7 @@ namespace POIProxy
             }
         }
 
-        public static void updateSyncReference(string sessionId, string userId, double timestamp)
+        public void updateSyncReference(string sessionId, string userId, double timestamp)
         {
             using (var redisClient = redisManager.GetClient())
             {
@@ -132,7 +146,7 @@ namespace POIProxy
             }
         }
 
-        public static void archiveSessionEvent(string sessionId, POIInteractiveEvent poiEvent)
+        public void archiveSessionEvent(string sessionId, POIInteractiveEvent poiEvent)
         {
             using (var redisClient = redisManager.GetClient())
             {
@@ -141,7 +155,7 @@ namespace POIProxy
             }
         }
 
-        public static void createSessionEvent(string sessionId, POIInteractiveEvent poiEvent)
+        public void createSessionEvent(string sessionId, POIInteractiveEvent poiEvent)
         {
             using (var redisClient = redisManager.GetClient())
             {
@@ -150,7 +164,7 @@ namespace POIProxy
             }
         }
 
-        public static List<POIInteractiveEvent> getSessionEventList(string sessionId)
+        public List<POIInteractiveEvent> getSessionEventList(string sessionId)
         {
             using (var redisClient = redisManager.GetClient())
             {
@@ -166,7 +180,7 @@ namespace POIProxy
             }
         }
 
-        public static bool checkEventExists(string sessionId, string eventId)
+        public bool checkEventExists(string sessionId, string eventId)
         {
             using (var redisClient = redisManager.GetClient())
             {
@@ -182,7 +196,7 @@ namespace POIProxy
             }
         }
 
-        public static bool checkDuplicatedCreatedSession(string eventId)
+        public bool checkDuplicatedCreatedSession(string eventId)
         {
             using (var redisClient = redisManager.GetClient())
             {
@@ -198,7 +212,7 @@ namespace POIProxy
             }
         }
 
-        public static string getSessionByMsgId(string msgId)
+        public string getSessionByMsgId(string msgId)
         {
             using (var redisClient = redisManager.GetClient()) {
                 var sessionEvent = redisClient.Hashes["create_sessoin_event"];
@@ -206,7 +220,7 @@ namespace POIProxy
             }
         }
 
-        public static Dictionary<string,string> getUserInfo(string userId)
+        public Dictionary<string,string> getUserInfo(string userId)
         {
             using (var redisClient = redisManager.GetClient())
             {
@@ -221,7 +235,7 @@ namespace POIProxy
             }
         }
 
-        public static void updateUserInfoFromDb(string userId)
+        public void updateUserInfoFromDb(string userId)
         {
             using (var redisClient = redisManager.GetClient())
             {
@@ -293,7 +307,7 @@ namespace POIProxy
 
         }
 
-        public static void updateUserDevice(string userId, string deviceId, string system, int tag)
+        public void updateUserDevice(string userId, string deviceId, string system, int tag)
         {
             using (var redisClient = redisManager.GetClient())
             {
@@ -336,7 +350,7 @@ namespace POIProxy
             }
         }
 
-        public static IRedisHash getUserDevice(string userId)
+        public IRedisHash getUserDevice(string userId)
         {
             using (var redisClient = redisManager.GetClient())
             { 
@@ -345,7 +359,7 @@ namespace POIProxy
             }
         }
 
-        public static List<string> getDeviceBySystem(string system)
+        public List<string> getDeviceBySystem(string system)
         {
             using (var redisClient = redisManager.GetClient())
             {
@@ -353,7 +367,7 @@ namespace POIProxy
             }
         }
 
-        public static Dictionary<string,string> getSessionInfo(string sessionId)
+        public Dictionary<string,string> getSessionInfo(string sessionId)
         {
             using (var redisClient = redisManager.GetClient())
             {
@@ -384,7 +398,7 @@ namespace POIProxy
             }
         }
 
-        public static List<Dictionary<string, string>> getSessionDetail(List<string> sessionList, string userId)
+        public List<Dictionary<string, string>> getSessionDetail(List<string> sessionList, string userId)
         {
             using (var redisClient = redisManager.GetClient())
             {
@@ -407,7 +421,7 @@ namespace POIProxy
             }
         }
 
-        public static void updateSessionInfo(string sessionId, Dictionary<string, string> update, string userId = "")
+        public void updateSessionInfo(string sessionId, Dictionary<string, string> update, string userId = "")
         {
             using (var redisClient = redisManager.GetClient())
             {
@@ -453,7 +467,7 @@ namespace POIProxy
             }
         }
 
-        public static POISessionArchive getSessionArchive(string sessionId)
+        public POISessionArchive getSessionArchive(string sessionId)
         {
             using (var redisClient = redisManager.GetClient())
             {
@@ -467,7 +481,7 @@ namespace POIProxy
             }
         }
 
-        public static bool checkPrivateTutoring(string sessionId)
+        public bool checkPrivateTutoring(string sessionId)
         {
             using (var redisClient = redisManager.GetClient())
             {
@@ -486,7 +500,7 @@ namespace POIProxy
             }
         }
 
-        public static void updateUserScoreRanking(string userId, int value)
+        public void updateUserScoreRanking(string userId, int value)
         {
             //get user school and team info from MySQL
             Dictionary<string, object> userConditions = new Dictionary<string, object>();
