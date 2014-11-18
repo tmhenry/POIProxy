@@ -331,7 +331,7 @@ namespace POIProxy
                 if (type == "tutorial")
                 {
                     updateByUserId(userId, "tutorial_score", tutorialScore + 10, "user_score");
-                    POIProxySessionManager.Instance.updateUserScoreRanking(userId, 100);
+                    POIProxySessionManager.Instance.updateUserScoreRanking(userId, 10);
                 }
 
             }
