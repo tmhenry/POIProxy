@@ -14,7 +14,7 @@ namespace POIProxy
 {
     public class POIProxySessionManager
     {
-        private static PooledRedisClientManager redisManager = new PooledRedisClientManager(POIGlobalVar.RedisHost + ":" + POIGlobalVar.RedisPort);
+        private static PooledRedisClientManager redisManager = new PooledRedisClientManager(POIGlobalVar.RedisHost + ":" + POIGlobalVar.RedisPort) { ConnectTimeout = 500 };
         private static POIProxyDbManager dbManager = POIProxyDbManager.Instance;
         private static JavaScriptSerializer jsonHandler = new JavaScriptSerializer();
 
