@@ -407,7 +407,7 @@ namespace POIProxy
                 {
                     var sessionInfo = getSessionInfo(sessionId);
                     Dictionary<string, string> sessionTempDic = new Dictionary<string, string>();
-                    sessionTempDic["sessionId"] = sessionInfo["session_id"];
+                    sessionTempDic["sessionId"] = sessionId;
                     sessionTempDic["vote"] = sessionInfo.ContainsKey("vote") ? sessionInfo["vote"] : "0";
                     sessionTempDic["watch"] = sessionInfo.ContainsKey("watch") ? sessionInfo["watch"] : "0";
                     var session_vote_by_user = redisClient.Hashes["session_vote_by_user:" + userId];
