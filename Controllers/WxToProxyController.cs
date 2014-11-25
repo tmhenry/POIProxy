@@ -323,7 +323,7 @@ namespace POIProxy.Controllers
             catch (Exception e)
             {
                 PPLog.errorLog("In wx to proxy post session: " + e.Message);
-                //if (e.Message.Contains("Unable to Connect") || e.Message.Contains("Redis Timeout expired"))
+                if (e.Message.Contains("Unable to Connect") || e.Message.Contains("Redis Timeout expired"))
                 {
                     POIProxyToWxApi.monitorLog(e.Message);
                 }
