@@ -410,6 +410,7 @@ namespace POIProxy
                     sessionTempDic["sessionId"] = sessionId;
                     sessionTempDic["vote"] = sessionInfo.ContainsKey("vote") ? sessionInfo["vote"] : "0";
                     sessionTempDic["watch"] = sessionInfo.ContainsKey("watch") ? sessionInfo["watch"] : "0";
+                    sessionTempDic["score"] = getSessionScore(sessionInfo).ToString();
                     var session_vote_by_user = redisClient.Hashes["session_vote_by_user:" + userId];
                     if (session_vote_by_user.ContainsKey(sessionId) && session_vote_by_user[sessionId] == (0).ToString())
                         sessionTempDic["isVoted"] = "1";
@@ -547,6 +548,18 @@ namespace POIProxy
                 }
             }
             return;
+        }
+
+        private double getSessionScore(Dictionary<string, string> sessionInfo)
+        {
+            int nVote = int.Parse(sessionInfo.ContainsKey("vote") ? sessionInfo["vote"] : "0");
+            int nWatch = int.Parse(sessionInfo.ContainsKey("watch") ? sessionInfo["watch"] : "0");
+            double fCreateTime = double.Parse(sessionInfo["create_at"]);
+            double fCurrentTime = (DateTime.Now.ToUniversalTime().Ticks - 621355968000000000) / 10000000;
+            double fScore = nVote * 5 + Math.Log(nWatch + 1) + (fCreateTime - fCurrentTime) / 86400 / 2;
+
+            //PPLog.debugLog("[Session Score] Session Id:" + sessionInfo["session_id"] + " Score:" + fScore.ToString() + " Vote:" + nVote.ToString() + " Watch:" + nWatch.ToString() + " CreateAt:" + fCreateTime.ToString() + " CurrentTime:" + fCurrentTime.ToString());
+            return fScore;
         }
     }
 }

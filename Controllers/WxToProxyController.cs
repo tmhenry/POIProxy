@@ -323,6 +323,10 @@ namespace POIProxy.Controllers
             catch (Exception e)
             {
                 PPLog.errorLog("In wx to proxy post session: " + e.Message);
+                //if (e.Message.Contains("Unable to Connect") || e.Message.Contains("Redis Timeout expired"))
+                {
+                    POIProxyToWxApi.monitorLog(e.Message);
+                }
                 var response = Request.CreateResponse(HttpStatusCode.OK);
                 response.StatusCode = HttpStatusCode.ExpectationFailed;
                 response.Content = new StringContent(jsonHandler.Serialize(new { status = POIGlobalVar.errorCode.FAIL, content = e.Message }));

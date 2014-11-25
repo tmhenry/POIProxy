@@ -16,6 +16,7 @@ namespace POIProxy
     public class POIProxyToWxApi
     {
         private static string baseReqUrl = WebConfigurationManager.AppSettings["WxServer"];
+        private static string adminReqUrl = WebConfigurationManager.AppSettings["adminServer"];
 
         private async static Task sendReq(NameValueCollection postVal)
         {
@@ -179,6 +180,25 @@ namespace POIProxy
         public static async Task illustrationMsgReceived(List<string> userList, string sessionId, string mediaId)
         {
             await msgReceived(userList, sessionId, "illustration", "", mediaId);
+        }
+
+        public async static Task monitorLog(string log)
+        {
+             using (var client = new HttpClient())
+            {
+                try
+                {
+                    var values = new List<KeyValuePair<string, string>>();
+                    values.Add(new KeyValuePair<string, string>("log", log));
+                    var content = new FormUrlEncodedContent(values);
+                    var response = await client.PostAsync(adminReqUrl, content);
+                }
+                catch (Exception e)
+                {
+                    PPLog.errorLog(e.Message);
+                }
+
+            }
         }
     }
 }
