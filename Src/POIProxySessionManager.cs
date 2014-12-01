@@ -554,7 +554,7 @@ namespace POIProxy
         {
             int nVote = int.Parse(sessionInfo.ContainsKey("vote") ? sessionInfo["vote"] : "0");
             int nWatch = int.Parse(sessionInfo.ContainsKey("watch") ? sessionInfo["watch"] : "0");
-            double fCreateTime = double.Parse(sessionInfo["create_at"]);
+            double fCreateTime = double.Parse(sessionInfo.ContainsKey("create_at") ? sessionInfo["create_at"] : "0");
             double fCurrentTime = (DateTime.Now.ToUniversalTime().Ticks - 621355968000000000) / 10000000;
             double fScore = nVote * 5 + Math.Log(nWatch + 1) + (fCreateTime - fCurrentTime) / 86400 / 2;
 
