@@ -153,7 +153,9 @@ namespace POIProxy
             appIdList.Add(APPID);
 
             List<String> phoneTypeList = new List<string>();    //通知接收者的手机操作系统类型
-            phoneTypeList.Add("ANDROID");
+            if (WebConfigurationManager.AppSettings["ENV"] == "production") {
+                phoneTypeList.Add("ANDROID");
+            }
             //phoneTypeList.Add("IOS");
 
             List<String> provinceList = new List<string>();     //通知接收者所在省份
@@ -173,7 +175,7 @@ namespace POIProxy
             String androidPushResult = push.pushMessageToApp(message);
 
             List<string> deviceList = POIProxySessionManager.Instance.getDeviceBySystem("ios");
-            List<com.igetui.api.openservice.igetui.Target> targetList = new List<com.igetui.api.openservice.igetui.Target>();
+            /*List<com.igetui.api.openservice.igetui.Target> targetList = new List<com.igetui.api.openservice.igetui.Target>();
             foreach (string deviceId in deviceList)
             {
                 com.igetui.api.openservice.igetui.Target target = new com.igetui.api.openservice.igetui.Target();
@@ -181,8 +183,34 @@ namespace POIProxy
                 target.clientId = deviceId;
                 targetList.Add(target);
             }
-            String iOSPushResult = pushMessageToList(title, pushMsg, targetList);
+            String iOSPushResult = pushMessageToList(title, pushMsg, targetList);*/
+            double deviceLength = Math.Ceiling((double)deviceList.Count / 1000);
+            PPLog.debugLog("BroadCast: " + deviceLength);
+            List<string> iOSPushResult = new List<string>();
+            for (int i = 0; i < deviceLength; i++)
+            {
+                List<com.igetui.api.openservice.igetui.Target> targetList = new List<com.igetui.api.openservice.igetui.Target>();
+                int targetCount = 1000;
+                if (i == deviceLength - 1)
+                {
+                    targetCount = deviceList.Count % 1000;
+                }
+
+                for (int j = 0; j < targetCount; j++)
+                {
+                    com.igetui.api.openservice.igetui.Target target = new com.igetui.api.openservice.igetui.Target();
+                    target.appId = APPID;
+                    target.clientId = deviceList[(int)(1000 * i + j)];
+                    targetList.Add(target);
+                }
+                if (WebConfigurationManager.AppSettings["ENV"] == "production") {
+                    String result = pushMessageToList(title, pushMsg, targetList);
+                    iOSPushResult.Add(result);
+                }
+            }
             PPLog.infoLog("[POIProxyPushNotifier] Session created broadcasted result: (android)" + androidPushResult + " (iOS) " + iOSPushResult);
+
+            
         }
 
         public static TransmissionTemplate transmissionTemplate(String title, String message)
