@@ -9,6 +9,8 @@ using ServiceStack.Redis.Generic;
 using ServiceStack.Text;
 
 using System.Data;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace POIProxy
 {
@@ -137,14 +139,14 @@ namespace POIProxy
             }
         }
 
-        public void updateSyncReference(string sessionId, string userId, double timestamp)
+        /*public void updateSyncReference(string sessionId, string userId, double timestamp)
         {
             using (var redisClient = redisManager.GetClient())
             {
                 var sessions = redisClient.Hashes["session_by_user:" + userId];
                 sessions[sessionId] = timestamp.ToString();
             }
-        }
+        }*/
 
         public void archiveSessionEvent(string sessionId, POIInteractiveEvent poiEvent)
         {
@@ -152,6 +154,56 @@ namespace POIProxy
             {
                 var eventList = redisClient.As<POIInteractiveEvent>().GetHash<string>("archive:event_list:" + sessionId);
                 eventList[poiEvent.EventId] = poiEvent;
+
+                List<string> userList = getUsersBySessionId(sessionId);
+                userList.Remove(poiEvent.UserId);
+                foreach (string userId in userList)
+                {
+                    updateSyncReference(sessionId, userId, poiEvent.Timestamp);
+                }
+            }
+        }
+
+        public void updateSyncReference(string sessionId, string userId, double timestamp)
+        {
+            PPLog.debugLog("updateSyncReference: " + sessionId + " userId: " + userId + " timestamp: " + timestamp.ToString());
+            using (var redisClient = redisManager.GetClient())
+            {
+                var sessions = redisClient.Hashes["session_by_user:" + userId];
+                sessions[sessionId] = timestamp.ToString();
+
+                List<object> sessionList = new List<object>();
+                foreach (var session in sessions) {
+                    if (session.Value != "0") {
+                        Dictionary<string, object> sessionDic = new Dictionary<string, object>();
+                        sessionDic[session.Key] = session.Value;
+                        sessionList.Add(sessionDic);
+                    }
+                }
+
+                string session_by_user = jsonHandler.Serialize(sessionList);
+                PPLog.debugLog("userId: " + userId + ": " + session_by_user);
+                
+                var user = redisClient.Hashes["user:" + userId];
+                user["status"] = GetMd5Hash(session_by_user);
+                PPLog.debugLog("[POIProxySessionManager] updateSyncReference Hash: " + GetMd5Hash(session_by_user) + "session dictionary: " + session_by_user);
+            }
+        }
+
+        public bool checkSyncReference(string userId, string hash)
+        {
+            using (var redisClient = redisManager.GetClient())
+            {
+                var user = redisClient.Hashes["user:" + userId];
+                //PPLog.debugLog("[POIProxySessionManager] checkSyncReference Hash: " + user["status"]);
+                if (hash == user["status"])
+                {
+                    return true;
+                }
+                else 
+                {
+                    return false;
+                }
             }
         }
 
@@ -560,6 +612,28 @@ namespace POIProxy
 
             //PPLog.debugLog("[Session Score] Session Id:" + sessionInfo["session_id"] + " Score:" + fScore.ToString() + " Vote:" + nVote.ToString() + " Watch:" + nWatch.ToString() + " CreateAt:" + fCreateTime.ToString() + " CurrentTime:" + fCurrentTime.ToString());
             return fScore;
+        }
+
+        private string GetMd5Hash (string input)
+        {
+
+            // Convert the input string to a byte array and compute the hash. 
+            MD5 md5 = System.Security.Cryptography.MD5.Create();
+            byte[] data = md5.ComputeHash(Encoding.UTF8.GetBytes(input));
+
+            // Create a new Stringbuilder to collect the bytes 
+            // and create a string.
+            StringBuilder sBuilder = new StringBuilder();
+
+            // Loop through each byte of the hashed data  
+            // and format each one as a hexadecimal string. 
+            for (int i = 0; i < data.Length; i++)
+            {
+                sBuilder.Append(data[i].ToString("x2"));
+            }
+
+            // Return the hexadecimal string. 
+            return sBuilder.ToString();
         }
     }
 }

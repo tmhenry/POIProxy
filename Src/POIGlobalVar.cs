@@ -31,12 +31,13 @@ namespace POIProxy
 
         public static int MaxMobileClientCount { get; set; }
 
-        public enum resource { SESSIONS, MESSAGES, USERS, SERVICES, ALERTS };
+        public enum resource { SESSIONS, MESSAGES, USERS, SERVICES, ALERTS, SYNC };
         public enum sessionType { CREATE, JOIN, END, CANCEL, UPDATE, RERAISE, RATING, GET };
         public enum messageType { TEXT, IMAGE, VOICE, ILLUSTRATION, SYSTEM };
         public enum userType { UPDATE, SCORE, LOGOUT };
         public enum serviceType { SYSTEM, ACTION, NEWS, EXTRA, TASK};
         public enum alertType { SYSTEM };
+        public enum syncType { SESSION };
         public enum tag { UNSUBSCRIBED, SUBSCRIBED};
         public enum errorCode
         {
@@ -49,7 +50,9 @@ namespace POIProxy
             STUDENT_CANNOT_JOIN = 1004,
             TUTOR_CANNOT_RATING = 1005,
             STUDENT_CANNOT_END = 1006,
-            SESSION_NOT_OPEN = 1007
+            SESSION_NOT_OPEN = 1007,
+            SESSION_SYNC = 5001,
+            SESSION_ASYNC = 5002,
         };
 
         public enum sessionAction { JOIN, VOTES, WATCH };

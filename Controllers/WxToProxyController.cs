@@ -8,6 +8,7 @@ using System.Web.Http;
 using System.Web.Script.Serialization;
 using System.Threading.Tasks;
 using System.Web.Configuration;
+using System.Collections;
 
 namespace POIProxy.Controllers
 {
@@ -496,6 +497,104 @@ namespace POIProxy.Controllers
             catch (Exception e)
             {
                 PPLog.errorLog("error in alert received: " + e.Message);
+                var response = Request.CreateResponse(HttpStatusCode.OK);
+                response.StatusCode = HttpStatusCode.ExpectationFailed;
+                response.Content = new StringContent(jsonHandler.Serialize(new { status = POIGlobalVar.errorCode.FAIL, content = e.Message }));
+                return response;
+            }
+        }
+
+        public HttpResponseMessage Sync(HttpRequestMessage request)
+        {
+            try
+            {
+                string content = request.Content.ReadAsStringAsync().Result;
+                Dictionary<string, object> syncInfo = jsonHandler.Deserialize<Dictionary<string, object>>(content);
+                PPLog.infoLog("[ProxyController Sync] " + DictToString(syncInfo, null));
+
+                string hash = syncInfo.ContainsKey("hash") ? (string)syncInfo["hash"] : "";
+                string userId = syncInfo.ContainsKey("userId") ? (string)syncInfo["userId"] : "";
+                ArrayList sessionList = syncInfo.ContainsKey("sessionList") ? (ArrayList) syncInfo["sessionList"] : new ArrayList();
+
+                int syncStatus = (int)POIGlobalVar.errorCode.SESSION_SYNC;
+                string syncContent = "";
+                if (userId != "") {
+                    if (hash != "")
+                    {
+                        bool isSync = POIProxySessionManager.Instance.checkSyncReference(userId, hash);
+                        if (isSync)
+                        {
+                            syncStatus = (int)POIGlobalVar.errorCode.SESSION_SYNC;
+                        }
+                        else {
+                            var session_by_user = POIProxySessionManager.Instance.getSessionsByUserId(userId);
+                            var serverSessionList = new List<string>();
+                            foreach (var session in session_by_user)
+                            {
+                                if (session.Value != "0") {
+                                    serverSessionList.Add(session.Key);
+                                }
+                            }
+
+                            syncStatus = (int)POIGlobalVar.errorCode.SESSION_ASYNC;
+                            syncContent = jsonHandler.Serialize(serverSessionList);
+                        }
+                    }
+
+                    else if (sessionList.Count > 0)
+                    {
+                        var session_by_user = POIProxySessionManager.Instance.getSessionsByUserId(userId);
+
+                        List<object> missedSessionList = new List<object>();
+                        foreach (var session in session_by_user)
+                        {
+                            double client_timestamp = 0;
+                            foreach (Dictionary<string, object> sessionRecord in sessionList)
+                            {
+                                if (sessionRecord.ContainsKey(session.Key))
+                                {
+                                    if (double.Parse((string)sessionRecord[session.Key]) == double.Parse(session.Value))
+                                    {
+                                        client_timestamp = double.Parse(session.Value);
+                                        break;
+                                    }
+                                }
+                            }
+                            if (session.Value != "0")
+                            {
+                                var missedEvents = interMsgHandler.getMissedEventsInSession(session.Key, client_timestamp);
+                                Dictionary<string, object> missedDic = new Dictionary<string, object>();
+                                missedDic[session.Key] = missedEvents;
+                                missedSessionList.Add(missedDic);
+                            }
+                        }
+
+                        if (missedSessionList.Count > 0)
+                        {
+                            syncStatus = (int)POIGlobalVar.errorCode.SESSION_ASYNC;
+                            syncContent = jsonHandler.Serialize(missedSessionList);
+                            PPLog.debugLog("[POIProxySessionManager] checkSyncReference missed session: " + syncContent);
+                        }
+                        else
+                        {
+                            syncStatus = (int)POIGlobalVar.errorCode.SESSION_ASYNC;
+                        }
+
+                    }
+                    
+                }
+                else { 
+                }
+
+                var response = Request.CreateResponse(HttpStatusCode.OK);
+                response.StatusCode = HttpStatusCode.OK;
+                response.Content = new StringContent(jsonHandler.Serialize(new { status = syncStatus, content = syncContent }));
+                return response;
+
+            }
+            catch (Exception e)
+            {
+                PPLog.errorLog("error in sync received: " + e.Message);
                 var response = Request.CreateResponse(HttpStatusCode.OK);
                 response.StatusCode = HttpStatusCode.ExpectationFailed;
                 response.Content = new StringContent(jsonHandler.Serialize(new { status = POIGlobalVar.errorCode.FAIL, content = e.Message }));

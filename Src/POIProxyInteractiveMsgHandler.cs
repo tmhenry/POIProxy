@@ -397,7 +397,6 @@ namespace POIProxy
             values["status"] = "open";
 
             string sessionId = dbManager.insertIntoTable("session", values);
-            PPLog.debugLog("[POIProxyInteractiveMsgHandler createInteractiveSession] session created! session id: "+ sessionId);
 
             Dictionary<string, string> filterInfo = jsonHandler.Deserialize<Dictionary<string, string>>(filter);
             values.Clear();
@@ -455,16 +454,16 @@ namespace POIProxy
                 Message = "",
                 Data = infoDict
             };
+            //Subscribe the user to the session
+            POIProxySessionManager.Instance.subscribeSession(sessionId, userId);
 
             POIProxySessionManager.Instance.archiveSessionEvent(sessionId, poiEvent);
             POIProxySessionManager.Instance.createSessionEvent(sessionId, poiEvent);
 
-            //Subscribe the user to the session
-            POIProxySessionManager.Instance.subscribeSession(sessionId, userId);
-            
             //Insert the question activity into the activity table
             addQuestionActivity(userId, sessionId);
 
+            PPLog.debugLog("[POIProxyInteractiveMsgHandler createInteractiveSession] session created! session id: "+ sessionId);
             return new Tuple<string,string>(presId, sessionId);
         }
 
@@ -885,10 +884,10 @@ namespace POIProxy
             POIProxySessionManager.Instance.archiveSessionEvent(sessionId, poiEvent);
         }
 
-        public List<POIInteractiveEvent> getMissedEventsInSession(string sessionId, double timestamp)
+        public List<object> getMissedEventsInSession(string sessionId, double timestamp)
         {
             //PPLog.debugLog("[POIProxyInteractiveMsgHandler getMissedEventsInSession] Getting missed event for session : " + sessionId);
-            var missedEvents = new List<POIInteractiveEvent>();
+            var missedEvents = new List<object>();
 
             try
             {
@@ -901,7 +900,71 @@ namespace POIProxy
                     {
                         if (eventList[i].Timestamp > timestamp)
                         {
-                            missedEvents.Add(eventList[i]);
+                            Dictionary<string, object> message = new Dictionary<string, object>();
+                            
+                            int eventType = (int)POIGlobalVar.resource.SESSIONS;
+
+                            message["msgId"] = eventList[i].EventId;
+                            message["userId"] = eventList[i].UserId;
+                            message["sessionId"] = sessionId;
+                            message["timestamp"] = eventList[i].Timestamp;
+
+                            if (eventList[i].EventType == "session_created") {
+                                message["sessionType"] = POIGlobalVar.sessionType.CREATE;
+                                message["mediaId"] = eventList[i].MediaId;
+                                var sessionInfo = POIProxySessionManager.Instance.getSessionInfo(sessionId);
+                                message["description"] = sessionInfo.ContainsKey("description") ? sessionInfo["description"] : "";
+                                message["presId"] = sessionInfo.ContainsKey("pres_id") ? sessionInfo["pres_id"] : "0";
+                            }
+                            else if (eventList[i].EventType == "session_joined") {
+                                message["sessionType"] = POIGlobalVar.sessionType.JOIN;
+                            }
+                            else if (eventList[i].EventType == "session_cancelled") {
+                                message["sessionType"] = POIGlobalVar.sessionType.CANCEL;
+                            }
+                            else if (eventList[i].EventType == "session_ended") {
+                                message["sessionType"] = POIGlobalVar.sessionType.END;
+                            }
+                            else if (eventList[i].EventType == "session_rated") {
+                                message["sessionType"] = POIGlobalVar.sessionType.RATING;
+                                var sessionInfo = POIProxySessionManager.Instance.getSessionInfo(sessionId);
+                                message["rating"] = sessionInfo.ContainsKey("rating") ? sessionInfo["rating"] : "0"; 
+                            }
+
+                            else if (eventList[i].EventType == "text") {
+                                message["msgType"] = POIGlobalVar.messageType.TEXT;
+                                eventType = (int)POIGlobalVar.resource.MESSAGES;
+                            }
+                            else if (eventList[i].EventType == "voice") {
+                                message["msgType"] = POIGlobalVar.messageType.VOICE;
+                                eventType = (int)POIGlobalVar.resource.MESSAGES;
+                            }
+                            else if (eventList[i].EventType == "image") {
+                                message["msgType"] = POIGlobalVar.messageType.IMAGE;
+                                eventType = (int)POIGlobalVar.resource.MESSAGES;
+                            }
+                            else if (eventList[i].EventType == "illustration") {
+                                message["msgType"] = POIGlobalVar.messageType.ILLUSTRATION;
+                                eventType = (int)POIGlobalVar.resource.MESSAGES;
+                            }
+                            else {
+                                message["msgType"] = POIGlobalVar.sessionType.GET;
+                            }
+
+                            if (eventType == (int)POIGlobalVar.resource.SESSIONS)
+                            {
+                                message["resource"] = POIGlobalVar.resource.SESSIONS;
+                                message["userInfo"] = jsonHandler.Serialize(POIProxySessionManager.Instance.getUserInfo(eventList[i].UserId));
+                            }
+                            else { 
+                                message["resource"] = POIGlobalVar.resource.MESSAGES;
+                                message["message"] = eventList[i].Message;
+                                message["mediaId"] = eventList[i].MediaId;
+                                message["mediaDuration"] = eventList[i].MediaDuration;
+                            }
+                            
+
+                            missedEvents.Add(message);
                         }
                     }
                 }
