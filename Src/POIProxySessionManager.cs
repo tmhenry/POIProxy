@@ -115,6 +115,14 @@ namespace POIProxy
             }
         }
 
+        public IRedisList getServiceByUserId(string userId)
+        {
+            using (var redisClient = redisManager.GetClient())
+            {
+                return redisClient.Lists["archive:service_list:" + userId];
+            }
+        }
+
         public List<Dictionary<string, string>> getUserListDetailsBySessionId(string sessionId)
         {
             using (var redisClient = redisManager.GetClient())
@@ -152,14 +160,25 @@ namespace POIProxy
         {
             using (var redisClient = redisManager.GetClient())
             {
-                var eventList = redisClient.As<POIInteractiveEvent>().GetHash<string>("archive:event_list:" + sessionId);
-                eventList[poiEvent.EventId] = poiEvent;
-
-                List<string> userList = getUsersBySessionId(sessionId);
-                userList.Remove(poiEvent.UserId);
-                foreach (string userId in userList)
+                if (sessionId != POIGlobalVar.customerSession.ToString())
                 {
-                    updateSyncReference(sessionId, userId, poiEvent.Timestamp);
+                    var eventList = redisClient.As<POIInteractiveEvent>().GetHash<string>("archive:event_list:" + sessionId);
+                    eventList[poiEvent.EventId] = poiEvent;
+
+                    List<string> userList = getUsersBySessionId(sessionId);
+                    userList.Remove(poiEvent.UserId);
+                    foreach (string userId in userList)
+                    {
+                        updateSyncReference(sessionId, userId, poiEvent.Timestamp);
+                    }
+                }
+                else {
+                    //var serviceList = redisClient.As<POIInteractiveEvent>().GetHash<string>("archive:service_list:" + poiEvent.UserId);
+                    //serviceList[poiEvent.Timestamp.ToString()] = poiEvent;
+                    var customerList = redisClient.As<POIInteractiveEvent>().Lists["archive:service_list:" + poiEvent.UserId];
+                    customerList.Push(poiEvent);
+                    var serviceList = redisClient.As<POIInteractiveEvent>().Lists["archive:service_list:" + poiEvent.CustomerId];
+                    serviceList.Push(poiEvent);
                 }
             }
         }
@@ -195,8 +214,8 @@ namespace POIProxy
             using (var redisClient = redisManager.GetClient())
             {
                 var user = redisClient.Hashes["user:" + userId];
-                //PPLog.debugLog("[POIProxySessionManager] checkSyncReference Hash: " + user["status"]);
-                if (hash == user["status"])
+                PPLog.debugLog("[POIProxySessionManager] checkSyncReference Hash: " + user["status"]);
+                if (String.Equals(hash, (string)user["status"], StringComparison.OrdinalIgnoreCase))
                 {
                     return true;
                 }
@@ -634,6 +653,17 @@ namespace POIProxy
 
             // Return the hexadecimal string. 
             return sBuilder.ToString();
+        }
+
+        public string DictToString<T, V>(IEnumerable<KeyValuePair<T, V>> items, string format)
+        {
+            format = String.IsNullOrEmpty(format) ? "{0}='{1}' " : format;
+
+            System.Text.StringBuilder itemString = new System.Text.StringBuilder();
+            foreach (var item in items)
+                itemString.AppendFormat(format, item.Key, item.Value);
+
+            return itemString.ToString();
         }
     }
 }

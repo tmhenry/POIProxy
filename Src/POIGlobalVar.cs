@@ -35,7 +35,7 @@ namespace POIProxy
         public enum sessionType { CREATE, JOIN, END, CANCEL, UPDATE, RERAISE, RATING, GET };
         public enum messageType { TEXT, IMAGE, VOICE, ILLUSTRATION, SYSTEM };
         public enum userType { UPDATE, SCORE, LOGOUT };
-        public enum serviceType { SYSTEM, ACTION, NEWS, EXTRA, TASK};
+        public enum serviceType { SYSTEM, ACTION, NEWS, EXTRA, TASK };
         public enum alertType { SYSTEM };
         public enum syncType { SESSION };
         public enum tag { UNSUBSCRIBED, SUBSCRIBED};
@@ -56,6 +56,8 @@ namespace POIProxy
         };
 
         public enum sessionAction { JOIN, VOTES, WATCH };
+        public static int customerSession = 0;
+        public static string customerId = "6c3514d4ad2741109e5b2a66dc2036df";
 
         //public static POIUIScheduler Scheduler { get; set; }
     }

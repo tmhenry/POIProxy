@@ -55,6 +55,7 @@ namespace POIProxy.Controllers
                 string message = msgInfo.ContainsKey("message") ? msgInfo["message"] : "";
                 string mediaId = msgInfo.ContainsKey("mediaId") ? msgInfo["mediaId"] : "";
                 float mediaDuration = msgInfo.ContainsKey("mediaDuration") ? float.Parse(msgInfo["mediaDuration"]) : 0;
+                string customerId = msgInfo.ContainsKey("customerId") ? msgInfo["customerId"] : POIGlobalVar.customerId;
                 //double timestamp = double.Parse(msgInfo["timestamp"]);
                 double timestamp = POITimestamp.ConvertToUnixTimestamp(DateTime.Now);
                 string pushMsg= jsonHandler.Serialize(new {
@@ -71,31 +72,39 @@ namespace POIProxy.Controllers
 
                 if (!POIProxySessionManager.Instance.checkEventExists(sessionId, msgId))
                 {
-                    List<string> userList = POIProxySessionManager.Instance.getUsersBySessionId(sessionId);
-                    userList.Remove(userId);
+                    List<string> userList = new List<string>();
+                    if (sessionId != POIGlobalVar.customerSession.ToString())
+                    {
+                        userList = POIProxySessionManager.Instance.getUsersBySessionId(sessionId);
+                        userList.Remove(userId);
+                    }
+                    else 
+                    {
+                        userList.Add(customerId);
+                    }
 
                     switch (msgType)
                     {
                         case (int)POIGlobalVar.messageType.TEXT:
-                            interMsgHandler.textMsgReceived(msgId, userId, sessionId, message, timestamp);
+                            interMsgHandler.textMsgReceived(msgId, userId, sessionId, message, timestamp, customerId);
                             POIProxyPushNotifier.send(userList, pushMsg);
                             await POIProxyToWxApi.textMsgReceived(userList, sessionId, message);
                             break;
 
                         case (int)POIGlobalVar.messageType.IMAGE:
-                            interMsgHandler.imageMsgReceived(msgId, userId, sessionId, mediaId, timestamp);
+                            interMsgHandler.imageMsgReceived(msgId, userId, sessionId, mediaId, timestamp, customerId);
                             POIProxyPushNotifier.send(userList, pushMsg);
                             await POIProxyToWxApi.imageMsgReceived(userList, sessionId, mediaId);
                             break;
 
                         case (int)POIGlobalVar.messageType.VOICE:
-                            interMsgHandler.voiceMsgReceived(msgId, userId, sessionId, mediaId, timestamp, mediaDuration);
+                            interMsgHandler.voiceMsgReceived(msgId, userId, sessionId, mediaId, timestamp, mediaDuration, customerId);
                             POIProxyPushNotifier.send(userList, pushMsg);
                             await POIProxyToWxApi.voiceMsgReceived(userList, sessionId, mediaId);
                             break;
 
                         case (int)POIGlobalVar.messageType.ILLUSTRATION:
-                            interMsgHandler.illustrationMsgReceived(msgId, userId, sessionId, mediaId, timestamp);
+                            interMsgHandler.illustrationMsgReceived(msgId, userId, sessionId, mediaId, timestamp, customerId);
                             POIProxyPushNotifier.send(userList, pushMsg);
                             await POIProxyToWxApi.illustrationMsgReceived(userList, sessionId, mediaId);
                             break;
@@ -573,7 +582,7 @@ namespace POIProxy.Controllers
                         {
                             syncStatus = (int)POIGlobalVar.errorCode.SESSION_ASYNC;
                             syncContent = jsonHandler.Serialize(missedSessionList);
-                            PPLog.debugLog("[POIProxySessionManager] checkSyncReference missed session: " + syncContent);
+                            //PPLog.debugLog("[POIProxySessionManager] checkSyncReference missed session: " + syncContent);
                         }
                         else
                         {

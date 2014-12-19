@@ -26,7 +26,7 @@ namespace POIProxy
         {
             if (!POIProxySessionManager.Instance.checkEventExists(sessionId, messageId))
             {
-                interMsgHandler.textMsgReceived(messageId, Clients.Caller.userId, sessionId, message, timestamp);
+                //interMsgHandler.textMsgReceived(messageId, Clients.Caller.userId, sessionId, message, timestamp);
 
                 Clients.Group("session_" + sessionId, Context.ConnectionId).
                     textMsgReceived(Clients.Caller.userId, sessionId, message, timestamp);
@@ -53,7 +53,7 @@ namespace POIProxy
         {
             if (!POIProxySessionManager.Instance.checkEventExists(sessionId, messageId))
             {
-                interMsgHandler.imageMsgReceived(messageId, Clients.Caller.userId, sessionId, mediaId, timestamp);
+                //interMsgHandler.imageMsgReceived(messageId, Clients.Caller.userId, sessionId, mediaId, timestamp);
 
                 Clients.Group("session_" + sessionId, Context.ConnectionId).
                     imageMsgReceived(Clients.Caller.userId, sessionId, mediaId, timestamp);
@@ -103,7 +103,7 @@ namespace POIProxy
         {
             if (!POIProxySessionManager.Instance.checkEventExists(sessionId, messageId))
             {
-                interMsgHandler.illustrationMsgReceived(messageId, Clients.Caller.userId, sessionId, mediaId, timestamp);
+                //interMsgHandler.illustrationMsgReceived(messageId, Clients.Caller.userId, sessionId, mediaId, timestamp);
 
                 Clients.Group("session_" + sessionId, Context.ConnectionId).
                     illustrationMsgReceived(Clients.Caller.userId, sessionId, mediaId, timestamp);

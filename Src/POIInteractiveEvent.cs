@@ -14,6 +14,7 @@ namespace POIProxy
         public string UserId { get; set; }
         public double Timestamp { get; set; }
         public float MediaDuration { get; set; }
+        public string CustomerId { get; set; }
 
         //Additional data for special events
         public Dictionary<string, string> Data { get; set; }

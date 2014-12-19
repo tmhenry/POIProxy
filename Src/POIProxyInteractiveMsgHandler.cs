@@ -728,6 +728,10 @@ namespace POIProxy
             string sessionId = msgInfo["sessionId"];
 
             List<string> userList = POIProxySessionManager.Instance.getUsersBySessionId(sessionId);
+            foreach (var user in userList)
+            {
+                POIProxySessionManager.Instance.unsubscribeSession(sessionId, user);
+            }
             string tutorId = null;
             if (userList.Count != 0)
             {
@@ -811,7 +815,7 @@ namespace POIProxy
         }
 
         //Functions for sending messages
-        public void textMsgReceived(string msgId, string userId, string sessionId, string message, double timestamp)
+        public void textMsgReceived(string msgId, string userId, string sessionId, string message, double timestamp, string customerId)
         {
             POIInteractiveEvent poiEvent = new POIInteractiveEvent
             {
@@ -819,13 +823,14 @@ namespace POIProxy
                 EventId = msgId,
                 UserId = userId,
                 Timestamp = timestamp,
-                Message = message
+                Message = message,
+                CustomerId = customerId,
             };
 
             POIProxySessionManager.Instance.archiveSessionEvent(sessionId, poiEvent);
         }
 
-        public void imageMsgReceived(string msgId, string userId, string sessionId, string mediaId, double timestamp)
+        public void imageMsgReceived(string msgId, string userId, string sessionId, string mediaId, double timestamp, string customerId)
         {
             POIInteractiveEvent poiEvent = new POIInteractiveEvent
             {
@@ -835,12 +840,13 @@ namespace POIProxy
                 MediaId = mediaId,
                 UserId = userId,
                 Timestamp = timestamp,
+                CustomerId = customerId,
             };
 
             POIProxySessionManager.Instance.archiveSessionEvent(sessionId, poiEvent);
         }
 
-        public void voiceMsgReceived(string msgId, string userId, string sessionId, string mediaId, double timestamp, float mediaDuration)
+        public void voiceMsgReceived(string msgId, string userId, string sessionId, string mediaId, double timestamp, float mediaDuration, string customerId)
         {
             POIInteractiveEvent poiEvent = new POIInteractiveEvent
             {
@@ -851,12 +857,13 @@ namespace POIProxy
                 MediaDuration = mediaDuration,
                 UserId = userId,
                 Timestamp = timestamp,
+                CustomerId = customerId,
             };
 
             POIProxySessionManager.Instance.archiveSessionEvent(sessionId, poiEvent);
         }
 
-        public void illustrationMsgReceived(string msgId, string userId, string sessionId, string mediaId, double timestamp)
+        public void illustrationMsgReceived(string msgId, string userId, string sessionId, string mediaId, double timestamp, string customerId)
         {
             POIInteractiveEvent poiEvent = new POIInteractiveEvent
             {
@@ -866,6 +873,7 @@ namespace POIProxy
                 MediaId = mediaId,
                 UserId = userId,
                 Timestamp = timestamp,
+                CustomerId = customerId,
             };
 
             POIProxySessionManager.Instance.archiveSessionEvent(sessionId, poiEvent);
