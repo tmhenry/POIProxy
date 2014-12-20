@@ -96,6 +96,31 @@ namespace POIProxy
             }
         }
 
+        public void deleteSession(string sessionId, string userId)
+        {
+            using (var redisClient = redisManager.GetClient())
+            {
+                var sessions = redisClient.Hashes["session_by_user:" + userId];
+                sessions[sessionId] = (0).ToString();
+            }
+        }
+
+        public bool checkIsDeletedSession(string sessionId, string userId)
+        { 
+            using (var redisClient = redisManager.GetClient())
+            {
+                var sessions = redisClient.Hashes["session_by_user:" + userId];
+                if (sessions[sessionId] == "0")
+                {
+                    return true;
+                }
+                else 
+                {
+                    return false;
+                }
+            }
+        }
+
         public void unsubscribeSession(string sessionId, string userId)
         {
             using (var redisClient = redisManager.GetClient())

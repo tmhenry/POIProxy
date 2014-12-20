@@ -28,6 +28,8 @@ namespace POIProxy
         {
             //detect is or not needed to push to app.
             List<com.igetui.api.openservice.igetui.Target> targetList = new List<com.igetui.api.openservice.igetui.Target>();
+            JavaScriptSerializer jsonHandler = new JavaScriptSerializer();
+            Dictionary<string, string> msgInfo = jsonHandler.Deserialize<Dictionary<string, string>>(message);
             bool needToPushApp = false;
             foreach (string userId in userList)
             {
@@ -39,6 +41,13 @@ namespace POIProxy
                     target.appId = APPID;
                     target.clientId = POIProxySessionManager.Instance.getUserDevice(userId)["deviceId"];
                     targetList.Add(target);
+
+                    if (msgInfo.ContainsKey("sessionId"))
+                    {
+                        if (POIProxySessionManager.Instance.checkIsDeletedSession(msgInfo["sessionId"], userId)) {
+                            return;
+                        }
+                    }
                 }
                 else
                 {
@@ -48,8 +57,6 @@ namespace POIProxy
 
             if (needToPushApp)
             {
-                JavaScriptSerializer jsonHandler = new JavaScriptSerializer();
-                Dictionary<string, string> msgInfo = jsonHandler.Deserialize<Dictionary<string, string>>(message);
                 String title = "";
                 switch (int.Parse(msgInfo["resource"]))
                 {

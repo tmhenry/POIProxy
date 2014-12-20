@@ -283,6 +283,30 @@ namespace POIProxy.Controllers
                             var sessionDetail = POIProxySessionManager.Instance.getSessionDetail(session, userId);
                             returnContent = jsonHandler.Serialize(sessionDetail);
                             break;
+
+                        case (int)POIGlobalVar.sessionType.DELETE:
+                            string deletedSessionList = msgInfo.ContainsKey("sessionList") ? msgInfo["sessionList"] : "[]";
+                            List<string> deletedSession = jsonHandler.Deserialize<List<string>>(deletedSessionList);
+                            foreach (var deletedItem in deletedSession) {
+                                List<Dictionary<string,string>> users = POIProxySessionManager.Instance.getUserListDetailsBySessionId(deletedItem);
+                                foreach (var user in users)
+                                { 
+                                    PPLog.debugLog("Deleted: " + DictToString(user, null));
+                                    var deleteSessionInfo = POIProxySessionManager.Instance.getSessionInfo(deletedItem);
+                                    if (deleteSessionInfo["creator"] == userId)
+                                    {
+                                        msgInfo["rating"] = "5";
+                                        interMsgHandler.rateInteractiveSession(msgInfo);
+                                    }
+                                    else
+                                    {
+                                        interMsgHandler.endInteractiveSession(msgId, userId, deletedItem);
+                                    }
+                                }
+                                POIProxySessionManager.Instance.deleteSession(deletedItem, userId);
+                            }
+                            break;
+
                         default:
                             break;
                     } 

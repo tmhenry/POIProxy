@@ -728,7 +728,7 @@ namespace POIProxy
             string sessionId = msgInfo["sessionId"];
 
             List<string> userList = POIProxySessionManager.Instance.getUsersBySessionId(sessionId);
-            POIProxySessionManager.Instance.unsubscribeSession(sessionId, userId);
+            //POIProxySessionManager.Instance.unsubscribeSession(sessionId, userId);
             string tutorId = null;
             if (userList.Count != 0)
             {
