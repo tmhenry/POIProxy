@@ -16,12 +16,23 @@ namespace POIProxy
 {
     public class POIProxySessionManager
     {
-        private static PooledRedisClientManager redisManager = new PooledRedisClientManager(POIGlobalVar.RedisHost + ":" + POIGlobalVar.RedisPort) { ConnectTimeout = 500 };
+        //private static PooledRedisClientManager redisManager = new PooledRedisClientManager(POIGlobalVar.RedisHost + ":" + POIGlobalVar.RedisPort) { ConnectTimeout = 500 };
+        private static PooledRedisClientManager redisManager = null;
         private static POIProxyDbManager dbManager = POIProxyDbManager.Instance;
         private static JavaScriptSerializer jsonHandler = new JavaScriptSerializer();
 
         private static POIProxySessionManager instance;
-        private POIProxySessionManager() { }
+        private POIProxySessionManager()
+        {
+            if (redisManager == null)
+            {
+                redisManager = new PooledRedisClientManager(POIGlobalVar.RedisHost + ":" + POIGlobalVar.RedisPort);
+                redisManager.ConnectTimeout = 500;
+                redisManager.IdleTimeOutSecs = 30;
+                redisManager.PoolTimeout = 3;
+            }
+        }
+        
         public static POIProxySessionManager Instance
         {
             get
