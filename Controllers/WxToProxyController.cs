@@ -296,6 +296,7 @@ namespace POIProxy.Controllers
                                     if (deleteSessionInfo["creator"] == userId)
                                     {
                                         msgInfo["rating"] = "5";
+                                        msgInfo["sessionId"] = "";
                                         interMsgHandler.rateInteractiveSession(msgInfo);
                                     }
                                     else
@@ -564,7 +565,7 @@ namespace POIProxy.Controllers
                             var serverSessionList = new List<string>();
                             foreach (var session in session_by_user)
                             {
-                                if (session.Value != "0") {
+                                if (session.Value != "0" && session.Value != "-1") {
                                     serverSessionList.Add(session.Key);
                                 }
                             }
@@ -593,7 +594,7 @@ namespace POIProxy.Controllers
                                     }
                                 }
                             }
-                            if (session.Value != "0")
+                            if (session.Value != "0" && session.Value != "-1")
                             {
                                 var missedEvents = interMsgHandler.getMissedEventsInSession(session.Key, client_timestamp);
                                 Dictionary<string, object> missedDic = new Dictionary<string, object>();

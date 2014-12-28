@@ -36,6 +36,12 @@ namespace POIProxy
 
                     try
                     {
+                        POIProxyInteractiveMsgHandler interMsgHandler = POIGlobalVar.Kernel.myInterMsgHandler;
+                        string deviceType = interMsgHandler.getDeviceTypeByUserId(userId);
+                        if (deviceType == "weixin_edu")
+                        {
+                            baseReqUrl = WebConfigurationManager.AppSettings["EduServer"]; 
+                        }
                         var content = new FormUrlEncodedContent(values);
                         var response = await client.PostAsync(baseReqUrl, content);
 

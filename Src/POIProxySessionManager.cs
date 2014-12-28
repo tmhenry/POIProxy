@@ -101,7 +101,8 @@ namespace POIProxy
             using (var redisClient = redisManager.GetClient())
             {
                 var sessions = redisClient.Hashes["session_by_user:" + userId];
-                sessions[sessionId] = (0).ToString();
+                sessions[sessionId] = (-1).ToString();
+                updateSyncReference(sessionId, userId, -1);
             }
         }
 
@@ -110,7 +111,7 @@ namespace POIProxy
             using (var redisClient = redisManager.GetClient())
             {
                 var sessions = redisClient.Hashes["session_by_user:" + userId];
-                if (sessions[sessionId] == "0")
+                if (sessions[sessionId] == "-1")
                 {
                     return true;
                 }
@@ -211,25 +212,29 @@ namespace POIProxy
                 else {
                     //var serviceList = redisClient.As<POIInteractiveEvent>().GetHash<string>("archive:service_list:" + poiEvent.UserId);
                     //serviceList[poiEvent.Timestamp.ToString()] = poiEvent;
-                    var customerList = redisClient.As<POIInteractiveEvent>().Lists["archive:service_list:" + poiEvent.UserId];
-                    customerList.Push(poiEvent);
-                    var serviceList = redisClient.As<POIInteractiveEvent>().Lists["archive:service_list:" + poiEvent.CustomerId];
-                    serviceList.Push(poiEvent);
+                    if (poiEvent.UserId != "")
+                    {
+                        var customerList = redisClient.As<POIInteractiveEvent>().Lists["archive:service_list:" + poiEvent.UserId];
+                        customerList.Push(poiEvent);
+                        var serviceList = redisClient.As<POIInteractiveEvent>().Lists["archive:service_list:" + poiEvent.CustomerId];
+                        serviceList.Push(poiEvent);
+                    }
                 }
             }
         }
 
         public void updateSyncReference(string sessionId, string userId, double timestamp)
         {
-            PPLog.debugLog("updateSyncReference: " + sessionId + " userId: " + userId + " timestamp: " + timestamp.ToString());
             using (var redisClient = redisManager.GetClient())
             {
                 var sessions = redisClient.Hashes["session_by_user:" + userId];
-                sessions[sessionId] = timestamp.ToString();
-
+                if (sessions[sessionId] != "-1") {
+                    sessions[sessionId] = timestamp.ToString();
+                }
+                
                 List<object> sessionList = new List<object>();
                 foreach (var session in sessions) {
-                    if (session.Value != "0") {
+                    if (session.Value != "0" && session.Value != "-1") {
                         Dictionary<string, object> sessionDic = new Dictionary<string, object>();
                         sessionDic[session.Key] = session.Value;
                         sessionList.Add(sessionDic);
@@ -237,11 +242,9 @@ namespace POIProxy
                 }
 
                 string session_by_user = jsonHandler.Serialize(sessionList);
-                PPLog.debugLog("userId: " + userId + ": " + session_by_user);
                 
                 var user = redisClient.Hashes["user:" + userId];
                 user["status"] = GetMd5Hash(session_by_user);
-                PPLog.debugLog("[POIProxySessionManager] updateSyncReference Hash: " + GetMd5Hash(session_by_user) + "session dictionary: " + session_by_user);
             }
         }
 
@@ -250,7 +253,11 @@ namespace POIProxy
             using (var redisClient = redisManager.GetClient())
             {
                 var user = redisClient.Hashes["user:" + userId];
-                PPLog.debugLog("[POIProxySessionManager] checkSyncReference Hash: " + user["status"]);
+
+                if (!user.ContainsKey("status"))
+                {
+                    user["status"] = GetMd5Hash("[]");
+                }
                 if (String.Equals(hash, (string)user["status"], StringComparison.OrdinalIgnoreCase))
                 {
                     return true;

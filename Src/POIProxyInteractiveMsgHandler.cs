@@ -823,7 +823,6 @@ namespace POIProxy
                 Message = message,
                 CustomerId = customerId,
             };
-
             POIProxySessionManager.Instance.archiveSessionEvent(sessionId, poiEvent);
         }
 
@@ -887,6 +886,25 @@ namespace POIProxy
                 Timestamp = timestamp,
             };
             POIProxySessionManager.Instance.archiveSessionEvent(sessionId, poiEvent);
+        }
+
+        public string getDeviceTypeByUserId(string userId)
+        {
+            Dictionary<string, object> conditions = new Dictionary<string, object>();
+            conditions["uid"] = userId;
+
+            List<string> cols = new List<string>();
+            cols.Add("type");
+
+            DataTable result = dbManager.selectFromTable("user_device", cols, conditions);
+            if (result.Rows.Count > 0)
+            {
+                return result.Rows[0]["type"].ToString();
+            }
+            else 
+            {
+                return "";
+            }
         }
 
         public List<object> getMissedEventsInSession(string sessionId, double timestamp)
