@@ -544,7 +544,7 @@ namespace POIProxy.Controllers
             {
                 string content = request.Content.ReadAsStringAsync().Result;
                 Dictionary<string, object> syncInfo = jsonHandler.Deserialize<Dictionary<string, object>>(content);
-                PPLog.infoLog("[ProxyController Sync] " + DictToString(syncInfo, null));
+                //PPLog.infoLog("[ProxyController Sync] " + DictToString(syncInfo, null));
 
                 string hash = syncInfo.ContainsKey("hash") ? (string)syncInfo["hash"] : "";
                 string userId = syncInfo.ContainsKey("userId") ? (string)syncInfo["userId"] : "";

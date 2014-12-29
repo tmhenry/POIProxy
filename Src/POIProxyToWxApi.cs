@@ -15,7 +15,7 @@ namespace POIProxy
 {
     public class POIProxyToWxApi
     {
-        private static string baseReqUrl = WebConfigurationManager.AppSettings["WxServer"];
+        //private static string baseReqUrl = WebConfigurationManager.AppSettings["WxServer"];
         private static string adminReqUrl = WebConfigurationManager.AppSettings["adminServer"];
 
         private async static Task sendReq(NameValueCollection postVal)
@@ -38,6 +38,7 @@ namespace POIProxy
                     {
                         POIProxyInteractiveMsgHandler interMsgHandler = POIGlobalVar.Kernel.myInterMsgHandler;
                         string deviceType = interMsgHandler.getDeviceTypeByUserId(userId);
+                        string baseReqUrl = WebConfigurationManager.AppSettings["WxServer"];
                         if (deviceType == "weixin_edu")
                         {
                             baseReqUrl = WebConfigurationManager.AppSettings["EduServer"]; 
