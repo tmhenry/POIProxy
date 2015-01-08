@@ -31,13 +31,14 @@ namespace POIProxy
 
         public static int MaxMobileClientCount { get; set; }
 
-        public enum resource { SESSIONS, MESSAGES, USERS, SERVICES, ALERTS, SYNC };
-        public enum sessionType { CREATE, JOIN, END, CANCEL, UPDATE, RERAISE, RATING, GET, DELETE };
+        public enum resource { SESSIONS, MESSAGES, USERS, SERVICES, ALERTS, SYNC, PRESENTATIONS };
+        public enum sessionType { CREATE, JOIN, END, CANCEL, UPDATE, RERAISE, RATING, GET, DELETE, INVITE };
         public enum messageType { TEXT, IMAGE, VOICE, ILLUSTRATION, SYSTEM };
         public enum userType { UPDATE, SCORE, LOGOUT };
         public enum serviceType { SYSTEM, ACTION, NEWS, EXTRA, TASK };
         public enum alertType { SYSTEM };
         public enum syncType { SESSION };
+        public enum presentationType { CREATE, JOIN, END, CANCEL, UPDATE, GET }
         public enum tag { UNSUBSCRIBED, SUBSCRIBED};
         public enum errorCode
         {

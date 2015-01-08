@@ -17,22 +17,11 @@ namespace POIProxy
     public class POIProxySessionManager
     {
         //private static PooledRedisClientManager redisManager = new PooledRedisClientManager(POIGlobalVar.RedisHost + ":" + POIGlobalVar.RedisPort) { ConnectTimeout = 500 };
-        private static PooledRedisClientManager redisManager = null;
+        private static PooledRedisClientManager redisManager = POIProxyRedisManager.Instance.getRedisClientManager();
         private static POIProxyDbManager dbManager = POIProxyDbManager.Instance;
         private static JavaScriptSerializer jsonHandler = new JavaScriptSerializer();
 
         private static POIProxySessionManager instance;
-        private POIProxySessionManager()
-        {
-            if (redisManager == null)
-            {
-                redisManager = new PooledRedisClientManager(POIGlobalVar.RedisHost + ":" + POIGlobalVar.RedisPort);
-                redisManager.ConnectTimeout = 500;
-                redisManager.IdleTimeOutSecs = 30;
-                redisManager.PoolTimeout = 3;
-            }
-        }
-        
         public static POIProxySessionManager Instance
         {
             get
@@ -43,6 +32,10 @@ namespace POIProxy
                 }
                 return instance;
             }
+        }
+
+        private POIProxySessionManager()
+        {
         }
 
         public void refreshSessionTokenPool(string sessionId)
@@ -218,6 +211,8 @@ namespace POIProxy
                         customerList.Push(poiEvent);
                         var serviceList = redisClient.As<POIInteractiveEvent>().Lists["archive:service_list:" + poiEvent.CustomerId];
                         serviceList.Push(poiEvent);
+                        var serviceLatestUser = redisClient.As<string>().SortedSets["archive:service_latest_user"];
+                        redisClient.AddItemToSortedSet("archive:service_latest_user", poiEvent.UserId, poiEvent.Timestamp);
                     }
                 }
             }
@@ -447,6 +442,8 @@ namespace POIProxy
 
                 if (system == "ios")
                 {
+                    var userInfo = redisClient.Hashes["user:" + userId];
+                    
                     var device = redisClient.Sets["device_by_system:" + system];
                     if (users.ContainsKey("deviceId") && users["deviceId"] != "")
                     {
@@ -454,7 +451,10 @@ namespace POIProxy
                     }
                     if (tag == (int)POIGlobalVar.tag.SUBSCRIBED)
                     {
-                        device.Add(deviceId);
+                        if (userInfo.ContainsKey("accessRight") && userInfo["accessRight"] == "tutor")
+                        {
+                            device.Add(deviceId);
+                        }  
                     }
                     else if (tag == (int)POIGlobalVar.tag.UNSUBSCRIBED)
                     {
@@ -524,6 +524,7 @@ namespace POIProxy
                     sessionTempDic["sessionId"] = sessionId;
                     sessionTempDic["vote"] = sessionInfo.ContainsKey("vote") ? sessionInfo["vote"] : "0";
                     sessionTempDic["watch"] = sessionInfo.ContainsKey("watch") ? sessionInfo["watch"] : "0";
+                    sessionTempDic["adopt"] = sessionInfo.ContainsKey("adopt") ? sessionInfo["adopt"] : "0";
                     sessionTempDic["score"] = getSessionScore(sessionInfo).ToString();
                     var session_vote_by_user = redisClient.Hashes["session_vote_by_user:" + userId];
                     if (session_vote_by_user.ContainsKey(sessionId) && session_vote_by_user[sessionId] == (0).ToString())
@@ -552,7 +553,14 @@ namespace POIProxy
                         }
                         sessionInfo[key] = (int.Parse(sessionInfo[key]) + (int.Parse(update[key]) > 1 ? 1 : int.Parse(update[key]))).ToString();
                     }
-                    else 
+                    else if (key == "adopt")
+                    {
+                        if (update[key] == "1")
+                        {
+                            sessionInfo[key] = update[key];
+                        }
+                    }
+                    else
                     { 
                         sessionInfo[key] = update[key];
                     }
@@ -708,5 +716,31 @@ namespace POIProxy
 
             return itemString.ToString();
         }
+
+        public static bool checkUserBanList(string userId)
+        {
+            using (var redisClient = redisManager.GetClient())
+            {
+                var banList = redisClient.Hashes["ban_list"];
+                var userDevice = redisClient.Hashes["user_device:"+userId];
+                if (userDevice.ContainsKey("deviceId"))
+                {
+                    string deviceId = userDevice["deviceId"];
+                    if (banList.ContainsKey(deviceId))
+                    {
+                        return true;
+                    }
+                    else
+                    {
+                        return false;
+                    }
+                }
+                else
+                {
+                    return false;
+                }
+            }
+        }
+
     }
 }

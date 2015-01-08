@@ -159,8 +159,14 @@ namespace POIProxy.Controllers
                 double timestamp = POITimestamp.ConvertToUnixTimestamp(DateTime.Now);
                 msgInfo["timestamp"] = timestamp.ToString();
 
-                string desc, mediaId, returnContent = "";
+                string desc, mediaId = "";
                 int rating = 0, errcode = 0;
+
+                int returnStatus = 0;
+                string returnErrMsg = "";
+                string returnContent = "";
+                var response = Request.CreateResponse(HttpStatusCode.OK);
+
                 string pushMsg = jsonHandler.Serialize(new
                 {
                     resource = POIGlobalVar.resource.SESSIONS,
@@ -172,15 +178,197 @@ namespace POIProxy.Controllers
                     timestamp = timestamp,
                 });
 
-                if (!POIProxySessionManager.Instance.checkEventExists(sessionId, msgId) && !POIProxySessionManager.Instance.checkDuplicatedCreatedSession(msgId))
+                if (POIProxySessionManager.Instance.checkEventExists(sessionId, msgId))
                 {
-                    List<string> userList = POIProxySessionManager.Instance.getUsersBySessionId(sessionId);
-                    userList.Remove(userId);
-                    switch (type)
-                    {
-                        case (int)POIGlobalVar.sessionType.RATING:
-                            var sessionInfo = POIProxySessionManager.Instance.getSessionInfo(sessionId);
-                            string role = msgInfo.ContainsKey("role") ? msgInfo["role"] : "members";
+                    errcode = (int)POIGlobalVar.errorCode.DUPLICATED;
+
+                    returnStatus = (int)POIGlobalVar.errorCode.DUPLICATED;
+                    returnErrMsg = "";
+                    returnContent = "";
+
+                    response.StatusCode = HttpStatusCode.OK;
+                    response.Content = new StringContent(jsonHandler.Serialize(new { status = returnStatus, type = type, errcode = errcode, errMsg = returnErrMsg, content = returnContent }));
+                    return response;
+
+                }
+
+                List<string> userList = POIProxySessionManager.Instance.getUsersBySessionId(sessionId);
+                userList.Remove(userId);
+
+                switch (type)
+                {
+                    case (int)POIGlobalVar.sessionType.CREATE:
+                        if (POIProxySessionManager.Instance.checkDuplicatedCreatedSession(msgId))
+                        {
+                            sessionId = POIProxySessionManager.Instance.getSessionByMsgId(msgId);
+                            returnStatus = (int)POIGlobalVar.errorCode.DUPLICATED;
+                            returnErrMsg = "";
+                            returnContent = jsonHandler.Serialize(new { sessionId = sessionId, timestamp = timestamp });
+                            break;
+                        }
+
+                        if (POIProxySessionManager.checkUserBanList(userId))
+                        {
+                            returnStatus = (int)POIGlobalVar.errorCode.FAIL;
+                            returnErrMsg = "您的账户被停权，无法提问，如有疑问请联系客服";
+                            returnContent = "";
+                            errcode = (int)POIGlobalVar.errorCode.FAIL;
+
+                            string alertMsg = jsonHandler.Serialize(new
+                            {
+                                resource = POIGlobalVar.resource.ALERTS,
+                                alertType = POIGlobalVar.alertType.SYSTEM,
+                                //msgId = msgId,
+                                title = "用户停权",
+                                message = "您的账户被停权，无法提问，如有疑问请联系客服",
+                                timestamp = POITimestamp.ConvertToUnixTimestamp(DateTime.Now),
+                            });
+
+                            if (userId != "")
+                            {
+                                List<string> pushList = new List<string>();
+                                pushList.Add(userId);
+                                POIProxyPushNotifier.send(pushList, alertMsg);
+                            }
+
+                            var responseErr = Request.CreateResponse(HttpStatusCode.OK);
+                            responseErr.StatusCode = HttpStatusCode.ExpectationFailed;
+                            responseErr.Content = new StringContent(jsonHandler.Serialize(new { status = returnStatus, type = type, errcode = errcode, errMsg = returnErrMsg, content = returnContent }));
+                            return responseErr;
+                        }
+
+                        Tuple<string, string> result = interMsgHandler.
+                            createInteractiveSession(msgId, userId, msgInfo["mediaId"], msgInfo["description"], "private", msgInfo.ContainsKey("filter") ? msgInfo["filter"] : "");
+                        string presId = result.Item1;
+                        sessionId = result.Item2;
+
+                        if (WebConfigurationManager.AppSettings["ENV"] == "production")
+                        {
+                            broadCastCreateSession(sessionId, pushMsg);
+                        }
+
+                        returnStatus = (int)POIGlobalVar.errorCode.SUCCESS;
+                        returnErrMsg = "";
+                        returnContent = jsonHandler.Serialize(new { sessionId = sessionId, presId = presId, timestamp = timestamp });
+ 
+                        break;
+
+                    case (int)POIGlobalVar.sessionType.JOIN:
+                        if (POIProxySessionManager.checkUserBanList(userId))
+                        {
+                            returnStatus = (int)POIGlobalVar.errorCode.FAIL;
+                            returnErrMsg = "您的账户被停权，无法提问，如有疑问请联系客服";
+                            returnContent = "";
+                            errcode = (int)POIGlobalVar.errorCode.FAIL;
+
+                            string alertMsg = jsonHandler.Serialize(new
+                            {
+                                resource = POIGlobalVar.resource.ALERTS,
+                                alertType = POIGlobalVar.alertType.SYSTEM,
+                                //msgId = msgId,
+                                title = "用户停权",
+                                message = "您的账户被停权，无法提问，如有疑问请联系客服",
+                                timestamp = POITimestamp.ConvertToUnixTimestamp(DateTime.Now),
+                            });
+
+                            if (userId != "")
+                            {
+                                List<string> pushList = new List<string>();
+                                pushList.Add(userId);
+                                POIProxyPushNotifier.send(pushList, alertMsg);
+                            }
+
+                            var responseErr = Request.CreateResponse(HttpStatusCode.OK);
+                            responseErr.StatusCode = HttpStatusCode.ExpectationFailed;
+                            responseErr.Content = new StringContent(jsonHandler.Serialize(new { status = returnStatus, type = type, errcode = errcode, errMsg = returnErrMsg, content = returnContent }));
+                            return responseErr;
+                        }
+
+                        sessionId = msgInfo["sessionId"];
+                        var sessionInfo = POIProxySessionManager.Instance.getSessionInfo(sessionId);
+
+                        errcode = await wxJoinInteractiveSession(msgInfo, sessionInfo, pushMsg, userList);
+                        if (errcode == (int)POIGlobalVar.errorCode.SUCCESS || errcode == (int)POIGlobalVar.errorCode.ALREADY_JOINED)
+                        {
+                            returnStatus = errcode;
+                            returnErrMsg = "";
+                            returnContent = jsonHandler.Serialize(POIProxySessionManager.Instance.getSessionArchive(sessionId));
+                        }
+                        else
+                        {
+                            returnStatus = errcode;
+                            returnErrMsg = "";
+                            returnContent = "";
+                        }
+
+                        break;
+
+                    case (int)POIGlobalVar.sessionType.END:
+                        sessionInfo = POIProxySessionManager.Instance.getSessionInfo(sessionId);
+                        if (sessionInfo["creator"] == userId) 
+                        {
+                            errcode = (int)POIGlobalVar.errorCode.STUDENT_CANNOT_END;
+                            break;
+                        }
+                        interMsgHandler.endInteractiveSession(msgId, userId, sessionId);
+                        POIProxyPushNotifier.send(userList, pushMsg);
+                        await POIProxyToWxApi.interactiveSessionEnded(sessionInfo["creator"], sessionId);
+
+                        returnStatus = errcode;
+                        returnErrMsg = "";
+                        returnContent = "";
+
+                        break;
+
+                    case (int)POIGlobalVar.sessionType.CANCEL:
+                        interMsgHandler.cancelInteractiveSession(msgInfo);
+                        break;
+
+                    case (int)POIGlobalVar.sessionType.UPDATE:
+                        desc = msgInfo.ContainsKey("description") ? msgInfo["description"] : "";
+                        mediaId = msgInfo.ContainsKey("mediaId") ? msgInfo["mediaId"] : "";
+
+                        Dictionary<string, string> infoDict = new Dictionary<string, string>();
+                        infoDict["vote"] = msgInfo.ContainsKey("vote") ? msgInfo["vote"] : "0";
+                        infoDict["watch"] = msgInfo.ContainsKey("watch") ? msgInfo["watch"] : "0";
+                        infoDict["adopt"] = msgInfo.ContainsKey("adopt") ? msgInfo["adopt"] : "0";
+                        POIProxySessionManager.Instance.updateSessionInfo(sessionId, infoDict, userId);
+
+                        if (desc != "") interMsgHandler.updateQuestionDescription(sessionId, desc);
+                        if (mediaId != "") interMsgHandler.updateQuestionMediaId(sessionId, mediaId);
+
+                        break;
+
+                    case (int)POIGlobalVar.sessionType.RERAISE:
+                        if (POIProxySessionManager.Instance.checkDuplicatedCreatedSession(msgId))
+                        {
+                            sessionId = POIProxySessionManager.Instance.getSessionByMsgId(msgId);
+                            returnStatus = (int)POIGlobalVar.errorCode.DUPLICATED;
+                            returnErrMsg = "";
+                            returnContent = jsonHandler.Serialize(new { sessionId = sessionId, timestamp = timestamp });
+                            break;
+                        }
+
+                        string newSessionId = interMsgHandler.duplicateInteractiveSession(sessionId, timestamp);
+                        interMsgHandler.reraiseInteractiveSession(msgId, userId, sessionId, newSessionId, timestamp);
+
+                        POIProxyPushNotifier.send(userList, pushMsg);
+                        if (WebConfigurationManager.AppSettings["ENV"] == "production")
+                        {
+                            broadCastCreateSession(sessionId, pushMsg);
+                        }
+
+                        await POIProxyToWxApi.interactiveSessionReraised(userId, sessionId, newSessionId);
+
+                        returnContent = jsonHandler.Serialize(new { sessionId = newSessionId, timestamp = timestamp });
+
+                        break;
+
+                    case (int)POIGlobalVar.sessionType.RATING:
+                        sessionInfo = POIProxySessionManager.Instance.getSessionInfo(sessionId);
+                        string role = msgInfo.ContainsKey("role") ? msgInfo["role"] : "members";
+                        if (!interMsgHandler.checkSessionState(sessionId, "closed") && !interMsgHandler.checkSessionState(sessionId, "cancelled"))
+                        {
                             if (sessionInfo["creator"] != userId && role != "admin")
                             {
                                 errcode = (int)POIGlobalVar.errorCode.TUTOR_CANNOT_RATING;
@@ -192,10 +380,12 @@ namespace POIProxy.Controllers
                             Dictionary<string, string> pushDic = jsonHandler.Deserialize<Dictionary<string, string>>(pushMsg);
                             pushDic["rating"] = rating.ToString();
                             pushMsg = jsonHandler.Serialize(pushDic);
-                            if (role == "members"){
+                            if (role == "members")
+                            {
                                 POIProxyPushNotifier.send(userList, pushMsg);
                             }
-                            else { 
+                            else
+                            {
                                 pushMsg = jsonHandler.Serialize(new
                                 {
                                     resource = POIGlobalVar.resource.MESSAGES,
@@ -210,150 +400,54 @@ namespace POIProxy.Controllers
                                 POIProxyPushNotifier.send(userList, pushMsg);
                             }
                             //need to write for weixin tutor notifier.
+                        }
 
-                            break;
+                        break;
 
-                        case (int)POIGlobalVar.sessionType.UPDATE:
-                            desc = msgInfo.ContainsKey("description") ? msgInfo["description"] : "";
-                            mediaId = msgInfo.ContainsKey("mediaId") ? msgInfo["mediaId"] : "";
+                    case (int)POIGlobalVar.sessionType.GET:
+                        string sessionList = msgInfo.ContainsKey("sessionList") ? msgInfo["sessionList"] : "[]";
+                        List<string> session = jsonHandler.Deserialize<List<string>>(sessionList);
+                        var sessionDetail = POIProxySessionManager.Instance.getSessionDetail(session, userId);
+                        returnContent = jsonHandler.Serialize(sessionDetail);
 
-                            Dictionary<string, string> infoDict = new Dictionary<string, string>();
-                            infoDict["vote"] = msgInfo.ContainsKey("vote") ? msgInfo["vote"] : "0";
-                            infoDict["watch"] = msgInfo.ContainsKey("watch") ? msgInfo["watch"] : "0";
-                            POIProxySessionManager.Instance.updateSessionInfo(sessionId, infoDict, userId);
-
-                            if (desc != "") interMsgHandler.updateQuestionDescription(sessionId, desc);
-                            if (mediaId != "") interMsgHandler.updateQuestionMediaId(sessionId, mediaId);
-                            break;
-
-                        case (int)POIGlobalVar.sessionType.CANCEL:
-                            interMsgHandler.cancelInteractiveSession(msgInfo);
-                            break;
-
-                        case (int)POIGlobalVar.sessionType.END:
-                            sessionInfo = POIProxySessionManager.Instance.getSessionInfo(sessionId);
-                            if (sessionInfo["creator"] == userId) 
-                            {
-                                errcode = (int)POIGlobalVar.errorCode.STUDENT_CANNOT_END;
-                                break;
-                            }
-                            interMsgHandler.endInteractiveSession(msgId, userId, sessionId);
-                            POIProxyPushNotifier.send(userList, pushMsg);
-                            await POIProxyToWxApi.interactiveSessionEnded(sessionInfo["creator"], sessionId);
-
-                            break;
-
-                        //Join and create operation received from weixin 
-                        case (int)POIGlobalVar.sessionType.JOIN:
-                            sessionId = msgInfo["sessionId"];
-                            sessionInfo = POIProxySessionManager.Instance.getSessionInfo(sessionId);
-                            errcode = await wxJoinInteractiveSession(msgInfo, sessionInfo, pushMsg, userList);
-                            if (errcode == (int)POIGlobalVar.errorCode.SUCCESS || errcode == (int)POIGlobalVar.errorCode.ALREADY_JOINED)
-                                returnContent = jsonHandler.Serialize(POIProxySessionManager.Instance.getSessionArchive(sessionId));
-                            break;
-
-                        case (int)POIGlobalVar.sessionType.CREATE:
-                            Tuple<string, string> result = interMsgHandler.
-                                createInteractiveSession(msgId, userId, msgInfo["mediaId"], msgInfo["description"], "private", msgInfo.ContainsKey("filter") ? msgInfo["filter"]:"");
-                            string presId = result.Item1;
-                            sessionId = result.Item2;
-
-                            if (WebConfigurationManager.AppSettings["ENV"] == "production") { 
-                                broadCastCreateSession(sessionId, pushMsg);
-                            }
-                            returnContent = jsonHandler.Serialize(new { sessionId = sessionId, presId = presId, timestamp = timestamp });
-                            break;
-
-                        case (int)POIGlobalVar.sessionType.RERAISE:
-                            string newSessionId = interMsgHandler.duplicateInteractiveSession(sessionId, timestamp);
-                            interMsgHandler.reraiseInteractiveSession(msgId, userId, sessionId, newSessionId, timestamp);
-
-                            POIProxyPushNotifier.send(userList, pushMsg);
-                            if (WebConfigurationManager.AppSettings["ENV"] == "production") { 
-                                broadCastCreateSession(newSessionId, pushMsg);
-                            }
-                            //Notify the student about interactive session reraised
-                            await POIProxyToWxApi.interactiveSessionReraised(userId, sessionId, newSessionId);
-                            returnContent = jsonHandler.Serialize(new { sessionId = newSessionId, timestamp = timestamp });
-                            break;
-
-                        case (int)POIGlobalVar.sessionType.GET:
-                            string sessionList = msgInfo.ContainsKey("sessionList") ? msgInfo["sessionList"] : "[]";
-                            List<string> session = jsonHandler.Deserialize<List<string>>(sessionList);
-                            var sessionDetail = POIProxySessionManager.Instance.getSessionDetail(session, userId);
-                            returnContent = jsonHandler.Serialize(sessionDetail);
-                            break;
-
-                        case (int)POIGlobalVar.sessionType.DELETE:
-                            string deletedSessionList = msgInfo.ContainsKey("sessionList") ? msgInfo["sessionList"] : "[]";
-                            List<string> deletedSession = jsonHandler.Deserialize<List<string>>(deletedSessionList);
-                            foreach (var deletedItem in deletedSession) {
-                                List<Dictionary<string,string>> users = POIProxySessionManager.Instance.getUserListDetailsBySessionId(deletedItem);
-                                foreach (var user in users)
-                                { 
-                                    PPLog.debugLog("Deleted: " + DictToString(user, null));
-                                    var deleteSessionInfo = POIProxySessionManager.Instance.getSessionInfo(deletedItem);
-                                    if (deleteSessionInfo["creator"] == userId)
-                                    {
-                                        msgInfo["rating"] = "5";
-                                        msgInfo["sessionId"] = "";
-                                        interMsgHandler.rateInteractiveSession(msgInfo);
-                                    }
-                                    else
-                                    {
-                                        interMsgHandler.endInteractiveSession(msgId, userId, deletedItem);
-                                    }
+                        break;
+                    
+                    case (int)POIGlobalVar.sessionType.DELETE:
+                        string deletedSessionList = msgInfo.ContainsKey("sessionList") ? msgInfo["sessionList"] : "[]";
+                        List<string> deletedSession = jsonHandler.Deserialize<List<string>>(deletedSessionList);
+                        foreach (var deletedItem in deletedSession) {
+                            List<Dictionary<string,string>> users = POIProxySessionManager.Instance.getUserListDetailsBySessionId(deletedItem);
+                            foreach (var user in users)
+                            { 
+                                PPLog.debugLog("Deleted: " + DictToString(user, null));
+                                var deleteSessionInfo = POIProxySessionManager.Instance.getSessionInfo(deletedItem);
+                                if (deleteSessionInfo["creator"] == userId)
+                                {
+                                    msgInfo["rating"] = "5";
+                                    msgInfo["sessionId"] = "";
+                                    interMsgHandler.rateInteractiveSession(msgInfo);
                                 }
-                                POIProxySessionManager.Instance.deleteSession(deletedItem, userId);
+                                else
+                                {
+                                    interMsgHandler.endInteractiveSession(msgId, userId, deletedItem);
+                                }
                             }
-                            break;
+                            POIProxySessionManager.Instance.deleteSession(deletedItem, userId);
+                        }
 
-                        default:
-                            break;
-                    } 
-                    var response = Request.CreateResponse(HttpStatusCode.OK);
-                    response.StatusCode = HttpStatusCode.OK;
-                    response.Content = new StringContent(jsonHandler.Serialize(new { status = "success", type = type, errcode = errcode, content = returnContent }));
-                    return response;
+                        break;
+
+                    case (int)POIGlobalVar.sessionType.INVITE:
+                        break;
+
+                    default:
+                        break;
                 }
-                else
-                {
-                    errcode = (int)POIGlobalVar.errorCode.DUPLICATED;
-                    switch (type)
-                    {
-                        case (int)POIGlobalVar.sessionType.RATING:
-                            break;
 
-                        case (int)POIGlobalVar.sessionType.UPDATE:
-                            break;
+                response.StatusCode = HttpStatusCode.OK;
+                response.Content = new StringContent(jsonHandler.Serialize(new { status = returnStatus, type = type, errcode = errcode, errMsg = returnErrMsg, content = returnContent }));
+                return response;
 
-                        case (int)POIGlobalVar.sessionType.CANCEL:
-                            break;
-
-                        case (int)POIGlobalVar.sessionType.END:
-                            break;
-
-                        //Join and create operation received from weixin 
-                        case (int)POIGlobalVar.sessionType.JOIN:
-                            break;
-
-                        case (int)POIGlobalVar.sessionType.CREATE:
-                            sessionId = POIProxySessionManager.Instance.getSessionByMsgId(msgId);
-                            returnContent = jsonHandler.Serialize(new { sessionId = sessionId, timestamp = timestamp });
-                            break;
-
-                        case (int)POIGlobalVar.sessionType.RERAISE:
-                            sessionId = POIProxySessionManager.Instance.getSessionByMsgId(msgId);
-                            returnContent = jsonHandler.Serialize(new { sessionId = sessionId, timestamp = timestamp });
-                            break;
-                        default:
-                            break;
-                    }
-                    var response = Request.CreateResponse(HttpStatusCode.OK);
-                    response.StatusCode = HttpStatusCode.OK;
-                    response.Content = new StringContent(jsonHandler.Serialize(new { status = POIGlobalVar.errorCode.DUPLICATED, type = type, errcode = errcode, content = returnContent }));
-                    return response;
-                }
             }
             catch (Exception e)
             {
@@ -370,6 +464,139 @@ namespace POIProxy.Controllers
             
         }
 
+        [HttpPost]
+        public HttpResponseMessage Presentations(HttpRequestMessage request)
+        {
+            try
+            {
+                string content = request.Content.ReadAsStringAsync().Result;
+                Dictionary<string, string> msgInfo = jsonHandler.Deserialize<Dictionary<string, string>>(content);
+                PPLog.infoLog("[ProxyController presentations] " + DictToString(msgInfo, null));
+
+                int type = int.Parse(msgInfo["type"]);
+                string msgId = msgInfo["msgId"];
+                string userId = msgInfo["userId"];
+                string presId = msgInfo.ContainsKey("presId") ? msgInfo["presId"] : "";
+                string message = msgInfo.ContainsKey("message") ? msgInfo["messsage"] : "";
+                string sessionId = "";
+
+                double timestamp = POITimestamp.ConvertToUnixTimestamp(DateTime.Now);
+                msgInfo["timestamp"] = timestamp.ToString();
+
+                int returnStatus = 0;
+                string returnErrMsg = "";
+                string returnContent = "";
+                int errcode = 0;
+
+                switch (type)
+                {
+                    case (int)POIGlobalVar.presentationType.CREATE:
+                        if (POIProxyPresentationManager.Instance.checkDuplicatedCreatedPresentation(msgId))
+                        {
+                            presId = POIProxyPresentationManager.Instance.getPresentationByMsgId(msgId);
+
+                            returnStatus = (int)POIGlobalVar.errorCode.DUPLICATED;
+                            returnErrMsg = "";
+                            returnContent = jsonHandler.Serialize(new { presId = presId, timestamp = timestamp });
+
+                            break;
+                        }
+                        
+                        presId = POIProxyPresentationManager.Instance.onPresentationCreate
+                            (msgId, userId, msgInfo["mediaId"], msgInfo["description"], "private", msgInfo.ContainsKey("category") ? msgInfo["category"]:"");
+                        
+                        if (WebConfigurationManager.AppSettings["ENV"] == "production") { 
+                            //broadCastCreateSession(presId, pushMsg);
+                        }
+                        
+                        returnStatus = (int)POIGlobalVar.errorCode.SUCCESS;
+                        returnErrMsg = "";
+                        returnContent = jsonHandler.Serialize(new { presId = presId, timestamp = timestamp });
+
+                        break;
+
+                    case (int)POIGlobalVar.presentationType.JOIN:
+                        if (POIProxySessionManager.Instance.checkDuplicatedCreatedSession(msgId))
+                        {
+                            sessionId = POIProxySessionManager.Instance.getSessionByMsgId(msgId);
+
+                            returnStatus = (int)POIGlobalVar.errorCode.DUPLICATED;
+                            returnErrMsg = "";
+                            returnContent = jsonHandler.Serialize(new { sessionId = sessionId, timestamp = timestamp });
+
+                            break;
+                        }
+
+                        if (POIProxyPresentationManager.Instance.checkDuplicatedPresentationJoin(presId, msgId))
+                        {
+                            sessionId = POIProxyPresentationManager.Instance.getPresentationSessionIdByUserId(presId, userId);
+
+                            returnStatus = (int)POIGlobalVar.errorCode.DUPLICATED;
+                            returnErrMsg = "";
+                            returnContent = jsonHandler.Serialize(new { sessionId = sessionId, timestamp = timestamp });
+
+                            break;
+                        }
+
+                        sessionId = POIProxyPresentationManager.Instance.onPresentationJoin(msgId, userId, presId, message);
+
+                        string pushMsg = jsonHandler.Serialize(new
+                        {
+                            resource = POIGlobalVar.resource.SESSIONS,
+                            sessionType = POIGlobalVar.sessionType.INVITE,
+                            msgId = msgId,
+                            userId = userId,
+                            userInfo = jsonHandler.Serialize(POIProxySessionManager.Instance.getUserInfo(userId)),
+                            sessionId = sessionId,
+                            presId = presId,
+                            timestamp = timestamp,
+                            message = message,
+                        });
+
+                        List<string> userList = POIProxySessionManager.Instance.getUsersBySessionId(sessionId);
+                        userList.Remove(userId);
+                        POIProxyPushNotifier.send(userList, pushMsg);
+                        
+                        returnStatus = (int)POIGlobalVar.errorCode.SUCCESS;
+                        returnErrMsg = "";
+                        returnContent = jsonHandler.Serialize(new { sessionId = sessionId, timestamp = timestamp });
+                        break;
+
+                    case (int)POIGlobalVar.presentationType.END:
+                        break;
+                        
+                    case (int)POIGlobalVar.presentationType.UPDATE:
+                        break;
+                        
+                    case (int)POIGlobalVar.presentationType.GET:
+                        break;
+                        
+                    case (int)POIGlobalVar.presentationType.CANCEL:
+                        break;
+                        
+                    default:
+                        break;
+
+                }
+
+                var response = Request.CreateResponse(HttpStatusCode.OK);
+                response.StatusCode = HttpStatusCode.OK;
+                response.Content = new StringContent(jsonHandler.Serialize(new { status = returnStatus, type = type, errMsg = returnErrMsg, content = returnContent }));
+                return response;
+            }
+            catch (Exception e)
+            {
+                PPLog.errorLog("In wx to proxy post presentation: " + e.Message);
+                if (e.Message.Contains("Unable to Connect") || e.Message.Contains("Redis Timeout expired"))
+                {
+                    POIProxyToWxApi.monitorLog(e.Message);
+                }
+                var response = Request.CreateResponse(HttpStatusCode.OK);
+                response.StatusCode = HttpStatusCode.ExpectationFailed;
+                response.Content = new StringContent(jsonHandler.Serialize(new { status = POIGlobalVar.errorCode.FAIL, content = e.Message }));
+                return response;
+            }
+        }
 
         [HttpPost]
         public HttpResponseMessage Users(HttpRequestMessage request)
@@ -398,14 +625,22 @@ namespace POIProxy.Controllers
                         {
                             POIProxySessionManager.Instance.updateUserInfoFromDb(userId);
                         }
-                    break;
+                        break;
+
                     case (int)POIGlobalVar.userType.SCORE:
                         //upload tutorial without interactive session.
                         interMsgHandler.addSessionScore(userId, "tutorial");
-                    break;
+                        break;
+
+                    case (int)POIGlobalVar.userType.LOGOUT:
+                        if (deviceId != "" && userId != "" && system != "")
+                        {
+                            POIProxySessionManager.Instance.updateUserDevice(userId, deviceId, system, tag);
+                        }
+                        break;
 
                     default:
-                    break;
+                        break;
                 }
                 var response = Request.CreateResponse(HttpStatusCode.OK);
                 response.StatusCode = HttpStatusCode.OK;
