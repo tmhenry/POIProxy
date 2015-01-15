@@ -914,13 +914,16 @@ namespace POIProxy
 
             try
             {
-                var eventList = POIProxySessionManager.Instance.getSessionEventList(sessionId);
-
+                var eventList = POIProxySessionManager.Instance.getSessionEventList(sessionId, false);
+                
                 //Get all event with timestamp larger than the given timestamp
                 if (eventList != null)
                 {
                     for (int i = 0; i < eventList.Count; i++)
                     {
+
+                        PPLog.debugLog("[Sync DEBUG:] sessionId:" + sessionId + " EventID: " + eventList[i].EventId);
+                        PPLog.debugLog("[Sync DEBUG:] eventList[i].Tempstamp: " + eventList[i].Timestamp.ToString() + " timestamp: " + timestamp.ToString());
                         if (eventList[i].Timestamp > timestamp)
                         {
                             Dictionary<string, object> message = new Dictionary<string, object>();
@@ -931,7 +934,7 @@ namespace POIProxy
                             message["userId"] = eventList[i].UserId;
                             message["sessionId"] = sessionId;
                             message["timestamp"] = eventList[i].Timestamp;
-
+                            
                             if (eventList[i].EventType == "session_created") {
                                 message["sessionType"] = POIGlobalVar.sessionType.CREATE;
                                 message["mediaId"] = eventList[i].MediaId;
@@ -941,6 +944,7 @@ namespace POIProxy
                             }
                             else if (eventList[i].EventType == "session_joined") {
                                 message["sessionType"] = POIGlobalVar.sessionType.JOIN;
+                                message["message"] = eventList[i].Message;
                             }
                             else if (eventList[i].EventType == "session_cancelled") {
                                 message["sessionType"] = POIGlobalVar.sessionType.CANCEL;

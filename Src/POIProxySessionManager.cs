@@ -273,21 +273,45 @@ namespace POIProxy
             }
         }
 
-        public List<POIInteractiveEvent> getSessionEventList(string sessionId)
+        public List<POIInteractiveEvent> getSessionEventList(string sessionId, bool sortByTimestamp = true)
         {
             using (var redisClient = redisManager.GetClient())
             {
                 var eventList = redisClient.As<POIInteractiveEvent>().GetHash<string>("archive:event_list:" + sessionId);
+
+                if (sortByTimestamp)
+                {
+                    var eventByTimestampList = new SortedDictionary<Double, POIInteractiveEvent>();
+
+                    foreach (string eventId in eventList.Keys)
+                    {
+                        eventByTimestampList[eventList[eventId].Timestamp] = eventList[eventId];
+                    }
+                    return eventByTimestampList.Values.ToList();
+                }
+                else
+                {
+                    return eventList.Values.ToList();
+                }
+            }
+        }
+
+        public List<POIInteractiveEvent> getAnswerEventList(string sessionId)
+        {
+            using (var redisClient = redisManager.GetClient())
+            {
+                var eventList = redisClient.As<POIInteractiveEvent>().GetHash<double>("session:public_answer:" + sessionId);
                 var eventByTimestampList = new SortedDictionary<Double, POIInteractiveEvent>();
-                
-                foreach (string eventId in eventList.Keys)
+
+                foreach (double timestamp in eventList.Keys)
                 {
                     //PPLog.debugLog("[Session ID]"+sessionId+"  [eventId]"+eventId+"  [Timestamp]"+eventTimestampList[eventId]);
-                    eventByTimestampList[eventList[eventId].Timestamp] = eventList[eventId];
+                    eventByTimestampList[timestamp] = eventList[timestamp];
                 }
                 return eventByTimestampList.Values.ToList();
             }
         }
+
 
         public bool checkEventExists(string sessionId, string eventId)
         {
@@ -507,6 +531,7 @@ namespace POIProxy
                     sessionInfo["creator"] = sessionRecord["creator"] as string;
                     sessionInfo["cover"] = presRecord["media_id"] as string;
                     sessionInfo["description"] = presRecord["description"] as string;
+                    sessionInfo["media_id"] = sessionRecord["media_id"] as string;
                 }
                 return redisClient.GetAllEntriesFromHash("session:" + sessionId);
             }
@@ -525,6 +550,11 @@ namespace POIProxy
                     sessionTempDic["vote"] = sessionInfo.ContainsKey("vote") ? sessionInfo["vote"] : "0";
                     sessionTempDic["watch"] = sessionInfo.ContainsKey("watch") ? sessionInfo["watch"] : "0";
                     sessionTempDic["adopt"] = sessionInfo.ContainsKey("adopt") ? sessionInfo["adopt"] : "0";
+                    sessionTempDic["submitted"] = sessionInfo.ContainsKey("submitted") ? sessionInfo["submitted"] : "0";
+                    if (sessionInfo.ContainsKey("submitted") && sessionInfo["submitted"] == "1")
+                    {
+                        sessionTempDic["preview"] = getSessionAnswerPreview(sessionId);
+                    }
                     sessionTempDic["score"] = getSessionScore(sessionInfo).ToString();
                     var session_vote_by_user = redisClient.Hashes["session_vote_by_user:" + userId];
                     if (session_vote_by_user.ContainsKey(sessionId) && session_vote_by_user[sessionId] == (0).ToString())
@@ -638,18 +668,6 @@ namespace POIProxy
                 return;
             }
 
-            /*
-            PPLog.debugLog("[DEBUG: updateuserScoreRanking] userId:" + userId + " value:" + value.ToString());
-            if (userInfo["school"].ToString().Equals(null))
-            {
-                PPLog.debugLog("[DEBUG: updateuserScoreRanking] school:" + userInfo["school"].ToString());  
-            }
-            if (userInfo["team"].ToString().Equals(null))
-            {
-                PPLog.debugLog("[DEBUG: updateuserScoreRanking] team:" + userInfo["team"].ToString());
-            }
-            */
-
             using (var redisClient = redisManager.GetClient())
             {
                 redisClient.IncrementItemInSortedSet("user_ranking", userId, value);
@@ -684,7 +702,7 @@ namespace POIProxy
             return fScore;
         }
 
-        private string GetMd5Hash (string input)
+        public static string GetMd5Hash (string input)
         {
 
             // Convert the input string to a byte array and compute the hash. 
@@ -742,5 +760,238 @@ namespace POIProxy
             }
         }
 
+        public void submitSessionAnswer(string sessionId, List<string> answerList)
+        {
+            using (var redisClient = redisManager.GetClient())
+            {
+                var sessionInfo = redisClient.Hashes["session:" + sessionId];
+                var sessionEventList = redisClient.Hashes["archive:event_list:" + sessionId];
+                var answerHash = redisClient.Hashes["session:public_answer:" + sessionId];
+                answerHash.Clear();
+                
+                if (answerList.IsNullOrEmpty())
+                {
+                    sessionInfo["submitted"] = "0";
+                    return;
+                }
+                
+                sessionInfo["submitted"] = "1";
+
+                foreach (var answerItem in answerList)
+                {
+                    if (sessionEventList.ContainsKey("\"" + answerItem + "\""))
+                    {
+                        string msg = sessionEventList["\"" + answerItem + "\""];
+                        Dictionary<string, object> msgInfo = jsonHandler.Deserialize<Dictionary<string, object>>(msg);
+                        string timestamp = msgInfo["Timestamp"].ToString();
+                        answerHash[timestamp] = msg;
+                    }
+                }
+            }
+        }
+
+        public List<object>retrieveSessionAnswer(string sessionId)
+        {
+            using (var redisClient = redisManager.GetClient())
+            {
+                var answerList = new List<object>();
+
+                var eventList = getAnswerEventList(sessionId);
+
+                if (eventList != null)
+                {
+                    for (int i = 0; i < eventList.Count; i++)
+                    {
+                        Dictionary<string, object> message = new Dictionary<string, object>();
+
+                        int eventType = (int)POIGlobalVar.resource.SESSIONS;
+
+                        message["msgId"] = eventList[i].EventId;
+                        message["userId"] = eventList[i].UserId;
+                        message["sessionId"] = sessionId;
+                        message["timestamp"] = eventList[i].Timestamp;
+
+                        if (eventList[i].EventType == "session_created")
+                        {
+                            message["sessionType"] = POIGlobalVar.sessionType.CREATE;
+                            message["mediaId"] = eventList[i].MediaId;
+                            var sessionInfo = POIProxySessionManager.Instance.getSessionInfo(sessionId);
+                            message["description"] = sessionInfo.ContainsKey("description") ? sessionInfo["description"] : "";
+                            message["presId"] = sessionInfo.ContainsKey("pres_id") ? sessionInfo["pres_id"] : "0";
+                        }
+                        else if (eventList[i].EventType == "session_joined")
+                        {
+                            message["sessionType"] = POIGlobalVar.sessionType.JOIN;
+                            message["message"] = eventList[i].Message;
+                        }
+                        else if (eventList[i].EventType == "session_cancelled")
+                        {
+                            message["sessionType"] = POIGlobalVar.sessionType.CANCEL;
+                        }
+                        else if (eventList[i].EventType == "session_ended")
+                        {
+                            message["sessionType"] = POIGlobalVar.sessionType.END;
+                        }
+                        else if (eventList[i].EventType == "session_rated")
+                        {
+                            message["sessionType"] = POIGlobalVar.sessionType.RATING;
+                            var sessionInfo = POIProxySessionManager.Instance.getSessionInfo(sessionId);
+                            message["rating"] = sessionInfo.ContainsKey("rating") ? sessionInfo["rating"] : "0";
+                        }
+
+                        else if (eventList[i].EventType == "text")
+                        {
+                            message["msgType"] = POIGlobalVar.messageType.TEXT;
+                            eventType = (int)POIGlobalVar.resource.MESSAGES;
+                        }
+                        else if (eventList[i].EventType == "voice")
+                        {
+                            message["msgType"] = POIGlobalVar.messageType.VOICE;
+                            eventType = (int)POIGlobalVar.resource.MESSAGES;
+                        }
+                        else if (eventList[i].EventType == "image")
+                        {
+                            message["msgType"] = POIGlobalVar.messageType.IMAGE;
+                            eventType = (int)POIGlobalVar.resource.MESSAGES;
+                        }
+                        else if (eventList[i].EventType == "illustration")
+                        {
+                            message["msgType"] = POIGlobalVar.messageType.ILLUSTRATION;
+                            eventType = (int)POIGlobalVar.resource.MESSAGES;
+                        }
+                        else
+                        {
+                            message["msgType"] = POIGlobalVar.sessionType.GET;
+                        }
+
+                        if (eventType == (int)POIGlobalVar.resource.SESSIONS)
+                        {
+                            message["resource"] = POIGlobalVar.resource.SESSIONS;
+                            message["userInfo"] = jsonHandler.Serialize(POIProxySessionManager.Instance.getUserInfo(eventList[i].UserId));
+                        }
+                        else
+                        {
+                            message["resource"] = POIGlobalVar.resource.MESSAGES;
+                            message["message"] = eventList[i].Message;
+                            message["mediaId"] = eventList[i].MediaId;
+                            message["mediaDuration"] = eventList[i].MediaDuration;
+                        }
+
+                        answerList.Add(message);
+                    }
+                }
+                return answerList;
+            }
+        }
+
+        public string getIllustationMetaInfo(string sessionId)
+        {
+            using (var redisClient = redisManager.GetClient())
+            {
+                var sessionInfo = redisClient.Hashes["session:" + sessionId];
+                if (!sessionInfo.ContainsKey("media_id"))
+                {
+                    Dictionary<string, object> conditions = new Dictionary<string, object> 
+                    { 
+                        {"id", sessionId}
+                    };
+
+                    var sessionRecord = dbManager.selectSingleRowFromTable("session", null, conditions);
+
+                    sessionInfo["media_id"] = sessionRecord["media_id"] as string;
+                    
+                }
+
+                string result = sessionInfo["media_id"];
+                return result;
+            }
+        }
+
+        public string getSessionAnswerPreview(string sessionId)
+        {
+            using (var redisClient = redisManager.GetClient())
+            {
+                PPLog.debugLog("[GET SESSION ANSWER PREVIEW]: IN FUNC. sessionId: " + sessionId);
+                
+                string result = "";
+
+                var sessionInfo = redisClient.Hashes["session:" + sessionId];
+
+                if (sessionInfo.ContainsKey("submitted"))
+                {
+                    if (sessionInfo["submitted"] == "1")
+                    {
+                        var sessionAnswerList = getAnswerEventList(sessionId);
+
+                        /*
+                        var eventList = new SortedDictionary<double, string>();
+
+                        foreach (string answerItem in sessionAnswerDict.Keys)
+                        {
+                            eventList[double.Parse(answerItem)] = sessionAnswerDict[answerItem];
+                        }
+                        */
+
+                        const int TEXT_MAX_COUNT = 1;
+                        const int IMAGE_MAX_COUNT = 3;
+                        const int ILLUSTRATION_MAX_COUNT = 1;
+                        
+                        List<Dictionary<string, string>> textList = new List<Dictionary<string, string>>();
+                        List<Dictionary<string, string>> imageList = new List<Dictionary<string, string>>();
+                        List<Dictionary<string, string>> illustrationList = new List<Dictionary<string, string>>();
+
+                        int textCount = 0;
+                        int imageCount = 0;
+                        int illustrationCount = 0;
+
+                        foreach (POIProxy.POIInteractiveEvent eventItem in sessionAnswerList)
+                        {
+                            string eventType = eventItem.EventType;
+                            //PPLog.debugLog("[GET SESSION ANSWER PREVIEW]:sessionId: " + sessionId + " eventType: " + eventItem.EventType);
+
+                            if (eventType == "text" && textCount < TEXT_MAX_COUNT)
+                            {
+                                Dictionary<string, string> tempDict = new Dictionary<string, string>();
+                                tempDict["timestamp"] = eventItem.Timestamp.ToString();
+                                tempDict["message"] = eventItem.Message;
+                                textList.Add(tempDict);
+                                textCount++;
+                                //PPLog.debugLog("[GET SESSION ANSWER PREVIEW]: sessionId: " + sessionId + " Text Count: " + textCount.ToString());
+                            }
+                            else if (eventType == "image" && imageCount < IMAGE_MAX_COUNT)
+                            {
+                                Dictionary<string, string> tempDict = new Dictionary<string, string>();
+                                tempDict["timestamp"] = eventItem.Timestamp.ToString();
+                                tempDict["media_id"] = eventItem.MediaId;
+                                imageList.Add(tempDict);
+                                imageCount++;
+                                //PPLog.debugLog("[GET SESSION ANSWER PREVIEW]: sessionId: " + sessionId + " Image Count: " + imageCount.ToString());
+                            }
+                            else if (eventType == "illustration" && illustrationCount < ILLUSTRATION_MAX_COUNT)
+                            {
+                                Dictionary<string, string> tempDict = new Dictionary<string, string>();
+                                tempDict["timestamp"] = eventItem.Timestamp.ToString();
+                                tempDict["session_id"] = eventItem.MediaId;
+                                tempDict["media_id"] = getIllustationMetaInfo(tempDict["session_id"]);
+                                illustrationList.Add(tempDict);
+                                illustrationCount++;
+                                //PPLog.debugLog("[GET SESSION ANSWER PREVIEW]: sessionId: " + sessionId + " Illustration Count: " + illustrationCount.ToString());
+                            }
+                        }
+
+                        Dictionary<string, string> returnDict = new Dictionary<string, string>();
+                        returnDict["text"] = jsonHandler.Serialize(textList);
+                        returnDict["image"] = jsonHandler.Serialize(imageList);
+                        returnDict["illustration"] = jsonHandler.Serialize(illustrationList);
+
+                        PPLog.debugLog("[GET SESSION ANSWER PREVIEW]: sessionId: " + sessionId + " preview: " + jsonHandler.Serialize(returnDict));
+                        result = jsonHandler.Serialize(returnDict);
+                    }
+                }
+
+
+                return result;
+            }
+        }
     }
 }

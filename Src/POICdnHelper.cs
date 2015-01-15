@@ -21,8 +21,13 @@ namespace POIProxy
         {
             try
             {
+                PPLog.debugLog("[POICdnHelper uploadStrToQiniuCDN] in uploadStrToQiniuCDN");
+
                 //Save the string to a temp file
                 string fileName = Path.GetTempFileName();
+
+                PPLog.debugLog("[POICdnHelper uploadStrToQiniuCDN] filename:" + fileName);
+
                 using (StreamWriter outFile = new StreamWriter(fileName))
                 {
                     outFile.Write(str);

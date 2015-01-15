@@ -38,7 +38,7 @@ namespace POIProxy
         }
 
         public string onPresentationCreate(string msgId, string userId, string mediaId,
-            string desc, string accessType = "private", string category = "")
+            string desc, string accessType = "private", string filter= "")
         {
             double timestamp = POITimestamp.ConvertToUnixTimestamp(DateTime.Now);
 
@@ -50,8 +50,24 @@ namespace POIProxy
             values["description"] = desc;
             values["create_at"] = timestamp;
             values["media_id"] = mediaId;
-
             string presId = dbManager.insertIntoTable("presentation", values);
+
+            Dictionary<string, string> filterInfo = jsonHandler.Deserialize<Dictionary<string, string>>(filter);
+            values.Clear();
+            values["pid"] = presId;
+            if (filter != "")
+            {
+                values["gid"] = filterInfo.ContainsKey("gid") ? filterInfo["gid"] : "0";
+                values["sid"] = filterInfo.ContainsKey("sid") ? filterInfo["sid"] : "0";
+                values["cid"] = filterInfo.ContainsKey("cid") ? filterInfo["cid"] : "0";
+            }
+            else
+            {
+                values["gid"] = "0";
+                values["sid"] = "0";
+                values["cid"] = "0";
+            }
+            dbManager.insertIntoTable("pres_category", values);
 
             //Get the information about the activity
             var userInfo = POIProxySessionManager.Instance.getUserInfo(userId);
@@ -61,10 +77,14 @@ namespace POIProxy
             infoDict["creator"] = userId;
             infoDict["description"] = desc;
             infoDict["cover"] = mediaId;
+            infoDict["cid"] = filterInfo.ContainsKey("cid") ? filterInfo["cid"] : "0";
+            infoDict["gid"] = filterInfo.ContainsKey("gid") ? filterInfo["gid"] : "0";
+            infoDict["sid"] = filterInfo.ContainsKey("sid") ? filterInfo["sid"] : "0";
             infoDict["access_type"] = accessType;
             infoDict["user_id"] = userInfo["user_id"];
             infoDict["username"] = userInfo["username"];
             infoDict["avatar"] = userInfo["avatar"];
+
 
             try
             {
@@ -79,7 +99,7 @@ namespace POIProxy
             POIInteractiveEvent poiEvent = new POIInteractiveEvent
             {
                 //EventIndex = EventList.Count,
-                EventType = "session_created",
+                EventType = "presentation_created",
                 EventId = msgId.ToString(),
                 MediaId = "",
                 UserId = userId,
@@ -94,13 +114,15 @@ namespace POIProxy
             //Insert the question activity into the activity table
             addQuestionActivity(userId, presId);
 
+            updateUserPresentation(userId, presId, (int)POIGlobalVar.presentationType.CREATE);
+
             PPLog.debugLog("[POIProxyPresentationManager onPresentationCreate] presentation created! presentation id: " + presId);
             return presId;
         }
 
-        public string onPresentationJoin(string msgId, string userId, string presId, string message)
+        public string onPresentationJoin(string msgId, string userId, string presId, string message, double timestamp)
         {
-            double timestamp = POITimestamp.ConvertToUnixTimestamp(DateTime.Now);
+            //double timestamp = POITimestamp.ConvertToUnixTimestamp(DateTime.Now);
 
             Dictionary<string, string> presInfo = getPresentationInfo(presId);
 
@@ -134,7 +156,7 @@ namespace POIProxy
             catch (Exception e)
             {
                 PPLog.errorLog("redis error:" + e.Message);
-            }            
+            }
 
             //Archive the session created event
             POIInteractiveEvent poiEvent = new POIInteractiveEvent
@@ -148,11 +170,25 @@ namespace POIProxy
                 Message = "",
                 Data = infoDict
             };
+
+            POIInteractiveEvent poiEventJoin = new POIInteractiveEvent
+            {
+                EventType = "session_joined",
+                EventId = Guid.NewGuid().ToString(),
+                MediaId = "",
+                UserId = userId,
+                Timestamp = timestamp,
+                Message = message,
+                Data = POIProxySessionManager.Instance.getUserInfo(userId)
+            };
+            
             //Subscribe the user to the session
             POIProxySessionManager.Instance.subscribeSession(sessionId, userId);
             POIProxySessionManager.Instance.subscribeSession(sessionId, presInfo["creator"]);
 
             POIProxySessionManager.Instance.archiveSessionEvent(sessionId, poiEvent);
+            POIProxySessionManager.Instance.archiveSessionEvent(sessionId, poiEventJoin);
+
             POIProxySessionManager.Instance.createSessionEvent(sessionId, poiEvent);
 
             createPresentationJoin(presId, sessionId, userId);
@@ -162,6 +198,8 @@ namespace POIProxy
 
             PPLog.debugLog("[POIProxyPresentationManager onPresentationJoin] session created! session id: " + sessionId);
 
+            updateUserPresentation(userId, presId, (int)POIGlobalVar.presentationType.JOIN);
+
             return sessionId;
         }
 
@@ -169,14 +207,68 @@ namespace POIProxy
         {
             using (var redisClient = redisManager.GetClient())
             {
-                var sessionInfo = redisClient.Hashes["presentation:presentation_info:" + presId];
+                var presInfo = redisClient.Hashes["presentation:presentation_info:" + presId];
 
                 foreach (string key in update.Keys)
                 {
                     //PPLog.infoLog("[DEBUG] userId: " + userId + " Key: " + key + " KeyValue: " + update[key]);
-                    sessionInfo[key] = update[key];
+                    presInfo[key] = update[key];
                 }
             }
+        }
+
+        public List<Dictionary<string, string>> onPresentationGet(List<string> presList, string userId)
+        {
+            using (var redisClient = redisManager.GetClient())
+            {
+                List<Dictionary<string, string>> result = new List<Dictionary<string, string>>();
+                foreach (string presId in presList)
+                {
+                    Dictionary<string, string> userSessionDict = redisClient.GetAllEntriesFromHash("presentation:presentation_session_list:" + presId);
+                    
+                    Dictionary<string, string> presTempDict = new Dictionary<string, string>();
+                    presTempDict["presId"] = presId;
+
+                    int sessionCount = 0;
+                    int submitCount = 0;
+                    bool adoptFlag = false;
+
+                    foreach (string tutorId in userSessionDict.Keys)
+                    {
+                        string sessionId = userSessionDict[tutorId];
+
+                        var sessionInfo = redisClient.Hashes["session:" + sessionId];
+                        if (sessionInfo.ContainsKey("adopt") && sessionInfo["adopt"] == "1")
+                        {
+                            adoptFlag = true;
+                        }
+                        if (sessionInfo.ContainsKey("submitted") && sessionInfo["submitted"] == "1")
+                        {
+                            submitCount++;
+                        }
+                        sessionCount++;
+                    }
+
+                    presTempDict["adopt"] = (adoptFlag) ? "1" : "0";
+                    presTempDict["submitCount"] = submitCount.ToString();
+                    presTempDict["sessionCount"] = sessionCount.ToString();
+
+                    result.Add(presTempDict);
+                }
+                return result;
+            }
+        }
+
+        public List<Dictionary<string, string>> onPresentationQuery(List<string> presList)
+        {
+            List<Dictionary<string, string>> result = new List<Dictionary<string, string>>();
+
+            foreach (string presId in presList)
+            {
+                result.Add(getPresentationInfo(presId));
+            }
+            
+            return result;
         }
 
         public Dictionary<string, string> getPresentationInfo(string presId)
@@ -194,7 +286,7 @@ namespace POIProxy
                         {"pid", presId}
                     };
                     var presRecord = dbManager.selectSingleRowFromTable("presentation", null, conditions);
-                    
+
                     presInfo["pres_id"] = presId;
                     presInfo["create_at"] = presRecord["create_at"].ToString();
                     presInfo["creator"] = presRecord["user_id"] as string;
@@ -207,7 +299,22 @@ namespace POIProxy
                     presInfo["username"] = userInfo["username"];
                     presInfo["avatar"] = userInfo["avatar"];
                 }
-                return redisClient.GetAllEntriesFromHash("presentation:presentation_info:" + presId);
+
+                Dictionary<string, string> resultDict = new Dictionary<string, string>();
+                resultDict["pres_id"] = presInfo.ContainsKey("pres_id") ? presInfo["pres_id"] : "";
+                resultDict["create_at"] = presInfo.ContainsKey("create_at") ? presInfo["create_at"] : "";
+                resultDict["creator"] = presInfo.ContainsKey("creator") ? presInfo["creator"] : "";
+                resultDict["description"] = presInfo.ContainsKey("description") ? presInfo["description"] : "";
+                resultDict["cover"] = presInfo.ContainsKey("cover") ? presInfo["cover"] : "";
+                resultDict["cid"] = presInfo.ContainsKey("cid") ? presInfo["cid"] : "0";
+                resultDict["gid"] = presInfo.ContainsKey("gid") ? presInfo["gid"] : "0";
+                resultDict["sid"] = presInfo.ContainsKey("sid") ? presInfo["sid"] : "0";
+                resultDict["access_type"] = presInfo.ContainsKey("access_type") ? presInfo["access_type"] : "";
+                resultDict["user_id"] = presInfo.ContainsKey("user_id") ? presInfo["user_id"] : "";
+                resultDict["username"] = presInfo.ContainsKey("username") ? presInfo["username"] : "";
+                resultDict["avatar"] = presInfo.ContainsKey("avatar") ? presInfo["avatar"] : "";
+
+                return resultDict;
             }
         }
 
@@ -298,6 +405,90 @@ namespace POIProxy
             );
 
             dbManager.insertIntoTable("activity", values);
+        }
+
+        public void updateUserPresentation(string userId, string presId, int type)
+        {
+            using (var redisClient = redisManager.GetClient())
+            {
+                var userPres = redisClient.Hashes["presentation:presentation_by_user:" + userId];
+                userPres[presId] = type.ToString();
+                updatePresSync(userId);
+            }
+        }
+
+        public List<string> getUserPresentationList(string userId)
+        {
+            using (var redisClient = redisManager.GetClient())
+            {
+                var userPres = redisClient.Hashes["presentation:presentation_by_user:" + userId];
+
+                SortedDictionary<int, string> presSoretedDict = new SortedDictionary<int, string>();
+                foreach (string key in userPres.Keys)
+                {
+                    if (userPres[key] != "-1")
+                    {
+                        presSoretedDict[int.Parse(key)] = key;
+                    }
+                }
+
+                List<string> presList = new List<string>();
+                foreach (int key in presSoretedDict.Keys)
+                {
+                    presList.Add(presSoretedDict[key]);
+                }
+
+                return presList;
+            }
+        }
+
+        public void updatePresSync(string userId)
+        {
+            using (var redisClient = redisManager.GetClient())
+            {
+                var userPres = redisClient.Hashes["presentation:presentation_by_user:" + userId];
+                
+                SortedDictionary<int, string> presSoretedDict = new SortedDictionary<int, string>();
+                foreach (string key in userPres.Keys)
+                {
+                    if (userPres[key] != "-1")
+                    {
+                        presSoretedDict[int.Parse(key)] = key;
+                    }
+                }
+
+                List<int> presList = new List<int>();
+                foreach (int key in presSoretedDict.Keys)
+                {
+                    presList.Add(key);
+                }
+
+                string presByUser = jsonHandler.Serialize(presList);
+
+                var user = redisClient.Hashes["user:" + userId];
+                user["statusPres"] = POIProxySessionManager.GetMd5Hash(presByUser);
+            }
+        }
+
+        public bool checkPresSync(string userId, string hash)
+        {
+            using (var redisClient = redisManager.GetClient())
+            {
+                var user = redisClient.Hashes["user:" + userId];
+
+                if (!user.ContainsKey("statusPres"))
+                {
+                    user["statusPres"] = POIProxySessionManager.GetMd5Hash("[]");
+                }
+                if (String.Equals(hash, (string)user["statusPres"], StringComparison.OrdinalIgnoreCase))
+                {
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+            }
         }
     }
 }

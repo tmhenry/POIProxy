@@ -340,6 +340,36 @@ namespace POIProxy.Controllers
                         break;
 
                     case (int)POIGlobalVar.sessionType.RERAISE:
+                        if (POIProxySessionManager.checkUserBanList(userId))
+                        {
+                            returnStatus = (int)POIGlobalVar.errorCode.FAIL;
+                            returnErrMsg = "您的账户被停权，无法提问，如有疑问请联系客服";
+                            returnContent = "";
+                            errcode = (int)POIGlobalVar.errorCode.FAIL;
+
+                            string alertMsg = jsonHandler.Serialize(new
+                            {
+                                resource = POIGlobalVar.resource.ALERTS,
+                                alertType = POIGlobalVar.alertType.SYSTEM,
+                                //msgId = msgId,
+                                title = "用户停权",
+                                message = "您的账户被停权，无法提问，如有疑问请联系客服",
+                                timestamp = POITimestamp.ConvertToUnixTimestamp(DateTime.Now),
+                            });
+
+                            if (userId != "")
+                            {
+                                List<string> pushList = new List<string>();
+                                pushList.Add(userId);
+                                POIProxyPushNotifier.send(pushList, alertMsg);
+                            }
+
+                            var responseErr = Request.CreateResponse(HttpStatusCode.OK);
+                            responseErr.StatusCode = HttpStatusCode.ExpectationFailed;
+                            responseErr.Content = new StringContent(jsonHandler.Serialize(new { status = returnStatus, type = type, errcode = errcode, errMsg = returnErrMsg, content = returnContent }));
+                            return responseErr;
+                        }
+
                         if (POIProxySessionManager.Instance.checkDuplicatedCreatedSession(msgId))
                         {
                             sessionId = POIProxySessionManager.Instance.getSessionByMsgId(msgId);
@@ -416,21 +446,24 @@ namespace POIProxy.Controllers
                         string deletedSessionList = msgInfo.ContainsKey("sessionList") ? msgInfo["sessionList"] : "[]";
                         List<string> deletedSession = jsonHandler.Deserialize<List<string>>(deletedSessionList);
                         foreach (var deletedItem in deletedSession) {
-                            List<Dictionary<string,string>> users = POIProxySessionManager.Instance.getUserListDetailsBySessionId(deletedItem);
-                            foreach (var user in users)
-                            { 
-                                PPLog.debugLog("Deleted: " + DictToString(user, null));
-                                var deleteSessionInfo = POIProxySessionManager.Instance.getSessionInfo(deletedItem);
-                                if (deleteSessionInfo["creator"] == userId)
-                                {
-                                    msgInfo["rating"] = "5";
-                                    msgInfo["sessionId"] = "";
-                                    interMsgHandler.rateInteractiveSession(msgInfo);
-                                }
-                                else
-                                {
-                                    interMsgHandler.endInteractiveSession(msgId, userId, deletedItem);
-                                }
+                            //List<Dictionary<string,string>> users = POIProxySessionManager.Instance.getUserListDetailsBySessionId(deletedItem);
+                            if (interMsgHandler.checkSessionServing(deletedItem))
+                            {
+                                //foreach (var user in users)
+                                //{
+                                    //PPLog.debugLog("Deleted: " + DictToString(user, null));
+                                    var deleteSessionInfo = POIProxySessionManager.Instance.getSessionInfo(deletedItem);
+                                    if (deleteSessionInfo["creator"] == userId)
+                                    {
+                                        msgInfo["rating"] = "5";
+                                        msgInfo["sessionId"] = "";
+                                        interMsgHandler.rateInteractiveSession(msgInfo);
+                                    }
+                                    else
+                                    {
+                                        interMsgHandler.endInteractiveSession(msgId, userId, deletedItem);
+                                    }
+                                //}
                             }
                             POIProxySessionManager.Instance.deleteSession(deletedItem, userId);
                         }
@@ -438,6 +471,17 @@ namespace POIProxy.Controllers
                         break;
 
                     case (int)POIGlobalVar.sessionType.INVITE:
+                        break;
+
+                    case (int)POIGlobalVar.sessionType.SUBMIT_ANSWER:
+                        string msgList = msgInfo.ContainsKey("answerList") ? msgInfo["answerList"] : "[]";
+                        List<string> answerList = jsonHandler.Deserialize<List<string>>(msgList);
+                        POIProxySessionManager.Instance.submitSessionAnswer(sessionId, answerList);
+
+                        break;
+
+                    case (int)POIGlobalVar.sessionType.RETRIEVE_ANSWER:
+                        returnContent = jsonHandler.Serialize(POIProxySessionManager.Instance.retrieveSessionAnswer(sessionId)); 
                         break;
 
                     default:
@@ -477,7 +521,7 @@ namespace POIProxy.Controllers
                 string msgId = msgInfo["msgId"];
                 string userId = msgInfo["userId"];
                 string presId = msgInfo.ContainsKey("presId") ? msgInfo["presId"] : "";
-                string message = msgInfo.ContainsKey("message") ? msgInfo["messsage"] : "";
+                string message = msgInfo.ContainsKey("message") ? msgInfo["message"] : "";
                 string sessionId = "";
 
                 double timestamp = POITimestamp.ConvertToUnixTimestamp(DateTime.Now);
@@ -501,9 +545,11 @@ namespace POIProxy.Controllers
 
                             break;
                         }
-                        
+
+                        string filter = msgInfo.ContainsKey("filter") ? msgInfo["filter"] : "";
+
                         presId = POIProxyPresentationManager.Instance.onPresentationCreate
-                            (msgId, userId, msgInfo["mediaId"], msgInfo["description"], "private", msgInfo.ContainsKey("category") ? msgInfo["category"]:"");
+                            (msgId, userId, msgInfo["mediaId"], msgInfo["description"], "private", filter);
                         
                         if (WebConfigurationManager.AppSettings["ENV"] == "production") { 
                             //broadCastCreateSession(presId, pushMsg);
@@ -538,8 +584,8 @@ namespace POIProxy.Controllers
                             break;
                         }
 
-                        sessionId = POIProxyPresentationManager.Instance.onPresentationJoin(msgId, userId, presId, message);
-
+                        sessionId = POIProxyPresentationManager.Instance.onPresentationJoin(msgId, userId, presId, message, timestamp);
+                        
                         string pushMsg = jsonHandler.Serialize(new
                         {
                             resource = POIGlobalVar.resource.SESSIONS,
@@ -564,16 +610,28 @@ namespace POIProxy.Controllers
 
                     case (int)POIGlobalVar.presentationType.END:
                         break;
-                        
+
+                    case (int)POIGlobalVar.presentationType.CANCEL:
+                        break;
+
                     case (int)POIGlobalVar.presentationType.UPDATE:
                         break;
                         
                     case (int)POIGlobalVar.presentationType.GET:
+                        string presGetListStr = msgInfo.ContainsKey("presList") ? msgInfo["presList"] : "[]";
+                        List<string> presGetList = jsonHandler.Deserialize<List<string>>(presGetListStr);
+                        var presGetDetail = POIProxyPresentationManager.Instance.onPresentationGet(presGetList, userId);
+                        returnContent = jsonHandler.Serialize(presGetDetail);
                         break;
-                        
-                    case (int)POIGlobalVar.presentationType.CANCEL:
+                    
+                    case (int)POIGlobalVar.presentationType.QUERY:
+                        string presQueryListStr = msgInfo.ContainsKey("presList") ? msgInfo["presList"] : "[]";
+                        List<string> presQueryList = jsonHandler.Deserialize<List<string>>(presQueryListStr);
+                        var presQueryDetail = POIProxyPresentationManager.Instance.onPresentationQuery(presQueryList);
+                        returnContent = jsonHandler.Serialize(presQueryDetail);
+
                         break;
-                        
+
                     default:
                         break;
 
@@ -781,78 +839,124 @@ namespace POIProxy.Controllers
                 Dictionary<string, object> syncInfo = jsonHandler.Deserialize<Dictionary<string, object>>(content);
                 //PPLog.infoLog("[ProxyController Sync] " + DictToString(syncInfo, null));
 
+                int type = syncInfo.ContainsKey("type") ? int.Parse((string)syncInfo["type"]) : 0;
+
                 string hash = syncInfo.ContainsKey("hash") ? (string)syncInfo["hash"] : "";
+                string hashPres = syncInfo.ContainsKey("hashPres") ? (string)syncInfo["hashPres"] : "";
                 string userId = syncInfo.ContainsKey("userId") ? (string)syncInfo["userId"] : "";
-                ArrayList sessionList = syncInfo.ContainsKey("sessionList") ? (ArrayList) syncInfo["sessionList"] : new ArrayList();
 
                 int syncStatus = (int)POIGlobalVar.errorCode.SESSION_SYNC;
                 string syncContent = "";
-                if (userId != "") {
-                    if (hash != "")
-                    {
-                        bool isSync = POIProxySessionManager.Instance.checkSyncReference(userId, hash);
-                        if (isSync)
+
+                switch (type)
+                {
+                    case (int)POIGlobalVar.syncType.SESSION:
+                        ArrayList sessionList = syncInfo.ContainsKey("sessionList") ? (ArrayList) syncInfo["sessionList"] : new ArrayList();
+
+                        if (userId != "")
                         {
-                            syncStatus = (int)POIGlobalVar.errorCode.SESSION_SYNC;
-                        }
-                        else {
-                            var session_by_user = POIProxySessionManager.Instance.getSessionsByUserId(userId);
-                            var serverSessionList = new List<string>();
-                            foreach (var session in session_by_user)
+                            if (hash != "")
                             {
-                                if (session.Value != "0" && session.Value != "-1") {
-                                    serverSessionList.Add(session.Key);
+                                bool isSync = POIProxySessionManager.Instance.checkSyncReference(userId, hash);
+                                if (isSync)
+                                {
+                                    syncStatus = (int)POIGlobalVar.errorCode.SESSION_SYNC;
+                                }
+                                else
+                                {
+                                    var session_by_user = POIProxySessionManager.Instance.getSessionsByUserId(userId);
+                                    var serverSessionList = new List<string>();
+                                    foreach (var session in session_by_user)
+                                    {
+                                        if (session.Value != "0" && session.Value != "-1")
+                                        {
+                                            serverSessionList.Add(session.Key);
+                                        }
+                                    }
+
+                                    syncStatus = (int)POIGlobalVar.errorCode.SESSION_ASYNC;
+                                    syncContent = jsonHandler.Serialize(serverSessionList);
                                 }
                             }
-
-                            syncStatus = (int)POIGlobalVar.errorCode.SESSION_ASYNC;
-                            syncContent = jsonHandler.Serialize(serverSessionList);
-                        }
-                    }
-
-                    else if (sessionList.Count > 0)
-                    {
-                        var session_by_user = POIProxySessionManager.Instance.getSessionsByUserId(userId);
-
-                        List<object> missedSessionList = new List<object>();
-                        foreach (var session in session_by_user)
-                        {
-                            double client_timestamp = 0;
-                            foreach (Dictionary<string, object> sessionRecord in sessionList)
+    
+                            else if (sessionList.Count > 0)
                             {
-                                if (sessionRecord.ContainsKey(session.Key))
+                                var session_by_user = POIProxySessionManager.Instance.getSessionsByUserId(userId);
+    
+                                List<object> missedSessionList = new List<object>();
+                                foreach (var session in session_by_user)
                                 {
-                                    if (double.Parse((string)sessionRecord[session.Key]) == double.Parse(session.Value))
+                                    double client_timestamp = 0;
+                                    foreach (Dictionary<string, object> sessionRecord in sessionList)
                                     {
-                                        client_timestamp = double.Parse(session.Value);
-                                        break;
+                                        if (sessionRecord.ContainsKey(session.Key))
+                                        {
+                                            if (double.Parse((string)sessionRecord[session.Key]) == double.Parse(session.Value))
+                                            {
+                                                client_timestamp = double.Parse(session.Value);
+                                                break;
+                                            }
+                                        }
+                                    }
+                                    if (session.Value != "0" && session.Value != "-1")
+                                    {
+                                        var missedEvents = interMsgHandler.getMissedEventsInSession(session.Key, client_timestamp);
+                                        Dictionary<string, object> missedDic = new Dictionary<string, object>();
+                                        missedDic[session.Key] = missedEvents;
+                                        missedSessionList.Add(missedDic);
                                     }
                                 }
-                            }
-                            if (session.Value != "0" && session.Value != "-1")
-                            {
-                                var missedEvents = interMsgHandler.getMissedEventsInSession(session.Key, client_timestamp);
-                                Dictionary<string, object> missedDic = new Dictionary<string, object>();
-                                missedDic[session.Key] = missedEvents;
-                                missedSessionList.Add(missedDic);
-                            }
-                        }
-
-                        if (missedSessionList.Count > 0)
-                        {
-                            syncStatus = (int)POIGlobalVar.errorCode.SESSION_ASYNC;
-                            syncContent = jsonHandler.Serialize(missedSessionList);
-                            //PPLog.debugLog("[POIProxySessionManager] checkSyncReference missed session: " + syncContent);
+    
+                                if (missedSessionList.Count > 0)
+                                {
+                                    syncStatus = (int)POIGlobalVar.errorCode.SESSION_ASYNC;
+                                    syncContent = jsonHandler.Serialize(missedSessionList);
+                                    //PPLog.debugLog("[POIProxySessionManager] checkSyncReference missed session: " + syncContent);
+                                }
+                                else
+                                {
+                                    syncStatus = (int)POIGlobalVar.errorCode.SESSION_ASYNC;
+                                }
+                            }   
                         }
                         else
-                        {
-                            syncStatus = (int)POIGlobalVar.errorCode.SESSION_ASYNC;
+                        { 
                         }
 
-                    }
-                    
-                }
-                else { 
+                        break;
+
+                    case (int)POIGlobalVar.syncType.PRESENTATION:
+                        if (hash != "" && hashPres != "" && userId != "")
+                        {
+                            if (POIProxySessionManager.Instance.checkSyncReference(userId, hash) &&
+                                POIProxyPresentationManager.Instance.checkPresSync(userId, hashPres))
+                            {
+                                syncStatus = (int)POIGlobalVar.errorCode.SESSION_SYNC;
+                            }
+                            else
+                            {
+                                var session_by_user = POIProxySessionManager.Instance.getSessionsByUserId(userId);
+                                var serverSessionList = new List<string>();
+                                foreach (var session in session_by_user)
+                                {
+                                    if (session.Value != "0" && session.Value != "-1")
+                                    {
+                                        serverSessionList.Add(session.Key);
+                                    }
+                                }
+
+                                var serverPresList = POIProxyPresentationManager.Instance.getUserPresentationList(userId);
+
+                                string sessionInfo = jsonHandler.Serialize(serverSessionList);
+                                string presInfo = jsonHandler.Serialize(serverPresList);
+                                syncStatus = (int)POIGlobalVar.errorCode.SESSION_ASYNC;
+                                syncContent = jsonHandler.Serialize(new { sessionList = sessionInfo, presList = presInfo});
+                            }
+                        }
+                        break;
+
+                    default:
+                        break;
                 }
 
                 var response = Request.CreateResponse(HttpStatusCode.OK);
