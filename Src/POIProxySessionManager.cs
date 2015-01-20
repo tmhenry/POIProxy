@@ -542,25 +542,39 @@ namespace POIProxy
             using (var redisClient = redisManager.GetClient())
             {
                 var detailList = new List<Dictionary<string, string>>();
+                var userScoreList = redisClient.GetAllWithScoresFromSortedSet("user_ranking");
                 foreach (string sessionId in sessionList)
                 {
                     var sessionInfo = getSessionInfo(sessionId);
                     Dictionary<string, string> sessionTempDic = new Dictionary<string, string>();
+                    sessionTempDic["userScore"] = sessionInfo.ContainsKey("tutor") ?
+                        (userScoreList.ContainsKey(sessionInfo["tutor"]) ? (int)userScoreList[sessionInfo["tutor"]] : 0).ToString() : "0";
                     sessionTempDic["sessionId"] = sessionId;
                     sessionTempDic["vote"] = sessionInfo.ContainsKey("vote") ? sessionInfo["vote"] : "0";
                     sessionTempDic["watch"] = sessionInfo.ContainsKey("watch") ? sessionInfo["watch"] : "0";
                     sessionTempDic["adopt"] = sessionInfo.ContainsKey("adopt") ? sessionInfo["adopt"] : "0";
+                    
                     sessionTempDic["submitted"] = sessionInfo.ContainsKey("submitted") ? sessionInfo["submitted"] : "0";
                     if (sessionInfo.ContainsKey("submitted") && sessionInfo["submitted"] == "1")
                     {
                         sessionTempDic["preview"] = getSessionAnswerPreview(sessionId);
                     }
+
                     sessionTempDic["score"] = getSessionScore(sessionInfo).ToString();
                     var session_vote_by_user = redisClient.Hashes["session_vote_by_user:" + userId];
                     if (session_vote_by_user.ContainsKey(sessionId) && session_vote_by_user[sessionId] == (0).ToString())
+                    {
                         sessionTempDic["isVoted"] = "1";
+                    }
+                    else if (session_vote_by_user.ContainsKey(sessionId) && session_vote_by_user[sessionId] == (-1).ToString())
+                    {
+                        sessionTempDic["isVoted"] = "-1";
+                    }
                     else
+                    {
                         sessionTempDic["isVoted"] = "0";
+                    }
+                    
                     detailList.Add(sessionTempDic);
                 }
                 return detailList;
@@ -585,7 +599,7 @@ namespace POIProxy
                     }
                     else if (key == "adopt")
                     {
-                        if (update[key] == "1")
+                        if (update[key] == "1" || update[key] == "2")
                         {
                             sessionInfo[key] = update[key];
                         }
@@ -604,7 +618,14 @@ namespace POIProxy
                     {
                         if (key == "vote" && update[key] != "0")
                         {
-                            session_vote_by_user[sessionId] = (0).ToString();
+                            if (update[key] == "1")
+                            {
+                                session_vote_by_user[sessionId] = (0).ToString();
+                            }
+                            else if (update[key] == "-1")
+                            {
+                                session_vote_by_user[sessionId] = (-1).ToString();
+                            }
                         }
                     }
                     
@@ -696,9 +717,8 @@ namespace POIProxy
             int nWatch = int.Parse(sessionInfo.ContainsKey("watch") ? sessionInfo["watch"] : "0");
             double fCreateTime = double.Parse(sessionInfo.ContainsKey("create_at") ? sessionInfo["create_at"] : "0");
             double fCurrentTime = (DateTime.Now.ToUniversalTime().Ticks - 621355968000000000) / 10000000;
-            double fScore = nVote * 5 + Math.Log(nWatch + 1) + (fCreateTime - fCurrentTime) / 86400 / 2;
+            double fScore = nVote + Math.Log(nWatch + 1) + (fCreateTime - fCurrentTime) / 86400 / 2;
 
-            //PPLog.debugLog("[Session Score] Session Id:" + sessionInfo["session_id"] + " Score:" + fScore.ToString() + " Vote:" + nVote.ToString() + " Watch:" + nWatch.ToString() + " CreateAt:" + fCreateTime.ToString() + " CurrentTime:" + fCurrentTime.ToString());
             return fScore;
         }
 

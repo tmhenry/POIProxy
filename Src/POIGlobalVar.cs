@@ -38,7 +38,7 @@ namespace POIProxy
         public enum serviceType { SYSTEM, ACTION, NEWS, EXTRA, TASK };
         public enum alertType { SYSTEM };
         public enum syncType { SESSION, PRESENTATION };
-        public enum presentationType { CREATE, JOIN, END, CANCEL, UPDATE, GET, QUERY }
+        public enum presentationType { CREATE, JOIN, END, PREPARE, UPDATE, GET, QUERY, DELETE}
         public enum tag { UNSUBSCRIBED, SUBSCRIBED};
 
         public enum sessionAction { JOIN, VOTES, WATCH };

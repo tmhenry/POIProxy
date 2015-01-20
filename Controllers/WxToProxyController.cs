@@ -521,7 +521,7 @@ namespace POIProxy.Controllers
                 string msgId = msgInfo["msgId"];
                 string userId = msgInfo["userId"];
                 string presId = msgInfo.ContainsKey("presId") ? msgInfo["presId"] : "";
-                string message = msgInfo.ContainsKey("message") ? msgInfo["message"] : "";
+                string messageList = msgInfo.ContainsKey("messageList") ? msgInfo["messageList"] : "";
                 string sessionId = "";
 
                 double timestamp = POITimestamp.ConvertToUnixTimestamp(DateTime.Now);
@@ -584,39 +584,43 @@ namespace POIProxy.Controllers
                             break;
                         }
 
-                        sessionId = POIProxyPresentationManager.Instance.onPresentationJoin(msgId, userId, presId, message, timestamp);
-                        
-                        string pushMsg = jsonHandler.Serialize(new
-                        {
-                            resource = POIGlobalVar.resource.SESSIONS,
-                            sessionType = POIGlobalVar.sessionType.INVITE,
-                            msgId = msgId,
-                            userId = userId,
-                            userInfo = jsonHandler.Serialize(POIProxySessionManager.Instance.getUserInfo(userId)),
-                            sessionId = sessionId,
-                            presId = presId,
-                            timestamp = timestamp,
-                            message = message,
-                        });
+                        sessionId = POIProxyPresentationManager.Instance.onPresentationJoin(msgId, userId, presId, timestamp, messageList);
 
-                        List<string> userList = POIProxySessionManager.Instance.getUsersBySessionId(sessionId);
-                        userList.Remove(userId);
-                        POIProxyPushNotifier.send(userList, pushMsg);
-                        
-                        returnStatus = (int)POIGlobalVar.errorCode.SUCCESS;
-                        returnErrMsg = "";
-                        returnContent = jsonHandler.Serialize(new { sessionId = sessionId, timestamp = timestamp });
+                        if (sessionId != "")
+                        {
+                            returnStatus = (int)POIGlobalVar.errorCode.SUCCESS;
+                            returnErrMsg = "";
+                            returnContent = jsonHandler.Serialize(new { sessionId = sessionId, timestamp = timestamp });
+                        }
+                        else
+                        {
+                            returnStatus = (int)POIGlobalVar.errorCode.FAIL;
+                            returnErrMsg = "";
+                            returnContent = "";
+                        }
                         break;
 
                     case (int)POIGlobalVar.presentationType.END:
                         break;
 
-                    case (int)POIGlobalVar.presentationType.CANCEL:
+                    case (int)POIGlobalVar.presentationType.PREPARE:
+                        int prepareTime = int.Parse(msgInfo["prepareTime"]);
+                        double targetTime = POIProxyPresentationManager.Instance.onPresentationPrepare(presId, userId, timestamp, prepareTime);
+
+                        returnStatus = (int)POIGlobalVar.errorCode.SUCCESS;
+                        returnErrMsg = "";
+                        returnContent = jsonHandler.Serialize(new { targetTime = targetTime });
                         break;
 
                     case (int)POIGlobalVar.presentationType.UPDATE:
+                        Dictionary<string, string> infoDict = new Dictionary<string, string>();
+                        infoDict["description"] = msgInfo.ContainsKey("description") ? msgInfo["description"] : "";
+                        infoDict["mediaId"] = msgInfo.ContainsKey("mediaId") ? msgInfo["mediaId"] : "";
+                        infoDict["difficulty"] = msgInfo.ContainsKey("difficulty") ? msgInfo["difficulty"] : "0";
+                        //infoDict["watch"] = msgInfo.ContainsKey("watch") ? msgInfo["watch"] : "0";
+                        POIProxyPresentationManager.Instance.onPresentationUpdate(presId, infoDict, userId);
                         break;
-                        
+
                     case (int)POIGlobalVar.presentationType.GET:
                         string presGetListStr = msgInfo.ContainsKey("presList") ? msgInfo["presList"] : "[]";
                         List<string> presGetList = jsonHandler.Deserialize<List<string>>(presGetListStr);
@@ -629,7 +633,10 @@ namespace POIProxy.Controllers
                         List<string> presQueryList = jsonHandler.Deserialize<List<string>>(presQueryListStr);
                         var presQueryDetail = POIProxyPresentationManager.Instance.onPresentationQuery(presQueryList);
                         returnContent = jsonHandler.Serialize(presQueryDetail);
+                        break;
 
+                    case (int)POIGlobalVar.presentationType.DELETE:
+                        POIProxyPresentationManager.Instance.onPresentationDelete(presId, userId);
                         break;
 
                     default:

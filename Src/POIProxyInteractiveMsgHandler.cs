@@ -921,9 +921,6 @@ namespace POIProxy
                 {
                     for (int i = 0; i < eventList.Count; i++)
                     {
-
-                        PPLog.debugLog("[Sync DEBUG:] sessionId:" + sessionId + " EventID: " + eventList[i].EventId);
-                        PPLog.debugLog("[Sync DEBUG:] eventList[i].Tempstamp: " + eventList[i].Timestamp.ToString() + " timestamp: " + timestamp.ToString());
                         if (eventList[i].Timestamp > timestamp)
                         {
                             Dictionary<string, object> message = new Dictionary<string, object>();
