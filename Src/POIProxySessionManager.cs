@@ -599,7 +599,7 @@ namespace POIProxy
                     }
                     else if (key == "adopt")
                     {
-                        if (update[key] == "1" || update[key] == "2")
+                        if ((update[key] == "1" && sessionInfo["creator"] == userId) || update[key] == "2")
                         {
                             sessionInfo[key] = update[key];
                         }

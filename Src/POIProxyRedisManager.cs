@@ -35,10 +35,10 @@ namespace POIProxy
         {
             if (redisManager == null)
             {
-                redisManager = new PooledRedisClientManager(POIGlobalVar.RedisHost + ":" + POIGlobalVar.RedisPort);
+                redisManager = new PooledRedisClientManager(200, 10, POIGlobalVar.RedisHost + ":" + POIGlobalVar.RedisPort);
                 redisManager.ConnectTimeout = 500;
                 redisManager.IdleTimeOutSecs = 30;
-                redisManager.PoolTimeout = 3;
+                redisManager.PoolTimeout = 10;
             }
         }
 
