@@ -84,8 +84,8 @@ namespace POIProxy
             infoDict["access_type"] = accessType;
             infoDict["user_id"] = userInfo["user_id"];
             infoDict["username"] = userInfo["username"];
+            infoDict["realname"] = userInfo["realname"];
             infoDict["avatar"] = userInfo["avatar"];
-
 
             try
             {
@@ -302,7 +302,7 @@ namespace POIProxy
 
                     Dictionary<string, string> presTempDict = new Dictionary<string, string>();
                     presTempDict["presId"] = presId;
-
+                    presTempDict["vanilla"] = (presInfo.ContainsKey("vanilla") && presInfo["vanilla"] == "1") ? presInfo["vanilla"] : "0";
                     int sessionCount = 0;
                     int submitCount = 0;
                     bool adoptFlag = false;
@@ -440,6 +440,7 @@ namespace POIProxy
                     var userInfo = POIProxySessionManager.Instance.getUserInfo(presInfo["creator"]);
                     presInfo["user_id"] = userInfo["user_id"];
                     presInfo["username"] = userInfo["username"];
+                    presInfo["realname"] = userInfo["realname"];
                     presInfo["avatar"] = userInfo["avatar"];
                 }
 
@@ -455,8 +456,10 @@ namespace POIProxy
                 resultDict["access_type"] = presInfo.ContainsKey("access_type") ? presInfo["access_type"] : "";
                 resultDict["user_id"] = presInfo.ContainsKey("user_id") ? presInfo["user_id"] : "";
                 resultDict["username"] = presInfo.ContainsKey("username") ? presInfo["username"] : "";
+                resultDict["realname"] = presInfo.ContainsKey("realname") ? presInfo["realname"] : "";
                 resultDict["avatar"] = presInfo.ContainsKey("avatar") ? presInfo["avatar"] : "";
-
+                resultDict["vanilla"] = presInfo.ContainsKey("vanilla") ? presInfo["vanilla"] : "0";
+                    
                 return resultDict;
             }
         }

@@ -223,21 +223,23 @@ namespace POIProxy
             using (var redisClient = redisManager.GetClient())
             {
                 var sessions = redisClient.Hashes["session_by_user:" + userId];
-                if (sessions[sessionId] != "-1") {
-                    sessions[sessionId] = timestamp.ToString();
+                if (sessions[sessionId] != "-1")
+                {
+                    sessions[sessionId] = String.Format("{0:F5}", timestamp);
                 }
                 
                 List<object> sessionList = new List<object>();
                 foreach (var session in sessions) {
                     if (session.Value != "0" && session.Value != "-1") {
                         Dictionary<string, object> sessionDic = new Dictionary<string, object>();
-                        sessionDic[session.Key] = session.Value;
+                        sessionDic[session.Key] = String.Format("{0:F5}", Double.Parse(session.Value));
                         sessionList.Add(sessionDic);
                     }
                 }
 
                 string session_by_user = jsonHandler.Serialize(sessionList);
-                
+                //PPLog.debugLog("[Update Session Sync]: userId:" + userId + " hashString:" + session_by_user);
+
                 var user = redisClient.Hashes["user:" + userId];
                 user["status"] = GetMd5Hash(session_by_user);
             }
@@ -359,7 +361,7 @@ namespace POIProxy
             {
                 var userInfo = redisClient.Hashes["user:" + userId];
 
-                if (userInfo.Count == 0 || !userInfo.ContainsKey("user_id") || !userInfo.ContainsKey("username") || !userInfo.ContainsKey("avatar") || !userInfo.ContainsKey("accessRight"))
+                if (userInfo.Count == 0 || !userInfo.ContainsKey("user_id") || !userInfo.ContainsKey("username") || !userInfo.ContainsKey("avatar") || !userInfo.ContainsKey("accessRight") || !userInfo.ContainsKey("realname"))
                 {
                     updateUserInfoFromDb(userId);
                 }
@@ -378,6 +380,7 @@ namespace POIProxy
 
                 conditions["id"] = userId;
                 cols.Add("username");
+                cols.Add("realname");
                 cols.Add("avatar");
                 cols.Add("accessRight");
                 DataRow user = dbManager.selectSingleRowFromTable("users", cols, conditions);
@@ -387,6 +390,7 @@ namespace POIProxy
                     //Read user info from db and save into redis
                     userInfo["user_id"] = userId;
                     userInfo["username"] = user["username"].ToString();
+                    userInfo["realname"] = user["realname"].ToString();
                     userInfo["avatar"] = user["avatar"].ToString();
                     userInfo["accessRight"] = user["accessRight"].ToString();
 
@@ -581,7 +585,7 @@ namespace POIProxy
             }
         }
 
-        public void updateSessionInfo(string sessionId, Dictionary<string, string> update, string userId = "")
+        public void updateSessionInfo(string sessionId, Dictionary<string, string> update, string userId = "", string adoptScore = "0")
         {
             using (var redisClient = redisManager.GetClient())
             {
@@ -780,6 +784,14 @@ namespace POIProxy
             }
         }
 
+        private void handleAdoptAction(string sessionId, string adopt, string adoptScore)
+        {
+            using (var redisClient = redisManager.GetClient())
+            {
+                var sessionInfo = redisClient.Hashes["session:" + sessionId];
+            }
+        }
+
         public void submitSessionAnswer(string sessionId, List<string> answerList)
         {
             using (var redisClient = redisManager.GetClient())
@@ -931,7 +943,7 @@ namespace POIProxy
         {
             using (var redisClient = redisManager.GetClient())
             {
-                PPLog.debugLog("[GET SESSION ANSWER PREVIEW]: IN FUNC. sessionId: " + sessionId);
+                //PPLog.debugLog("[GET SESSION ANSWER PREVIEW]: IN FUNC. sessionId: " + sessionId);
                 
                 string result = "";
 
@@ -1004,7 +1016,7 @@ namespace POIProxy
                         returnDict["image"] = jsonHandler.Serialize(imageList);
                         returnDict["illustration"] = jsonHandler.Serialize(illustrationList);
 
-                        PPLog.debugLog("[GET SESSION ANSWER PREVIEW]: sessionId: " + sessionId + " preview: " + jsonHandler.Serialize(returnDict));
+                        //PPLog.debugLog("[GET SESSION ANSWER PREVIEW]: sessionId: " + sessionId + " preview: " + jsonHandler.Serialize(returnDict));
                         result = jsonHandler.Serialize(returnDict);
                     }
                 }

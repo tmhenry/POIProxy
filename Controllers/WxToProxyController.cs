@@ -332,7 +332,8 @@ namespace POIProxy.Controllers
                         infoDict["vote"] = msgInfo.ContainsKey("vote") ? msgInfo["vote"] : "0";
                         infoDict["watch"] = msgInfo.ContainsKey("watch") ? msgInfo["watch"] : "0";
                         infoDict["adopt"] = msgInfo.ContainsKey("adopt") ? msgInfo["adopt"] : "0";
-                        POIProxySessionManager.Instance.updateSessionInfo(sessionId, infoDict, userId);
+                        string adoptScore = msgInfo.ContainsKey("adoptScore") ? msgInfo["adoptScore"] : "0";
+                        POIProxySessionManager.Instance.updateSessionInfo(sessionId, infoDict, userId, adoptScore);
 
                         if (desc != "") interMsgHandler.updateQuestionDescription(sessionId, desc);
                         if (mediaId != "") interMsgHandler.updateQuestionMediaId(sessionId, mediaId);

@@ -441,6 +441,32 @@ namespace POIProxy
                 PPLog.errorLog("redis error:" + e.Message);
             }
             
+            //Update redis presentation info
+            infoDict.Clear();
+            infoDict["pres_id"] = presId;
+            infoDict["create_at"] = timestamp.ToString();
+            infoDict["creator"] = userId;
+            infoDict["description"] = desc;
+            infoDict["cover"] = mediaId;
+            infoDict["cid"] = filterInfo.ContainsKey("cid") ? filterInfo["cid"] : "0";
+            infoDict["gid"] = filterInfo.ContainsKey("gid") ? filterInfo["gid"] : "0";
+            infoDict["sid"] = filterInfo.ContainsKey("sid") ? filterInfo["sid"] : "0";
+            infoDict["access_type"] = accessType;
+            infoDict["user_id"] = userInfo["user_id"];
+            infoDict["username"] = userInfo["username"];
+            infoDict["realname"] = userInfo["realname"];
+            infoDict["avatar"] = userInfo["avatar"];
+            infoDict["vanilla"] = "1";
+            infoDict["interactive"] = sessionId;
+            
+            try
+            {
+                POIProxyPresentationManager.Instance.onPresentationUpdate(presId, infoDict);
+            }
+            catch (Exception e)
+            {
+                PPLog.errorLog("redis error:" + e.Message);
+            }
 
             //Archive the session created event
             POIInteractiveEvent poiEvent = new POIInteractiveEvent
@@ -456,6 +482,7 @@ namespace POIProxy
             };
             //Subscribe the user to the session
             POIProxySessionManager.Instance.subscribeSession(sessionId, userId);
+            POIProxyPresentationManager.Instance.updateUserPresentation(userId, presId, (int)POIGlobalVar.presentationType.CREATE);
 
             POIProxySessionManager.Instance.archiveSessionEvent(sessionId, poiEvent);
             POIProxySessionManager.Instance.createSessionEvent(sessionId, poiEvent);
