@@ -121,7 +121,7 @@ namespace POIProxy
             return presId;
         }
 
-        public string onPresentationJoin(string msgId, string userId, string presId, double timestamp, string messageList = "")
+        public Tuple<string, List<string>> onPresentationJoin(string msgId, string userId, string presId, double timestamp, string messageList = "")
         {
             //double timestamp = POITimestamp.ConvertToUnixTimestamp(DateTime.Now);
 
@@ -129,7 +129,7 @@ namespace POIProxy
 
             if (userId == presInfo["creator"])
             {
-                return "";
+                return null;
             }
 
             Dictionary<string, object> values = new Dictionary<string, object>();
@@ -230,9 +230,9 @@ namespace POIProxy
             userList.Remove(userId);
             POIProxyPushNotifier.send(userList, pushMsg);
 
-            archiveSessionAnswer(messageList, sessionId, userId);
+            List<string> returnMsgList = archiveSessionAnswer(messageList, sessionId, userId);
 
-            return sessionId;
+            return new Tuple<string, List<string>>(sessionId, returnMsgList);
         }
 
         public double onPresentationPrepare(string presId, string userId, double timestamp, int prepareTime)
@@ -568,17 +568,18 @@ namespace POIProxy
             }
         }
 
-        private void archiveSessionAnswer(string messageList, string sessionId, string userId)
+        private List<string> archiveSessionAnswer(string messageList, string sessionId, string userId)
         {
             using (var redisClient = redisManager.GetClient())
             {
                 if (messageList == null || messageList == "")
                 {
-                    return;
+                    return null;
                 }
                 var msgList = jsonHandler.Deserialize<List<Dictionary<string, string>>>(messageList);
 
                 List<string> userList = POIProxySessionManager.Instance.getUsersBySessionId(sessionId);
+                List<string> returnMsgList = new List<string>();
                 userList.Remove(userId);
 
                 var sessionInfo = redisClient.Hashes["session:" + sessionId];
@@ -665,9 +666,11 @@ namespace POIProxy
                     }
                     POIProxySessionManager.Instance.archiveSessionEvent(sessionId, poiEvent);
                     POIProxyPushNotifier.send(userList, pushMsg);
+                    returnMsgList.Add(pushMsg);
                     string msg = sessionEventList["\"" + msgId + "\""];
                     answerHash[timestamp.ToString()] = msg;
                 }
+                return returnMsgList;
             }
         }
 

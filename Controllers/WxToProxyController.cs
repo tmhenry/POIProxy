@@ -585,13 +585,13 @@ namespace POIProxy.Controllers
                             break;
                         }
 
-                        sessionId = POIProxyPresentationManager.Instance.onPresentationJoin(msgId, userId, presId, timestamp, messageList);
+                        Tuple<string, List<string>> result = POIProxyPresentationManager.Instance.onPresentationJoin(msgId, userId, presId, timestamp, messageList);
 
-                        if (sessionId != "")
+                        if (result != null)
                         {
                             returnStatus = (int)POIGlobalVar.errorCode.SUCCESS;
                             returnErrMsg = "";
-                            returnContent = jsonHandler.Serialize(new { sessionId = sessionId, timestamp = timestamp });
+                            returnContent = jsonHandler.Serialize(new { sessionId = result.Item1, msgList = result.Item2, timestamp = timestamp });
                         }
                         else
                         {
@@ -615,10 +615,11 @@ namespace POIProxy.Controllers
 
                     case (int)POIGlobalVar.presentationType.UPDATE:
                         Dictionary<string, string> infoDict = new Dictionary<string, string>();
-                        infoDict["description"] = msgInfo.ContainsKey("description") ? msgInfo["description"] : "";
-                        infoDict["mediaId"] = msgInfo.ContainsKey("mediaId") ? msgInfo["mediaId"] : "";
+                        if (msgInfo.ContainsKey("description"))
+                            infoDict["description"] = msgInfo["description"];
+                        if (msgInfo.ContainsKey("mediaId"))
+                            infoDict["cover"] = msgInfo["mediaId"];
                         infoDict["difficulty"] = msgInfo.ContainsKey("difficulty") ? msgInfo["difficulty"] : "0";
-                        //infoDict["watch"] = msgInfo.ContainsKey("watch") ? msgInfo["watch"] : "0";
                         POIProxyPresentationManager.Instance.onPresentationUpdate(presId, infoDict, userId);
                         break;
 
