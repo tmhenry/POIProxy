@@ -621,7 +621,7 @@ namespace POIProxy.Controllers
 
                         Tuple<string, List<string>> result = POIProxyPresentationManager.Instance.onPresentationJoin(msgId, userId, presId, timestamp, messageList);
 
-                        if (result != null)
+                        if (result != null && result.Item1 != "-1")
                         {
                             returnStatus = (int)POIGlobalVar.errorCode.SUCCESS;
                             returnErrMsg = "";

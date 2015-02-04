@@ -381,7 +381,7 @@ namespace POIProxy
             //Create interactive presentation
             Dictionary<string, object> values = new Dictionary<string, object>();
             values["user_id"] = userId;
-            values["type"] = "interactive";
+            values["type"] = "idle";
             values["course_id"] = -1;
             values["description"] = desc;
             values["create_at"] = timestamp;
@@ -998,7 +998,13 @@ namespace POIProxy
                                 message["msgType"] = POIGlobalVar.messageType.ILLUSTRATION;
                                 eventType = (int)POIGlobalVar.resource.MESSAGES;
                             }
-                            else {
+                            else if (eventList[i].EventType == "system")
+                            {
+                                message["msgType"] = POIGlobalVar.messageType.SYSTEM;
+                                eventType = (int)POIGlobalVar.resource.MESSAGES;
+                            }
+                            else
+                            {
                                 message["msgType"] = POIGlobalVar.sessionType.GET;
                             }
 

@@ -921,6 +921,11 @@ namespace POIProxy
                             message["msgType"] = POIGlobalVar.messageType.ILLUSTRATION;
                             eventType = (int)POIGlobalVar.resource.MESSAGES;
                         }
+                        else if (eventList[i].EventType == "system")
+                        {
+                            message["msgType"] = POIGlobalVar.messageType.SYSTEM;
+                            eventType = (int)POIGlobalVar.resource.MESSAGES;
+                        }
                         else
                         {
                             message["msgType"] = POIGlobalVar.sessionType.GET;

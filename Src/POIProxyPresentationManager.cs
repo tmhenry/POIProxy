@@ -126,119 +126,209 @@ namespace POIProxy
             //double timestamp = POITimestamp.ConvertToUnixTimestamp(DateTime.Now);
 
             Dictionary<string, string> presInfo = getPresentationInfo(presId);
-
+            string sessionId = "";
             if (userId == presInfo["creator"])
             {
                 return null;
             }
 
-            Dictionary<string, object> values = new Dictionary<string, object>();
-            values["type"] = "interactive";
-            values["presId"] = (presId == "-1") ? "0" : presId;
-            values["creator"] = presInfo["creator"];
-            values["tutor"] = userId;
-            values["create_at"] = timestamp;
-            values["start_at"] = timestamp;
-            values["status"] = "serving";
-            string sessionId = dbManager.insertIntoTable("session", values);
+            if (presInfo.ContainsKey("vanilla") && presInfo["vanilla"] == "1" && presInfo.ContainsKey("interactive") && presInfo["interactive"] != "0")
+            {
+                sessionId = joinPresentationVanilla(userId, presId, msgId, timestamp);
 
-            Dictionary<string, object> conditions = new Dictionary<string, object>();
-            conditions["pid"] = presId;
-            values = new Dictionary<string, object>();
-            values["type"] = "interactive";
-            dbManager.updateTable("presentation", values, conditions);
+                if (sessionId == "-1")
+                {
+                    return new Tuple<string, List<string>>("-1", null);
+                }
 
-            Dictionary<string, string> infoDict = new Dictionary<string, string>();
-            infoDict["session_id"] = sessionId;
-            infoDict["pres_id"] = presId;
-            infoDict["create_at"] =  timestamp.ToString();
-            infoDict["creator"] = presInfo["creator"];
-            infoDict["description"] = presInfo["description"];
-            infoDict["cover"] = presInfo["cover"];
-            infoDict["access_type"] = presInfo["access_type"];
-            infoDict["user_id"] = presInfo["user_id"];
-            infoDict["username"] = presInfo["username"];
-            infoDict["avatar"] = presInfo["avatar"];
-            infoDict["tutor"] = userId;
+                Dictionary<string, object> conditions = new Dictionary<string, object>();
+                conditions["pid"] = presId;
+                Dictionary<string, object> values = new Dictionary<string, object>();
+                values["type"] = "interactive";
+                dbManager.updateTable("presentation", values, conditions);
 
-            try {
-                POIProxySessionManager.Instance.updateSessionInfo(sessionId, infoDict);
+                conditions.Clear();
+                values.Clear();
+                conditions["id"] = sessionId;
+                values["tutor"] = userId;
+                values["start_at"] = timestamp;
+                dbManager.updateTable("session", values, conditions);
+
+                Dictionary<string, string> infoDict = new Dictionary<string, string>();
+                infoDict["tutor"] = userId;
+                try
+                {
+                    POIProxySessionManager.Instance.updateSessionInfo(sessionId, infoDict);
+                }
+                catch (Exception e)
+                {
+                    PPLog.errorLog("redis error:" + e.Message);
+                }
+                
+                createPresentationJoin(presId, sessionId, userId);
+                presInfo["interactive"] = "0";
             }
-            catch (Exception e)
+            else
             {
-                PPLog.errorLog("redis error:" + e.Message);
+                Dictionary<string, object> values = new Dictionary<string, object>();
+                values["type"] = "interactive";
+                values["presId"] = (presId == "-1") ? "0" : presId;
+                values["creator"] = presInfo["creator"];
+                values["tutor"] = userId;
+                values["create_at"] = timestamp;
+                values["start_at"] = timestamp;
+                values["status"] = "serving";
+                sessionId = dbManager.insertIntoTable("session", values);
+
+                Dictionary<string, object> conditions = new Dictionary<string, object>();
+                conditions["pid"] = presId;
+                values = new Dictionary<string, object>();
+                values["type"] = "interactive";
+                dbManager.updateTable("presentation", values, conditions);
+
+                Dictionary<string, string> infoDict = new Dictionary<string, string>();
+                infoDict["session_id"] = sessionId;
+                infoDict["pres_id"] = presId;
+                infoDict["create_at"] = timestamp.ToString();
+                infoDict["creator"] = presInfo["creator"];
+                infoDict["description"] = presInfo["description"];
+                infoDict["cover"] = presInfo["cover"];
+                infoDict["access_type"] = presInfo["access_type"];
+                infoDict["user_id"] = presInfo["user_id"];
+                infoDict["username"] = presInfo["username"];
+                infoDict["avatar"] = presInfo["avatar"];
+                infoDict["tutor"] = userId;
+
+                try
+                {
+                    POIProxySessionManager.Instance.updateSessionInfo(sessionId, infoDict);
+                }
+                catch (Exception e)
+                {
+                    PPLog.errorLog("redis error:" + e.Message);
+                }
+
+                //Archive the session created event
+                POIInteractiveEvent poiEvent = new POIInteractiveEvent
+                {
+                    //EventIndex = EventList.Count,
+                    EventType = "session_created",
+                    EventId = msgId.ToString(),
+                    MediaId = "",
+                    UserId = presInfo["creator"],
+                    Timestamp = timestamp,
+                    Message = "",
+                    Data = infoDict
+                };
+
+                POIInteractiveEvent poiEventJoin = new POIInteractiveEvent
+                {
+                    EventType = "session_joined",
+                    EventId = Guid.NewGuid().ToString(),
+                    MediaId = "",
+                    UserId = userId,
+                    Timestamp = timestamp,
+                    Message = "",
+                    Data = POIProxySessionManager.Instance.getUserInfo(userId)
+                };
+
+                //Subscribe the user to the session
+                POIProxySessionManager.Instance.subscribeSession(sessionId, userId);
+
+                if (checkCreatorPresStatus(presId))
+                    POIProxySessionManager.Instance.subscribeSession(sessionId, presInfo["creator"]);
+
+                POIProxySessionManager.Instance.archiveSessionEvent(sessionId, poiEvent);
+                POIProxySessionManager.Instance.archiveSessionEvent(sessionId, poiEventJoin);
+
+                POIProxySessionManager.Instance.createSessionEvent(sessionId, poiEvent);
+
+                createPresentationJoin(presId, sessionId, userId);
+
+                //Insert the question activity into the activity table
+                //addQuestionActivity(userId, sessionId);
+
+                PPLog.debugLog("[POIProxyPresentationManager onPresentationJoin] session created! session id: " + sessionId);
+
+                string pushMsg = jsonHandler.Serialize(new
+                {
+                    resource = POIGlobalVar.resource.SESSIONS,
+                    sessionType = POIGlobalVar.sessionType.INVITE,
+                    msgId = msgId,
+                    userId = userId,
+                    userInfo = jsonHandler.Serialize(POIProxySessionManager.Instance.getUserInfo(userId)),
+                    sessionId = sessionId,
+                    presId = presId,
+                    timestamp = timestamp,
+                    message = "",
+                });
+
+                List<string> userList = POIProxySessionManager.Instance.getUsersBySessionId(sessionId);
+                userList.Remove(userId);
+                POIProxyPushNotifier.send(userList, pushMsg);
+
             }
-
-            //Archive the session created event
-            POIInteractiveEvent poiEvent = new POIInteractiveEvent
-            {
-                //EventIndex = EventList.Count,
-                EventType = "session_created",
-                EventId = msgId.ToString(),
-                MediaId = "",
-                UserId = presInfo["creator"],
-                Timestamp = timestamp,
-                Message = "",
-                Data = infoDict
-            };
-
-            POIInteractiveEvent poiEventJoin = new POIInteractiveEvent
-            {
-                EventType = "session_joined",
-                EventId = Guid.NewGuid().ToString(),
-                MediaId = "",
-                UserId = userId,
-                Timestamp = timestamp,
-                Message = "",
-                Data = POIProxySessionManager.Instance.getUserInfo(userId)
-            };
-            
-            //Subscribe the user to the session
-            POIProxySessionManager.Instance.subscribeSession(sessionId, userId);
-
-            if (checkCreatorPresStatus(presId))
-                POIProxySessionManager.Instance.subscribeSession(sessionId, presInfo["creator"]);
-
-            POIProxySessionManager.Instance.archiveSessionEvent(sessionId, poiEvent);
-            POIProxySessionManager.Instance.archiveSessionEvent(sessionId, poiEventJoin);
-
-            POIProxySessionManager.Instance.createSessionEvent(sessionId, poiEvent);
-
-            createPresentationJoin(presId, sessionId, userId);
-
-            //Insert the question activity into the activity table
-            //addQuestionActivity(userId, sessionId);
-
-            PPLog.debugLog("[POIProxyPresentationManager onPresentationJoin] session created! session id: " + sessionId);
-
             updateUserPresentation(userId, presId, (int)POIGlobalVar.presentationType.JOIN);
 
-            string pushMsg = jsonHandler.Serialize(new
-            {
-                resource = POIGlobalVar.resource.SESSIONS,
-                sessionType = POIGlobalVar.sessionType.INVITE,
-                msgId = msgId,
-                userId = userId,
-                userInfo = jsonHandler.Serialize(POIProxySessionManager.Instance.getUserInfo(userId)),
-                sessionId = sessionId,
-                presId = presId,
-                timestamp = timestamp,
-                message = "",
-            });
-
-            List<string> userList = POIProxySessionManager.Instance.getUsersBySessionId(sessionId);
-            userList.Remove(userId);
-            POIProxyPushNotifier.send(userList, pushMsg);
 
             List<string> returnMsgList = archiveSessionAnswer(messageList, sessionId, userId);
 
             return new Tuple<string, List<string>>(sessionId, returnMsgList);
         }
 
-        private string joinPresentationVanilla(string userId, string sessionId, double timestamp)
+        private string joinPresentationVanilla(string userId, string presId, string msgId, double timestamp)
         {
             using (var redisClient = redisManager.GetClient())
             {
+                var userInfo = POIProxySessionManager.Instance.getUserInfo(userId);
+                var presInfo = redisClient.Hashes["presentation:presentation_info:" + presId];
+                string sessionId = presInfo["interactive"];
+
+                if (!interMsgHandler.checkSessionOpen(sessionId))
+                {
+                    PPLog.infoLog("[POIProxyPresentation Join Vanilla Session] session status is not open");
+                    return "-1";
+                }
+                else if (POIProxySessionManager.Instance.checkUserInSession(sessionId, userId))
+                {
+                    //User already in the session
+                    PPLog.infoLog("[POIProxyPresentation Join Vanilla Session] Session already joined");
+                    return "-1";
+                }
+                else if (userInfo["accessRight"] != "tutor")
+                {
+                    PPLog.infoLog("[POIProxyPresentation Join Vanilla Session] forbidden join");
+                    return "-1";
+                }
+                else if (POIProxySessionManager.Instance.acquireSessionToken(sessionId))
+                {
+                    PPLog.infoLog("[POIProxyPresentation Join Vanilla Session] Session is open, joined!");
+                    interMsgHandler.joinInteractiveSession(msgId, userId, sessionId, timestamp);
+
+                    string pushMsg = jsonHandler.Serialize(new
+                    {
+                        resource = POIGlobalVar.resource.SESSIONS,
+                        sessionType = POIGlobalVar.sessionType.JOIN,
+                        msgId = msgId,
+                        userId = userId,
+                        userInfo = jsonHandler.Serialize(POIProxySessionManager.Instance.getUserInfo(userId)),
+                        sessionId = sessionId,
+                        timestamp = timestamp,
+                    });
+
+                    List<string> userList = POIProxySessionManager.Instance.getUsersBySessionId(sessionId);
+                    userList.Remove(userId);
+
+                    //Send push notification
+                    POIProxyPushNotifier.send(userList, pushMsg);
+                    return sessionId;
+                }
+                else
+                {
+                    PPLog.infoLog("[POIProxyHub wxJoinInteractiveSession] Cannot join the session, taken by others");
+                    return "-1";
+                }
+
                 string result = "";
                 return result;
             }
@@ -701,7 +791,10 @@ namespace POIProxy
                 List<string> presList = new List<string>();
                 foreach (int key in presSoretedDict.Keys)
                 {
-                    presList.Add(presSoretedDict[key]);
+                    if (key != -1 && key != 0)
+                    {
+                        presList.Add(presSoretedDict[key]);
+                    }
                 }
 
                 return presList;
@@ -717,7 +810,7 @@ namespace POIProxy
                 SortedDictionary<int, string> presSoretedDict = new SortedDictionary<int, string>();
                 foreach (string key in userPres.Keys)
                 {
-                    if (userPres[key] != "-1")
+                    if (userPres[key] != "-1" && userPres[key] == "0")
                     {
                         presSoretedDict[int.Parse(key)] = key;
                     }
@@ -726,7 +819,10 @@ namespace POIProxy
                 List<int> presList = new List<int>();
                 foreach (int key in presSoretedDict.Keys)
                 {
-                    presList.Add(key);
+                    if (key != -1 && key != 0)
+                    {
+                        presList.Add(key);
+                    }
                 }
 
                 string presByUser = jsonHandler.Serialize(presList);
