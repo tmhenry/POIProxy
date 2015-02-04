@@ -218,6 +218,7 @@
     <Compile Include="Src\POIProxyRedisManager.cs" />
     <Compile Include="Src\POIProxySessionManager.cs" />
     <Compile Include="Src\POIProxyToWxApi.cs" />
+    <Compile Include="Src\POIProxyUserManager.cs" />
     <Compile Include="Src\POISessionArchive.cs" />
     <Compile Include="Src\POITimestamp.cs" />
     <Compile Include="Src\PPLog.cs" />

@@ -605,7 +605,7 @@ namespace POIProxy
                     {
                         if ((update[key] == "1" && sessionInfo["creator"] == userId) || update[key] == "2")
                         {
-                            sessionInfo[key] = update[key];
+                            handleAdoptAction(sessionId, update[key], adoptScore);
                         }
                     }
                     else
@@ -789,6 +789,36 @@ namespace POIProxy
             using (var redisClient = redisManager.GetClient())
             {
                 var sessionInfo = redisClient.Hashes["session:" + sessionId];
+                int score = int.Parse(adoptScore);
+
+                if (adopt == "1")
+                {
+                    if (!sessionInfo.ContainsKey("adopt") || sessionInfo["adopt"] == "0")
+                    {
+                        sessionInfo["adopt"] = adopt;
+                        sessionInfo["adoptScore"] = "50";
+                        POIProxyUserManager.onUpdateUserScore(sessionInfo["tutor"], "interactive_score", 50);
+                    }
+                }
+                else if (adopt == "2")
+                {
+                    if (!sessionInfo.ContainsKey("adopt") || sessionInfo["adopt"] == "0")
+                    {
+                        sessionInfo["adopt"] = adopt;
+                        sessionInfo["adoptScore"] = adoptScore;
+                        POIProxyUserManager.onUpdateUserScore(sessionInfo["tutor"], "interactive_score", score);
+                    }
+                    else if (sessionInfo["adopt"] == "2")
+                    {
+                        if (sessionInfo.ContainsKey("adoptScore"))
+                        {
+                            int oldScore = int.Parse(sessionInfo["adoptScore"]);
+                            score -= oldScore;
+                        }
+                        sessionInfo["adoptScore"] = adoptScore;
+                        POIProxyUserManager.onUpdateUserScore(sessionInfo["tutor"], "interactive_score", score);
+                    }
+                }
             }
         }
 

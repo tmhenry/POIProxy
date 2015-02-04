@@ -235,6 +235,15 @@ namespace POIProxy
             return new Tuple<string, List<string>>(sessionId, returnMsgList);
         }
 
+        private string joinPresentationVanilla(string userId, string sessionId, double timestamp)
+        {
+            using (var redisClient = redisManager.GetClient())
+            {
+                string result = "";
+                return result;
+            }
+        }
+
         public double onPresentationPrepare(string presId, string userId, double timestamp, int prepareTime)
         {
             using (var redisClient = redisManager.GetClient())

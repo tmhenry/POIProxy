@@ -254,6 +254,39 @@ namespace POIProxy.Controllers
                         break;
 
                     case (int)POIGlobalVar.sessionType.JOIN:
+                    case (int)POIGlobalVar.sessionType.END:
+                    case (int)POIGlobalVar.sessionType.CANCEL:
+                    case (int)POIGlobalVar.sessionType.RATING:
+                    case (int)POIGlobalVar.sessionType.RERAISE:
+
+                        returnStatus = (int)POIGlobalVar.errorCode.FAIL;
+                        returnErrMsg = "由于最新版本中问答系统进行了重大调整，一些旧版功能已不被支持，请及时更新版本，谢谢！";
+                        returnContent = "";
+                        errcode = (int)POIGlobalVar.errorCode.FAIL;
+
+                        string alertVanillaMsg = jsonHandler.Serialize(new
+                        {
+                            resource = POIGlobalVar.resource.ALERTS,
+                            alertType = POIGlobalVar.alertType.SYSTEM,
+                            title = "版本更新",
+                            message = "由于最新版本中问答系统进行了重大调整，一些旧版功能已不被支持，请及时更新版本，谢谢！",
+                            timestamp = POITimestamp.ConvertToUnixTimestamp(DateTime.Now),
+                        });
+
+                        if (userId != "")
+                        {
+                            List<string> pushList = new List<string>();
+                            pushList.Add(userId);
+                            POIProxyPushNotifier.send(pushList, alertVanillaMsg);
+                        }
+
+                        var responseVanillaErr = Request.CreateResponse(HttpStatusCode.OK);
+                        responseVanillaErr.StatusCode = HttpStatusCode.ExpectationFailed;
+                        responseVanillaErr.Content = new StringContent(jsonHandler.Serialize(new { status = returnStatus, type = type, errcode = errcode, errMsg = returnErrMsg, content = returnContent }));
+                        return responseVanillaErr;
+
+                    /*
+                    case (int)POIGlobalVar.sessionType.JOIN:
                         if (POIProxySessionManager.checkUserBanList(userId))
                         {
                             returnStatus = (int)POIGlobalVar.errorCode.FAIL;
@@ -322,22 +355,6 @@ namespace POIProxy.Controllers
 
                     case (int)POIGlobalVar.sessionType.CANCEL:
                         interMsgHandler.cancelInteractiveSession(msgInfo);
-                        break;
-
-                    case (int)POIGlobalVar.sessionType.UPDATE:
-                        desc = msgInfo.ContainsKey("description") ? msgInfo["description"] : "";
-                        mediaId = msgInfo.ContainsKey("mediaId") ? msgInfo["mediaId"] : "";
-
-                        Dictionary<string, string> infoDict = new Dictionary<string, string>();
-                        infoDict["vote"] = msgInfo.ContainsKey("vote") ? msgInfo["vote"] : "0";
-                        infoDict["watch"] = msgInfo.ContainsKey("watch") ? msgInfo["watch"] : "0";
-                        infoDict["adopt"] = msgInfo.ContainsKey("adopt") ? msgInfo["adopt"] : "0";
-                        string adoptScore = msgInfo.ContainsKey("adoptScore") ? msgInfo["adoptScore"] : "0";
-                        POIProxySessionManager.Instance.updateSessionInfo(sessionId, infoDict, userId, adoptScore);
-
-                        if (desc != "") interMsgHandler.updateQuestionDescription(sessionId, desc);
-                        if (mediaId != "") interMsgHandler.updateQuestionMediaId(sessionId, mediaId);
-
                         break;
 
                     case (int)POIGlobalVar.sessionType.RERAISE:
@@ -432,6 +449,23 @@ namespace POIProxy.Controllers
                             }
                             //need to write for weixin tutor notifier.
                         }
+
+                        break;
+                    */
+
+                    case (int)POIGlobalVar.sessionType.UPDATE:
+                        desc = msgInfo.ContainsKey("description") ? msgInfo["description"] : "";
+                        mediaId = msgInfo.ContainsKey("mediaId") ? msgInfo["mediaId"] : "";
+
+                        Dictionary<string, string> infoDict = new Dictionary<string, string>();
+                        infoDict["vote"] = msgInfo.ContainsKey("vote") ? msgInfo["vote"] : "0";
+                        infoDict["watch"] = msgInfo.ContainsKey("watch") ? msgInfo["watch"] : "0";
+                        infoDict["adopt"] = msgInfo.ContainsKey("adopt") ? msgInfo["adopt"] : "0";
+                        string adoptScore = msgInfo.ContainsKey("adoptScore") ? msgInfo["adoptScore"] : "0";
+                        POIProxySessionManager.Instance.updateSessionInfo(sessionId, infoDict, userId, adoptScore);
+
+                        if (desc != "") interMsgHandler.updateQuestionDescription(sessionId, desc);
+                        if (mediaId != "") interMsgHandler.updateQuestionMediaId(sessionId, mediaId);
 
                         break;
 

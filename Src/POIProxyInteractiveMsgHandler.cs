@@ -337,7 +337,7 @@ namespace POIProxy
             }
         }
 
-        private void updateByUserId(string userId, string colName, int value, string table){
+        public void updateByUserId(string userId, string colName, int value, string table){
             Dictionary<string, object> values = new Dictionary<string, object>();
             values["user_id"] = userId;
             values[colName] = value;
@@ -357,7 +357,7 @@ namespace POIProxy
             dbManager.insertIntoTable("user_task", values);
         }
 
-        private DataRow getByUserId(Dictionary<string, object> conditions, List<string> cols, string table)
+        public DataRow getByUserId(Dictionary<string, object> conditions, List<string> cols, string table)
         {
             DataTable userResult = dbManager.selectFromTable("user_score", cols, conditions);
             if (userResult.Rows.Count > 0)
