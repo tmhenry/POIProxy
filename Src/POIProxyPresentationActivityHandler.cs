@@ -81,11 +81,11 @@ namespace POIProxy
                     {
                         //var activityInfo = redisClient.Hashes["model:presentation_activity:" + key];
                         Dictionary<string, string> tempDict = redisClient.GetAllEntriesFromHash("model:presentation_activity:" + key);
-                        if (tempDict.ContainsKey("userId") && tempDict["userId"] == null && tempDict["userId"] == "")
+                        if (tempDict.ContainsKey("userId") && tempDict["userId"] != null && tempDict["userId"] != "")
                         {
                             var userInfo = POIProxySessionManager.Instance.getUserInfo(tempDict["userId"]);
                             tempDict["realname"] = userInfo["realname"];
-                            tempDict["school"] = userInfo["school"];
+                            tempDict["school"] = userInfo.ContainsKey("school") ? userInfo["school"] : "";
                         }
                         result.Add(tempDict);
                     }
