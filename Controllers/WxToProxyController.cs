@@ -170,7 +170,7 @@ namespace POIProxy.Controllers
                 string pushMsg = jsonHandler.Serialize(new
                 {
                     resource = POIGlobalVar.resource.SESSIONS,
-                    sessionType = type,
+                    msgType = POIGlobalVar.messageType.SYSTEM,
                     msgId = msgId,
                     userId = userId,
                     userInfo = jsonHandler.Serialize(POIProxySessionManager.Instance.getUserInfo(userId)),
@@ -273,11 +273,23 @@ namespace POIProxy.Controllers
                             timestamp = POITimestamp.ConvertToUnixTimestamp(DateTime.Now),
                         });
 
+                        string pushVanillaMsg = jsonHandler.Serialize(new
+                        {
+                            resource = POIGlobalVar.resource.MESSAGES,
+                            msgId = msgId,
+                            userId = "",
+                            sessionId = sessionId,
+                            msgType = POIGlobalVar.messageType.SYSTEM,
+                            message = "由于最新版本中问答系统进行了重大调整，一些旧版功能已不被支持，请及时更新版本，谢谢！",
+                            timestamp = timestamp
+                        });
+
                         if (userId != "")
                         {
                             List<string> pushList = new List<string>();
                             pushList.Add(userId);
                             POIProxyPushNotifier.send(pushList, alertVanillaMsg);
+                            //POIProxyPushNotifier.send(pushList, pushVanillaMsg);
                         }
 
                         var responseVanillaErr = Request.CreateResponse(HttpStatusCode.OK);
@@ -640,7 +652,7 @@ namespace POIProxy.Controllers
 
                     case (int)POIGlobalVar.presentationType.PREPARE:
                         int prepareTime = int.Parse(msgInfo["prepareTime"]);
-                        double targetTime = POIProxyPresentationManager.Instance.onPresentationPrepare(presId, userId, timestamp, prepareTime);
+                        double targetTime = POIProxyPresentationManager.Instance.onPresentationPrepare(msgId, presId, userId, timestamp, prepareTime);
 
                         returnStatus = (int)POIGlobalVar.errorCode.SUCCESS;
                         returnErrMsg = "";
@@ -659,8 +671,10 @@ namespace POIProxy.Controllers
 
                     case (int)POIGlobalVar.presentationType.GET:
                         string presGetListStr = msgInfo.ContainsKey("presList") ? msgInfo["presList"] : "[]";
+                        bool prepareFlag = msgInfo.ContainsKey("prepareInfo");
+                        double lastTimestamp = (prepareFlag) ? double.Parse(msgInfo["prepareInfo"]) : 0;
                         List<string> presGetList = jsonHandler.Deserialize<List<string>>(presGetListStr);
-                        var presGetDetail = POIProxyPresentationManager.Instance.onPresentationGet(presGetList, userId);
+                        var presGetDetail = POIProxyPresentationManager.Instance.onPresentationGet(presGetList, userId, prepareFlag, lastTimestamp);
                         returnContent = jsonHandler.Serialize(presGetDetail);
                         break;
                     

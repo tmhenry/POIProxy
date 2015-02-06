@@ -489,6 +489,8 @@ namespace POIProxy
 
             //Insert the question activity into the activity table
             addQuestionActivity(userId, sessionId);
+            POIProxyPresentationActivityHandler.CreatePresentationActivity(POIProxyPresentationActivityHandler.PresentationAcitivity.CREATE,
+                presId, msgId, userId, timestamp);
 
             PPLog.debugLog("[POIProxyInteractiveMsgHandler createInteractiveSession] session created! session id: "+ sessionId);
             return new Tuple<string,string>(presId, sessionId);

@@ -116,7 +116,8 @@ namespace POIProxy
             addQuestionActivity(userId, presId);
 
             updateUserPresentation(userId, presId, (int)POIGlobalVar.presentationType.CREATE);
-
+            POIProxyPresentationActivityHandler.CreatePresentationActivity(POIProxyPresentationActivityHandler.PresentationAcitivity.CREATE,
+                presId, msgId, userId, timestamp);
             PPLog.debugLog("[POIProxyPresentationManager onPresentationCreate] presentation created! presentation id: " + presId);
             return presId;
         }
@@ -270,6 +271,15 @@ namespace POIProxy
             }
             updateUserPresentation(userId, presId, (int)POIGlobalVar.presentationType.JOIN);
 
+            using (var redisClient = redisManager.GetClient())
+            {
+                if (redisClient.SortedSetContainsItem("presentation:presentation_prepare_list:" + presId, userId))
+                {
+                    redisClient.RemoveItemFromSortedSet("presentation:presentation_prepare_list:" + presId, userId);
+                    POIProxyPresentationActivityHandler.CreatePresentationActivity(POIProxyPresentationActivityHandler.PresentationAcitivity.READY,
+                        presId, msgId, userId, timestamp);
+                }
+            }
 
             List<string> returnMsgList = archiveSessionAnswer(messageList, sessionId, userId);
 
@@ -328,19 +338,26 @@ namespace POIProxy
                     PPLog.infoLog("[POIProxyHub wxJoinInteractiveSession] Cannot join the session, taken by others");
                     return "-1";
                 }
-
-                string result = "";
-                return result;
             }
         }
 
-        public double onPresentationPrepare(string presId, string userId, double timestamp, int prepareTime)
+        public double onPresentationPrepare(string msgId, string presId, string userId, double timestamp, int prepareTime)
         {
             using (var redisClient = redisManager.GetClient())
             {
                 if (prepareTime > 0)
                 {
                     double targetTime = timestamp + prepareTime * 60;
+                    if (redisClient.SortedSetContainsItem("presentation:presentation_prepare_list:" + presId, userId))
+                    {
+                        POIProxyPresentationActivityHandler.CreatePresentationActivity(POIProxyPresentationActivityHandler.PresentationAcitivity.EXTEND,
+                            presId, msgId, userId, timestamp, prepareTime);
+                    }
+                    else
+                    {
+                        POIProxyPresentationActivityHandler.CreatePresentationActivity(POIProxyPresentationActivityHandler.PresentationAcitivity.PREPARE,
+                            presId, msgId, userId, timestamp, prepareTime);
+                    }
                     redisClient.AddItemToSortedSet("presentation:presentation_prepare_list:" + presId, userId, targetTime);
                     return targetTime;
                 }
@@ -349,6 +366,8 @@ namespace POIProxy
                     if (redisClient.SortedSetContainsItem("presentation:presentation_prepare_list:" + presId, userId))
                     {
                         redisClient.RemoveItemFromSortedSet("presentation:presentation_prepare_list:" + presId, userId);
+                        POIProxyPresentationActivityHandler.CreatePresentationActivity(POIProxyPresentationActivityHandler.PresentationAcitivity.CANCEL,
+                            presId, msgId, userId, timestamp);
                     }
                     return (double)0;
                 }
@@ -387,7 +406,7 @@ namespace POIProxy
             }
         }
 
-        public List<Dictionary<string, string>> onPresentationGet(List<string> presList, string userId)
+        public List<Dictionary<string, string>> onPresentationGet(List<string> presList, string userId, bool prepareFlag = false, double lastTimestamp = 0)
         {
             using (var redisClient = redisManager.GetClient())
             {
@@ -436,20 +455,25 @@ namespace POIProxy
                     {
                         var userInfo = POIProxySessionManager.Instance.getUserInfo(user);
 
-                        if (prepareDict[user] >= POITimestamp.ConvertToUnixTimestamp(DateTime.Now))
-                        {
+//                      if (prepareDict[user] >= POITimestamp.ConvertToUnixTimestamp(DateTime.Now))
+                        if (prepareFlag)
+                        { 
                             Dictionary<string, string> prepareTempDict = new Dictionary<string, string>();
                             prepareTempDict["userId"] = user;
                             prepareTempDict["targetTime"] = prepareDict[user].ToString();
                             prepareTempDict["avatar"] = userInfo["avatar"];
 
                             prepareList.Add(prepareTempDict);
-                            prepareCount++;
                         }
+                        prepareCount++;
                     }
 
                     presTempDict["prepareCount"] = prepareCount.ToString();
-                    presTempDict["prepareList"] = jsonHandler.Serialize(prepareList);
+                    if (prepareFlag)
+                    {
+                        presTempDict["prepareList"] = jsonHandler.Serialize(prepareList);
+                        presTempDict["presActivity"] = jsonHandler.Serialize(POIProxyPresentationActivityHandler.GetPresentationActivity(presId, lastTimestamp));
+                    }
 
                     result.Add(presTempDict);
                 }
@@ -558,7 +582,8 @@ namespace POIProxy
                 resultDict["realname"] = presInfo.ContainsKey("realname") ? presInfo["realname"] : "";
                 resultDict["avatar"] = presInfo.ContainsKey("avatar") ? presInfo["avatar"] : "";
                 resultDict["vanilla"] = presInfo.ContainsKey("vanilla") ? presInfo["vanilla"] : "0";
-                    
+                resultDict["interactive"] = presInfo.ContainsKey("interactive") ? presInfo["interactive"] : "0";
+
                 return resultDict;
             }
         }

@@ -238,7 +238,7 @@ namespace POIProxy
                 }
 
                 string session_by_user = jsonHandler.Serialize(sessionList);
-                //PPLog.debugLog("[Update Session Sync]: userId:" + userId + " hashString:" + session_by_user);
+                PPLog.debugLog("[Update Session Sync]: userId:" + userId + " hashString:" + session_by_user);
 
                 var user = redisClient.Hashes["user:" + userId];
                 user["status"] = GetMd5Hash(session_by_user);

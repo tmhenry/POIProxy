@@ -75,6 +75,21 @@ namespace POIProxy
             {
                 List<Dictionary<string, string>> result = new List<Dictionary<string, string>>();
                 var presActivity = redisClient.GetAllWithScoresFromSortedSet("presentation:presentation_activity:" + presId);
+                foreach (string key in presActivity.Keys)
+                {
+                    if (presActivity[key] > lastTimestamp)
+                    {
+                        //var activityInfo = redisClient.Hashes["model:presentation_activity:" + key];
+                        Dictionary<string, string> tempDict = redisClient.GetAllEntriesFromHash("model:presentation_activity:" + key);
+                        if (tempDict.ContainsKey("userId") && tempDict["userId"] == null && tempDict["userId"] == "")
+                        {
+                            var userInfo = POIProxySessionManager.Instance.getUserInfo(tempDict["userId"]);
+                            tempDict["realname"] = userInfo["realname"];
+                            tempDict["school"] = userInfo["school"];
+                        }
+                        result.Add(tempDict);
+                    }
+                }
                 return result;
             }
         }
