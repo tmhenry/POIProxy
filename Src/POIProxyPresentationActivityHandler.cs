@@ -84,8 +84,15 @@ namespace POIProxy
                         if (tempDict.ContainsKey("userId") && tempDict["userId"] != null && tempDict["userId"] != "")
                         {
                             var userInfo = POIProxySessionManager.Instance.getUserInfo(tempDict["userId"]);
-                            tempDict["realname"] = userInfo["realname"];
-                            tempDict["school"] = userInfo.ContainsKey("school") ? userInfo["school"] : "";
+                            if (userInfo.ContainsKey("realname") && userInfo["realname"] != null && userInfo["realname"] != "")
+                            {
+                                tempDict["realname"] = userInfo["realname"];
+                            }
+                            else
+                            {
+                                tempDict["realname"] = (userInfo.ContainsKey("username") && userInfo["username"] != null) ? userInfo["username"] : "";
+                            }
+                            tempDict["school"] = (userInfo.ContainsKey("school") && userInfo["school"] != null) ? userInfo["school"] : "";
                         }
                         result.Add(tempDict);
                     }
