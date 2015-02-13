@@ -203,6 +203,7 @@
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
+    <Compile Include="Models\POIPresentation.cs" />
     <Compile Include="Src\POIInteractiveEvent.cs" />
     <Compile Include="Src\POIProxyInteractiveMsgHandler.cs" />
     <Compile Include="Models\ComClientViewModel.cs" />

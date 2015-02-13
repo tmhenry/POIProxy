@@ -16,9 +16,14 @@ namespace POIProxy
 {
     public class POIProxyRedisManager
     {
+        public static string CacheUser = "cache:user:";
+        public static string CacheMessage = "cache:message:";
+        public static string CacheSession = "cache:session:";
+        public static string CachePresentation = "cache:presentation:";
+        
         private PooledRedisClientManager redisManager = null;
-
         private static POIProxyRedisManager instance = null;
+        
         public static POIProxyRedisManager Instance
         {
             get
@@ -35,7 +40,7 @@ namespace POIProxy
         {
             if (redisManager == null)
             {
-                redisManager = new PooledRedisClientManager(200, 10, POIGlobalVar.RedisHost + ":" + POIGlobalVar.RedisPort);
+                redisManager = new PooledRedisClientManager(300, 10, POIGlobalVar.RedisHost + ":" + POIGlobalVar.RedisPort);
                 redisManager.ConnectTimeout = 500;
                 redisManager.IdleTimeOutSecs = 30;
                 redisManager.PoolTimeout = 10;

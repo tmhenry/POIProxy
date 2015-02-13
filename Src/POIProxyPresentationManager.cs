@@ -345,6 +345,7 @@ namespace POIProxy
         {
             using (var redisClient = redisManager.GetClient())
             {
+                POIPresentation.LoadPresInfoFromOrigin(presId);
                 if (prepareTime > 0)
                 {
                     double targetTime = timestamp + prepareTime * 60;
@@ -835,7 +836,7 @@ namespace POIProxy
                 SortedDictionary<int, string> presSoretedDict = new SortedDictionary<int, string>();
                 foreach (string key in userPres.Keys)
                 {
-                    if (userPres[key] != "-1" && userPres[key] == "0")
+                    if (userPres[key] != "-1")
                     {
                         presSoretedDict[int.Parse(key)] = key;
                     }
@@ -854,6 +855,8 @@ namespace POIProxy
 
                 var user = redisClient.Hashes["user:" + userId];
                 user["statusPres"] = POIProxySessionManager.GetMd5Hash(presByUser);
+                PPLog.debugLog("[Update Presentation Sync]: userId:" + userId + " hashString:" + user["statusPres"]);
+
             }
         }
 
