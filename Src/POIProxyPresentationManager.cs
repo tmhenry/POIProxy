@@ -46,7 +46,7 @@ namespace POIProxy
             //Create interactive presentation
             Dictionary<string, object> values = new Dictionary<string, object>();
             values["user_id"] = userId;
-            values["type"] = "idle";
+            values["type"] = "interactive";
             values["course_id"] = -1;
             values["description"] = desc;
             values["create_at"] = timestamp;

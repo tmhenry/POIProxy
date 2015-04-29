@@ -21,9 +21,9 @@ namespace POIProxy
             get
             {
                 Dictionary<string, string> result = new Dictionary<string,string>();
-                result["presId"] = presId;
+                result["presId"] = id;
                 result["creator"] = creatorId;
-                result["type"] = presType;
+                result["type"] = type;
                 result["description"] = description;
                 result["media_id"] = mediaId;
                 result["create_at"] = createTimestamp.ToString();
@@ -70,18 +70,18 @@ namespace POIProxy
         private static JavaScriptSerializer jsonHandler = new JavaScriptSerializer();
 
         // Premitives
-        protected string presId;
-        protected string creatorId;
-        protected string presType;
-        protected string description;
-        protected string mediaId;
-        protected double createTimestamp;
-        protected double updateTimestamp;
-        protected int categoryId;
-        protected int gradeId;
-        protected int subjectId;
-        protected int difficulty;
-        protected string vanillaFlag;
-        protected string interactiveSessionId;
+        protected string id;                    //Presentation Id
+        protected string creatorId;             //Presentation Creator User UUID
+        protected string type;                  //Presentation Type
+        protected string description;           //Presentation Description
+        protected string mediaId;               //Presentation Cover Picture Media ID
+        protected double createTimestamp;       //Presentation Creation Timestamp
+        protected double updateTimestamp;       //Presentation Update Timestamp
+        protected int categoryId;               //Presentation Category ID
+        protected int gradeId;                  //Presentation Grade ID
+        protected int subjectId;                //Presentation Subject ID
+        protected int difficulty;               //Presentation Difficult Count
+        protected string vanillaFlag;           //True if the presentation is raised by older version
+        protected string interactiveSessionId;  //Session ID if the presentation is raised by older version
     }
 }
